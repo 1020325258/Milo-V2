@@ -2,36 +2,65 @@
 
 基于 AgentScope 的 AI Agent 对话平台，前后端分离架构。
 
-## 项目结构
+## ⚠️ 强制要求：前端改动必须进行浏览器测试
 
-```
-milo-v2/
-├── backend/                # Python 后端 (FastAPI + AgentScope)
-│   ├── main.py             # 应用入口
-│   ├── requirements.txt    # Python 依赖
-│   └── workspaces/         # Agent 工作空间（运行时生成，已 gitignore）
-├── frontend/               # React 前端 (Vite + TypeScript + Tailwind)
-│   ├── src/
-│   │   ├── api/            # API 调用层（按资源拆分）
-│   │   ├── components/     # UI 组件（按功能域分组）
-│   │   │   ├── badge/      # 徽章组件
-│   │   │   ├── chat/       # 聊天相关组件
-│   │   │   │   └── tool-renderers/  # 工具调用渲染器
-│   │   │   ├── dialog/     # 弹窗组件
-│   │   │   ├── drawer/     # 抽屉组件
-│   │   │   ├── form/       # 表单组件
-│   │   │   ├── layout/     # 布局组件
-│   │   │   ├── select/     # 选择器组件
-│   │   │   ├── tour/       # 新手引导
-│   │   │   └── ui/         # 基础 UI 原子组件（shadcn 风格）
-│   │   ├── hooks/          # 自定义 Hooks（按资源拆分）
-│   │   ├── i18n/           # 国际化
-│   │   ├── lib/            # 工具库
-│   │   ├── pages/          # 页面组件（按路由拆分）
-│   │   └── utils/          # 通用工具函数
-│   └── package.json
-└── docker-compose.yml      # Redis 等基础设施
-```
+**当用户提及的改动涉及到前端的任何修改时，必须使用 Playwright 进行浏览器端到端测试，验证功能正常后才能提交代码。**
+
+### 浏览器测试流程
+
+1. **启动服务**
+   ```bash
+   # 启动后端
+   cd backend && python main.py
+
+   # 启动前端
+   cd frontend && npm run dev
+   ```
+
+2. **编写 Playwright 测试脚本**
+   ```javascript
+   const { chromium } = require('playwright');
+
+   (async () => {
+       const browser = await chromium.launch({
+           headless: true,
+           executablePath: '/Users/zqy/Library/Caches/ms-playwright/chromium-1208/chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing'
+       });
+       const page = await browser.newPage();
+
+       // 监听控制台错误
+       page.on('console', msg => {
+           if (msg.type() === 'error') {
+               console.log('控制台错误:', msg.text());
+           }
+       });
+
+       page.on('pageerror', error => {
+           console.log('页面错误:', error.message);
+       });
+
+       // 测试逻辑...
+
+       await browser.close();
+   })();
+   ```
+
+3. **验证内容**
+   - 页面加载无错误
+   - 交互功能正常（点击、输入、弹窗等）
+   - 数据正确显示
+   - API 调用成功
+
+4. **测试通过后方可提交**
+
+### Playwright 环境
+
+- **安装路径**: `/Users/zqy/Library/Caches/ms-playwright/chromium-1208/`
+- **可执行文件**: `chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing`
+- **前端地址**: `http://localhost:5175/`
+- **后端地址**: `http://localhost:8001/`
+
+---
 
 ## 启动方式
 
