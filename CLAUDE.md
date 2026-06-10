@@ -17,32 +17,19 @@
    cd frontend && npm run dev
    ```
 
-2. **编写 Playwright 测试脚本**
-   ```javascript
-   const { chromium } = require('playwright');
+2. **运行浏览器测试**
+   ```bash
+   # 基础测试（检查页面加载）
+   cd frontend && node test-browser.js
 
-   (async () => {
-       const browser = await chromium.launch({
-           headless: true,
-           executablePath: '/Users/zqy/Library/Caches/ms-playwright/chromium-1208/chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing'
-       });
-       const page = await browser.newPage();
+   # 自动登录测试
+   cd frontend && node test-browser.js --login
 
-       // 监听控制台错误
-       page.on('console', msg => {
-           if (msg.type() === 'error') {
-               console.log('控制台错误:', msg.text());
-           }
-       });
+   # 保存截图
+   cd frontend && node test-browser.js --screenshot
 
-       page.on('pageerror', error => {
-           console.log('页面错误:', error.message);
-       });
-
-       // 测试逻辑...
-
-       await browser.close();
-   })();
+   # 测试指定 URL
+   cd frontend && node test-browser.js --url http://localhost:5175/chat/xxx
    ```
 
 3. **验证内容**
@@ -52,6 +39,31 @@
    - API 调用成功
 
 4. **测试通过后方可提交**
+
+### 测试脚本
+
+项目提供了 `frontend/test-browser.cjs` 测试脚本，支持以下功能：
+
+```bash
+cd frontend
+
+# 基础测试（检查页面加载）
+node test-browser.cjs
+
+# 自动登录测试
+node test-browser.cjs --login
+
+# 保存截图到 /tmp
+node test-browser.cjs --screenshot
+
+# 显示详细错误
+node test-browser.cjs --verbose
+
+# 组合使用
+node test-browser.cjs --login --screenshot --verbose
+```
+
+**注意：** 需要先安装 playwright：`npm install playwright --save-dev`
 
 ### Playwright 环境
 
