@@ -66,7 +66,7 @@ export function CitationModal({ citation, onClose }: CitationModalProps) {
 			setError(null);
 
 			try {
-				const response = await fetch('/api/rag/file-content', {
+				const response = await fetch('/rag/file-content', {
 					method: 'POST',
 					headers: { 'Content-Type': 'application/json' },
 					body: JSON.stringify({
