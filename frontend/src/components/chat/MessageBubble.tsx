@@ -162,6 +162,7 @@ function renderBlock(
 		confirm: boolean,
 		rules?: ToolCallBlock['suggested_rules'],
 	) => void,
+	onCitationClick?: (citation: CitationData) => void,
 ) {
 	switch (block.type) {
 		case 'tool_call_group': {
@@ -234,13 +235,15 @@ function renderBlock(
 												onClick={() => {
 													// Extract file name and open modal
 													const fileName = text.trim();
-													setSelectedCitation({
-														fileName,
-														fileId: '',
-														title: '',
-														content: '',
-														paths: [],
-													});
+													if (onCitationClick) {
+														onCitationClick({
+															fileName,
+															fileId: '',
+															title: '',
+															content: '',
+															paths: [],
+														});
+													}
 												}}
 											>
 												{children}
@@ -422,6 +425,7 @@ export function MessageBubble({ message, onUserConfirm }: MessageBubbleProps) {
 								onUserConfirm(toolCall, confirm, message.id, rules);
 								toolCall.state = confirm ? 'allowed' : 'finished';
 							},
+							(citation) => setSelectedCitation(citation),
 						),
 					)}
 				</div>
