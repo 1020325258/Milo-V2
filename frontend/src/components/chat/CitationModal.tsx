@@ -1,11 +1,12 @@
-import { FileText, X } from 'lucide-react';
-import { useCallback, useEffect } from 'react';
+import { FileText, Loader2, X } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 
 export interface CitationData {
 	fileName: string;
+	fileId?: string;
 	title: string;
 	content: string;
 	paths: string[];
@@ -21,8 +22,14 @@ interface CitationModalProps {
  *
  * Shows the source file name, title, full content, and logical paths
  * of a knowledge chunk referenced in the LLM's response.
+ *
+ * When opened, fetches the full file content from the backend API.
  */
 export function CitationModal({ citation, onClose }: CitationModalProps) {
+	const [loading, setLoading] = useState(false);
+	const [fileContent, setFileContent] = useState<string | null>(null);
+	const [error, setError] = useState<string | null>(null);
+
 	const handleKeyDown = useCallback(
 		(e: KeyboardEvent) => {
 			if (e.key === 'Escape') {
@@ -39,6 +46,51 @@ export function CitationModal({ citation, onClose }: CitationModalProps) {
 		}
 	}, [citation, handleKeyDown]);
 
+	// Fetch file content when citation changes
+	useEffect(() => {
+		if (!citation) {
+			setFileContent(null);
+			setError(null);
+			return;
+		}
+
+		// If content is already provided, use it
+		if (citation.content) {
+			setFileContent(citation.content);
+			return;
+		}
+
+		// Otherwise, fetch from API
+		const fetchContent = async () => {
+			setLoading(true);
+			setError(null);
+
+			try {
+				const response = await fetch('/api/rag/file-content', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({
+						file_id: citation.fileId || '',
+						query: citation.fileName,
+					}),
+				});
+
+				if (!response.ok) {
+					throw new Error('Failed to fetch file content');
+				}
+
+				const data = await response.json();
+				setFileContent(data.content);
+			} catch (err) {
+				setError(err instanceof Error ? err.message : 'Unknown error');
+			} finally {
+				setLoading(false);
+			}
+		};
+
+		fetchContent();
+	}, [citation]);
+
 	if (!citation) return null;
 
 	return (
@@ -53,7 +105,7 @@ export function CitationModal({ citation, onClose }: CitationModalProps) {
 			aria-label="引用详情"
 		>
 			<div
-				className="relative w-full max-w-2xl max-h-[80vh] bg-background rounded-lg shadow-lg overflow-hidden"
+				className="relative w-full max-w-3xl max-h-[85vh] bg-background rounded-lg shadow-lg overflow-hidden"
 				onClick={(e) => e.stopPropagation()}
 				onKeyDown={(e) => e.stopPropagation()}
 			>
@@ -69,12 +121,14 @@ export function CitationModal({ citation, onClose }: CitationModalProps) {
 				</div>
 
 				{/* Content */}
-				<div className="p-4 overflow-y-auto max-h-[calc(80vh-120px)]">
+				<div className="p-4 overflow-y-auto max-h-[calc(85vh-120px)]">
 					{/* File info */}
 					<div className="flex flex-wrap items-center gap-2 mb-4">
 						<Badge variant="secondary">{citation.fileName}</Badge>
-						{citation.title && citation.title !== citation.fileName && (
-							<Badge variant="outline">{citation.title}</Badge>
+						{citation.fileId && (
+							<Badge variant="outline" className="text-xs font-mono">
+								{citation.fileId}
+							</Badge>
 						)}
 					</div>
 
@@ -97,10 +151,25 @@ export function CitationModal({ citation, onClose }: CitationModalProps) {
 					{/* Content */}
 					<div>
 						<h3 className="text-sm font-medium text-muted-foreground mb-2">
-							知识内容
+							文件内容
 						</h3>
-						<div className="p-3 bg-muted rounded-md whitespace-pre-wrap text-sm">
-							{citation.content}
+						<div className="p-4 bg-muted rounded-md">
+							{loading && (
+								<div className="flex items-center gap-2 text-muted-foreground">
+									<Loader2 className="size-4 animate-spin" />
+									<span>加载中...</span>
+								</div>
+							)}
+							{error && (
+								<div className="text-destructive">
+									加载失败: {error}
+								</div>
+							)}
+							{fileContent && (
+								<pre className="whitespace-pre-wrap text-sm font-mono">
+									{fileContent}
+								</pre>
+							)}
 						</div>
 					</div>
 				</div>

@@ -221,6 +221,35 @@ function renderBlock(
 									</div>
 								);
 							},
+							// Handle reference links in the References section
+							li: ({ children, ...props }) => {
+								// Check if this is a reference list item
+								const text = String(children);
+								if (text.match(/\.(md|pdf|doc|docx|txt)$/i)) {
+									return (
+										<li {...props}>
+											<button
+												type="button"
+												className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer"
+												onClick={() => {
+													// Extract file name and open modal
+													const fileName = text.trim();
+													setSelectedCitation({
+														fileName,
+														fileId: '',
+														title: '',
+														content: '',
+														paths: [],
+													});
+												}}
+											>
+												{children}
+											</button>
+										</li>
+									);
+								}
+								return <li {...props}>{children}</li>;
+							},
 						}}
 					>
 						{block.text}

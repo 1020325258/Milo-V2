@@ -25,6 +25,7 @@ from rag import register_retriever
 from rag.ke_rag_retriever import KeRagRetriever
 from rag.tools import KnowledgeSearchTool
 from rag.middleware import RagMiddleware
+from rag.api import router as rag_router
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -99,6 +100,9 @@ app = create_app(
     extra_agent_tools=_create_agent_tools,
     extra_agent_middlewares=_create_agent_middlewares,
 )
+
+# Register RAG API router
+app.include_router(rag_router)
 
 
 if __name__ == "__main__":

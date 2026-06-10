@@ -28,6 +28,7 @@ class KnowledgeChunk(BaseModel):
     Attributes:
         content: The text content of the knowledge chunk.
         file_name: The source file name.
+        file_id: The source file ID for API queries.
         title: The knowledge title.
         paths: Logical location paths for citation.
         chunk_id: Unique identifier for citation links.
@@ -36,6 +37,7 @@ class KnowledgeChunk(BaseModel):
 
     content: str
     file_name: str = ""
+    file_id: str = ""
     title: str = ""
     paths: List[str] = Field(default_factory=list)
     chunk_id: str = ""

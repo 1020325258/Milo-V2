@@ -18,6 +18,7 @@ export default defineConfig({
 			'/model': 'http://localhost:8001',
 			'/workspace': 'http://localhost:8001',
 			'/schedule': 'http://localhost:8001',
+				'/rag': 'http://localhost:8001',
 		},
 	},
 	resolve: {

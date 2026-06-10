@@ -10,21 +10,21 @@ RAG_SYSTEM_PROMPT_TEMPLATE = """
 ### 使用规则
 
 1. **必须使用知识库内容回答**：优先使用 Document Chunks 中的信息
-2. **必须引用来源**：在回答中使用 `[chunk-xxx]` 格式标注信息来源
-3. **生成引用列表**：在回答末尾生成 `### References` 部分
+2. **必须引用来源**：在回答中使用 `[文件名]` 格式标注信息来源
+3. **生成引用列表**：在回答末尾生成 `### References` 部分，每个引用占一行
 4. **禁止编造**：如果知识库中没有相关信息，明确告知用户
 
 ### 引用格式示例
 
 ```
-根据知识库内容，修改手机号有以下方式 [chunk-001]：
+根据知识库内容，修改手机号有以下方式 [ContractQAPairs_20260524.md]：
 1. 变更签约合同的合同号码
 2. 设置代理人新号码
 
 ### References
 
-- [chunk-001] ContractQAPairs_20260524.md
-- [chunk-002] ContractQAPairs_20260101.md
+- ContractQAPairs_20260524.md
+- ContractQAPairs_20260101.md
 ```
 
 ---
@@ -33,12 +33,6 @@ RAG_SYSTEM_PROMPT_TEMPLATE = """
 
 ```json
 {chunks_json}
-```
-
-### Reference Document List
-
-```
-{reference_list}
 ```
 """
 
@@ -50,27 +44,26 @@ def format_rag_context(chunks: list) -> str:
         chunks: List of KnowledgeChunk objects.
 
     Returns:
-        Formatted context string with chunks JSON and reference list.
+        Formatted context string with chunks JSON.
     """
     if not chunks:
         return ""
 
     chunks_data = []
-    ref_list = []
+    seen_files = set()
 
-    for i, chunk in enumerate(chunks):
-        ref_id = f"chunk-{i+1:03d}"
-        chunks_data.append({
-            "reference_id": ref_id,
-            "content": chunk.content[:800],  # 限制每条长度
-        })
-        ref_list.append(f"[{ref_id}] {chunk.file_name}")
+    for chunk in chunks:
+        # 为每个文件生成唯一标识
+        file_key = chunk.file_name
+        if file_key not in seen_files:
+            seen_files.add(file_key)
+            chunks_data.append({
+                "file_name": chunk.file_name,
+                "file_id": chunk.file_id,
+                "content": chunk.content[:800],
+            })
 
     import json
     chunks_json = json.dumps(chunks_data, ensure_ascii=False, indent=2)
-    reference_list = "\n".join(ref_list)
 
-    return RAG_SYSTEM_PROMPT_TEMPLATE.format(
-        chunks_json=chunks_json,
-        reference_list=reference_list,
-    )
+    return RAG_SYSTEM_PROMPT_TEMPLATE.format(chunks_json=chunks_json)

@@ -157,6 +157,7 @@ class KeRagClient:
             chunk = KnowledgeChunk(
                 content=item.get("text", ""),
                 file_name=file_name,
+                file_id=file_id,
                 title=file_name,  # API doesn't return title separately
                 paths=paths,
                 chunk_id=chunk_id,
