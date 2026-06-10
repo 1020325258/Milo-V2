@@ -21,6 +21,9 @@ import { useEffect, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
+import { CitationModal } from './CitationModal';
+import type { CitationData } from './CitationModal';
+import { parseCitationList } from './CitationRenderer';
 import { ConfirmCard } from './ConfirmCard';
 import { renderToolGroup } from './tool-renderers';
 import type { TFunction, ToolCallWithResult } from './tool-renderers/types';
@@ -343,6 +346,7 @@ interface MessageBubbleProps {
 export function MessageBubble({ message, onUserConfirm }: MessageBubbleProps) {
 	const isUser = message.role === 'user';
 	const { t } = useTranslation();
+	const [selectedCitation, setSelectedCitation] = useState<CitationData | null>(null);
 
 	const isRunning = !message.finished_at;
 	const hasUsage =
@@ -420,6 +424,10 @@ export function MessageBubble({ message, onUserConfirm }: MessageBubbleProps) {
 					</Badge>
 				</div>
 			)}
+			<CitationModal
+				citation={selectedCitation}
+				onClose={() => setSelectedCitation(null)}
+			/>
 		</div>
 	);
 }
