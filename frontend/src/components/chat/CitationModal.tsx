@@ -71,7 +71,7 @@ export function CitationModal({ citation, onClose }: CitationModalProps) {
 					headers: { 'Content-Type': 'application/json' },
 					body: JSON.stringify({
 						file_id: citation.fileId || '',
-						query: citation.fileName,
+						file_name: citation.fileName,
 					}),
 				});
 
