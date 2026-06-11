@@ -48,6 +48,19 @@ interface ToolCallGroupBlock {
 type ExtendedContentBlock = ContentBlock | ToolCallGroupBlock;
 
 /**
+ * Preprocess text to replace citation patterns with custom markers.
+ * Converts [filename.ext] to a format that can be rendered by ReactMarkdown.
+ */
+function preprocessCitations(text: string): string {
+	// Replace [filename.ext] patterns with a custom marker
+	// This marker will be handled by the custom span component
+	return text.replace(
+		/\[([^\]]+\.(md|pdf|doc|docx|txt))\]/g,
+		'`📄 $1`',
+	);
+}
+
+/**
  * Group tool_call blocks of the same name into a single
  * `tool_call_group`, with each call paired to its matching
  * tool_result by id.
@@ -192,6 +205,31 @@ function renderBlock(
 							code: ({ className, children, ...props }) => {
 								const isInline = !String(className ?? '').startsWith('language-');
 								if (isInline) {
+									const text = String(children);
+									// Check if this is a citation marker (starts with 📄)
+									if (text.startsWith('📄 ')) {
+										const fileName = text.slice(2).trim();
+										return (
+											<button
+												type="button"
+												className="inline-flex items-center gap-0.5 px-1 py-0.5 text-[10px] leading-tight font-normal text-muted-foreground/70 hover:text-muted-foreground bg-muted/50 hover:bg-muted rounded-sm cursor-pointer transition-colors align-middle"
+												onClick={() => {
+													if (onCitationClick) {
+														onCitationClick({
+															fileName,
+															fileId: '',
+															title: '',
+															content: '',
+															paths: [],
+														});
+													}
+												}}
+												title={`查看来源: ${fileName}`}
+											>
+												<span>{fileName}</span>
+											</button>
+										);
+									}
 									return (
 										<code className={`${className ?? ''} break-all`} {...props}>
 											{children}
@@ -231,7 +269,7 @@ function renderBlock(
 										<li {...props}>
 											<button
 												type="button"
-												className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer"
+												className="text-muted-foreground/70 hover:text-muted-foreground text-xs cursor-pointer transition-colors"
 												onClick={() => {
 													// Extract file name and open modal
 													const fileName = text.trim();
@@ -255,7 +293,7 @@ function renderBlock(
 							},
 						}}
 					>
-						{block.text}
+						{preprocessCitations(block.text)}
 					</ReactMarkdown>
 				</div>
 			);

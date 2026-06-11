@@ -32,9 +32,9 @@ class KnowledgeSearchTool(ToolBase):
 
     name = "knowledge_search"
     description = (
-        "Search the knowledge base for information relevant to the user's question. "
-        "Use this when you need to find documentation, policies, or technical knowledge "
-        "to answer the user's question accurately."
+        "搜索知识库获取相关信息。"
+        "当用户问题涉及企业内部知识时使用此工具。"
+        "【重要】使用此工具后，必须在回答中引用来源：在引用信息后标注 [文件名]。"
     )
     input_schema = {
         "type": "object",

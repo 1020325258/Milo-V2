@@ -10,18 +10,19 @@ interface CitationRendererProps {
 /**
  * Inline citation marker component.
  *
- * Renders a clickable blue badge that represents a knowledge citation
- * in the LLM's response. When clicked, it opens the citation detail modal.
+ * Renders a subtle, clickable badge that represents a knowledge citation
+ * in the LLM's response. Styled with gray tones and smaller font to
+ * distinguish from main content without being distracting.
  */
 export function CitationRenderer({ fileName, onClick }: CitationRendererProps) {
 	return (
 		<button
 			type="button"
-			className="inline-flex items-center gap-1 px-1.5 py-0.5 text-xs font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded cursor-pointer transition-colors"
+			className="inline-flex items-center gap-0.5 px-1 py-0.5 text-[10px] leading-tight font-normal text-muted-foreground/70 hover:text-muted-foreground bg-muted/50 hover:bg-muted rounded-sm cursor-pointer transition-colors align-middle"
 			onClick={onClick}
 			title={`查看来源: ${fileName}`}
 		>
-			<BookOpen className="size-3" />
+			<BookOpen className="size-2.5" />
 			<span>{fileName}</span>
 		</button>
 	);
