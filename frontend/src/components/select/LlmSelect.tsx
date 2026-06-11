@@ -1,4 +1,4 @@
-import { ChevronDown, PlusCircle, Ban } from 'lucide-react';
+import { ChevronDown, Ban } from 'lucide-react';
 import { useEffect } from 'react';
 
 import type { ChatModelConfig } from '@/api';
@@ -25,7 +25,6 @@ interface Props {
 	 * clears the selection (in which case `null` is emitted).
 	 */
 	onChange?: (value: ChatModelConfig | null) => void;
-	onAddCredential?: () => void;
 	refetchTrigger?: number;
 	/** Override the trigger label shown when no model is selected. */
 	placeholder?: string;
@@ -41,7 +40,6 @@ interface Props {
 export function LlmSelect({
 	value,
 	onChange,
-	onAddCredential,
 	refetchTrigger,
 	placeholder,
 	allowClear = false,
@@ -135,17 +133,15 @@ export function LlmSelect({
 						);
 					})
 				)}
-				<DropdownMenuSeparator />
 				{allowClear && (
-					<DropdownMenuItem onSelect={() => onChange?.(null)} disabled={!value}>
-						<Ban className="size-4" />
-						<span>{clearLabel ?? t('llm-select.clear')}</span>
-					</DropdownMenuItem>
+					<>
+						<DropdownMenuSeparator />
+						<DropdownMenuItem onSelect={() => onChange?.(null)} disabled={!value}>
+							<Ban className="size-4" />
+							<span>{clearLabel ?? t('llm-select.clear')}</span>
+						</DropdownMenuItem>
+					</>
 				)}
-				<DropdownMenuItem onSelect={onAddCredential}>
-					<PlusCircle className="size-4" />
-					<span>{t('llm-select.addCredential')}</span>
-				</DropdownMenuItem>
 			</DropdownMenuContent>
 		</DropdownMenu>
 	);

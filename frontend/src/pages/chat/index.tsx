@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { toast } from 'sonner';
 
 import { ChatViewport } from './ChatViewport';
 import type { SessionRecord } from '@/api';
@@ -56,6 +57,7 @@ import {
 	SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { useAgents } from '@/hooks/useAgents';
+import { useDefaultModel } from '@/hooks/useDefaultModel';
 import { useSessions } from '@/hooks/useSessions';
 import { useTranslation } from '@/i18n/useI18n.ts';
 
@@ -93,6 +95,9 @@ const ChatPageInner = () => {
 	}>();
 	const { t } = useTranslation();
 	const { agents, refetch: refetchAgents, remove: removeAgent } = useAgents();
+	const { fetch: fetchDefaultModel } = useDefaultModel({
+		onError: () => toast.warning(t('chat.session.noModelWarning')),
+	});
 	const {
 		sessions,
 		refetch: refetchSessions,
@@ -147,27 +152,27 @@ const ChatPageInner = () => {
 	}, [urlAgentId, urlSessionId, sessions, navigate]);
 
 	/**
-	 * Create a new session under the currently selected agent and
-	 * pre-fill it with the model + fallback the currently open session
-	 * is using (so "new chat" inherits whatever the user just had
-	 * configured). Falls back to any other session under this agent
-	 * when there is no current one — keeps the model choice sticky
-	 * across "delete last → create new" instead of dropping back to
-	 * whatever ChatViewport's auto-pick happens to land on. Navigates
-	 * to the freshly created session.
+	 * Create a new session under the currently selected agent.
+	 * Pre-fills model config from the currently open session; falls
+	 * back to the default model from .env if no seed exists.
+	 * Navigates to the freshly created session.
 	 */
 	const handleCreateSession = async () => {
 		if (!urlAgentId) return;
 		const seedConfig = currentView?.session.config ?? sessions[0]?.session.config;
+		let chatModelConfig = seedConfig?.chat_model_config ?? null;
+		if (!chatModelConfig) {
+			chatModelConfig = await fetchDefaultModel();
+		}
 		const res = await createSession({
 			agent_id: urlAgentId,
-			...(seedConfig?.chat_model_config
-				? { chat_model_config: seedConfig.chat_model_config }
-				: {}),
+			...(chatModelConfig ? { chat_model_config: chatModelConfig } : {}),
 			...(seedConfig?.fallback_chat_model_config
 				? { fallback_chat_model_config: seedConfig.fallback_chat_model_config }
 				: {}),
 		});
+		// Fix permission mode to explore
+		await updateSession(res.session_id, { permission_mode: 'explore' });
 		navigate(`/chat/${urlAgentId}/${res.session_id}`);
 	};
 

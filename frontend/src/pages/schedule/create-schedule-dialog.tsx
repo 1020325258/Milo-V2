@@ -3,7 +3,6 @@ import { ChevronDownIcon, CircleAlert, Loader2, PlusCircle } from 'lucide-react'
 import * as React from 'react';
 
 import type { ChatModelConfig, PermissionMode } from '@/api';
-import { LlmSelect } from '@/components/select/LlmSelect';
 import { PermissionModeSelect } from '@/components/select/PermissionModeSelect';
 import { TimezoneSelect } from '@/components/select/TimezoneSelect';
 import { Button } from '@/components/ui/button';
@@ -29,6 +28,7 @@ import {
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { useAgents } from '@/hooks/useAgents';
+import { useDefaultModel } from '@/hooks/useDefaultModel';
 import { useSchedules } from '@/hooks/useSchedules';
 import { useTranslation } from '@/i18n/useI18n';
 
@@ -117,6 +117,7 @@ export function CreateScheduleDialog({ open, onOpenChange, onCreated }: Props) {
 	const { t } = useTranslation();
 	const { create } = useSchedules();
 	const { agents } = useAgents();
+	const { modelName, loading: modelLoading, fetch: fetchDefaultModel } = useDefaultModel();
 	const [form, setForm] = React.useState(getDefaultForm);
 	const [loading, setLoading] = React.useState(false);
 	const [error, setError] = React.useState('');
@@ -125,8 +126,13 @@ export function CreateScheduleDialog({ open, onOpenChange, onCreated }: Props) {
 		if (open) {
 			setForm(getDefaultForm());
 			setError('');
+			fetchDefaultModel().then((config) => {
+				if (config) {
+					setForm((prev) => ({ ...prev, chatModelConfig: config }));
+				}
+			});
 		}
-	}, [open]);
+	}, [open, fetchDefaultModel]);
 
 	React.useEffect(() => {
 		if (agents.length > 0 && !form.agentId) {
@@ -294,10 +300,9 @@ export function CreateScheduleDialog({ open, onOpenChange, onCreated }: Props) {
 
 						<Field orientation={'horizontal'}>
 							<FieldLabel>{t('common.model')}</FieldLabel>
-							<LlmSelect
-								value={form.chatModelConfig}
-								onChange={(v) => set('chatModelConfig', v)}
-							/>
+							<Button variant="outline" size="sm" className="justify-between gap-1" disabled>
+								<span className="truncate">{modelLoading ? t('llm-select.loading') : (modelName || t('schedule.noDefaultModel'))}</span>
+							</Button>
 						</Field>
 
 						<Field orientation={'horizontal'}>

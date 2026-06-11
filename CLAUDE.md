@@ -2,75 +2,7 @@
 
 基于 AgentScope 的 AI Agent 对话平台，前后端分离架构。
 
-## ⚠️ 强制要求：前端改动必须进行浏览器测试
-
-**当用户提及的改动涉及到前端的任何修改时，必须使用 Playwright 进行浏览器端到端测试，验证功能正常后才能提交代码。**
-
-### 浏览器测试流程
-
-1. **启动服务**
-   ```bash
-   # 启动后端
-   cd backend && python main.py
-
-   # 启动前端
-   cd frontend && npm run dev
-   ```
-
-2. **运行浏览器测试**
-   ```bash
-   # 基础测试（检查页面加载）
-   cd frontend && node test-browser.js
-
-   # 自动登录测试
-   cd frontend && node test-browser.js --login
-
-   # 保存截图
-   cd frontend && node test-browser.js --screenshot
-
-   # 测试指定 URL
-   cd frontend && node test-browser.js --url http://localhost:5175/chat/xxx
-   ```
-
-3. **验证内容**
-   - 页面加载无错误
-   - 交互功能正常（点击、输入、弹窗等）
-   - 数据正确显示
-   - API 调用成功
-
-4. **测试通过后方可提交**
-
-### 测试脚本
-
-项目提供了 `frontend/test-browser.cjs` 测试脚本，支持以下功能：
-
-```bash
-cd frontend
-
-# 基础测试（检查页面加载）
-node test-browser.cjs
-
-# 自动登录测试
-node test-browser.cjs --login
-
-# 保存截图到 /tmp
-node test-browser.cjs --screenshot
-
-# 显示详细错误
-node test-browser.cjs --verbose
-
-# 组合使用
-node test-browser.cjs --login --screenshot --verbose
-```
-
-**注意：** 需要先安装 playwright：`npm install playwright --save-dev`
-
-### Playwright 环境
-
-- **安装路径**: `/Users/zqy/Library/Caches/ms-playwright/chromium-1208/`
-- **可执行文件**: `chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing`
-- **前端地址**: `http://localhost:5175/`
-- **后端地址**: `http://localhost:8001/`
+## ⚠️ 强制要求：如果用户指定 UI 验证标准，则必须使用 `playwright-cli` 进行浏览器端到端测试
 
 ---
 
@@ -195,17 +127,6 @@ utils/ lib/     # 基础层：纯函数，工具方法，零业务依赖
 - 一个文件只导出一个主要产物（组件/Hook/函数）
 - 相关的类型定义就近放置（`types.ts` 或文件内 `interface`）
 
-#### TypeScript 规范
-- 禁止 `any`，必须使用具体类型或 `unknown`
-- API 响应必须定义完整的 TypeScript 类型（在 `api/types.ts`）
-- 组件 Props 必须显式定义 interface
-
-#### React 规范
-- 优先使用函数组件 + Hooks
-- 避免在渲染函数中创建新对象/数组（会导致不必要的 re-render）
-- `useEffect` 依赖数组必须完整，不遗漏依赖
-- 自定义 Hook 以 `use` 开头，只封装可复用的状态逻辑
-
 ### 4. 测试覆盖
 
 - **新功能必须有测试**，不允许提交无测试覆盖的功能代码。
@@ -228,16 +149,6 @@ utils/ lib/     # 基础层：纯函数，工具方法，零业务依赖
 
 关键原则：**每一层的测试只 Mock 它的直接下层**，不跨层 Mock。这样当下层实现变更时，只需更新该层的测试，上层测试不受影响。
 
-### 5. 开发流程
-
-每次功能开发必须遵循以下流程：
-
-1. **编写/更新测试** — 先写测试或同步写测试（TDD 或 TAD）
-2. **实现功能代码** — 满足测试用例
-3. **运行相关测试** — 确保所有相关测试通过
-4. **运行 lint** — `cd frontend && npm run lint`
-5. **确认无误后提交**
-
 ```bash
 # 前端测试
 cd frontend && npm test
@@ -251,19 +162,3 @@ cd frontend && npm run lint
 
 **严禁跳过测试直接提交。** 如果测试失败，必须修复后再提交。
 
-## 常见任务
-
-### 添加新页面
-1. 在 `pages/` 下创建页面目录和组件
-2. 在 `App.tsx` 中添加路由
-3. 在 `i18n/locales/` 下添加对应翻译
-
-### 添加新 API
-1. 在 `api/types.ts` 定义请求/响应类型
-2. 在 `api/` 对应资源文件中添加请求函数
-3. 在 `hooks/` 中封装为 Hook（如需要）
-
-### 添加新组件
-1. 确定组件归属的功能域（chat/dialog/form 等）
-2. 基础 UI 组件放 `components/ui/`，业务组件放对应域目录
-3. 组件 Props 定义 interface，放在组件文件顶部或同目录 `types.ts`

@@ -1,0 +1,94 @@
+- generic [ref=e22]:
+  - generic [ref=e24]:
+    - generic [ref=e25]:
+      - img [ref=e28]
+      - list [ref=e44]:
+        - listitem [ref=e45]:
+          - button [ref=e46]:
+            - img [ref=e47]
+        - listitem [ref=e50]:
+          - button [active] [ref=e51]:
+            - img [ref=e52]
+      - list [ref=e56]:
+        - listitem [ref=e57]:
+          - button [ref=e58]:
+            - img [ref=e59]
+        - listitem [ref=e63]:
+          - button [ref=e64]:
+            - img [ref=e65]
+        - listitem [ref=e68]:
+          - button [ref=e69]:
+            - img [ref=e70]
+    - main [ref=e73]:
+      - generic [ref=e122]:
+        - generic [ref=e123]:
+          - generic [ref=e124]: 日程
+          - generic [ref=e125]:
+            - button [ref=e126]:
+              - img
+            - tablist [ref=e128]:
+              - tab "日历" [selected] [ref=e129]:
+                - img
+                - generic [ref=e130]: 日历
+              - tab "列表" [ref=e131]:
+                - img
+                - generic [ref=e132]: 列表
+        - generic [ref=e134]:
+          - generic [ref=e135]:
+            - heading "June 2026" [level=2] [ref=e136]
+            - generic [ref=e137]:
+              - button "今天" [ref=e138]
+              - button [ref=e139]:
+                - img
+              - button [ref=e140]:
+                - img
+              - button [ref=e141]:
+                - img
+              - button [ref=e142]:
+                - img
+          - generic [ref=e143]:
+            - generic [ref=e144]:
+              - generic [ref=e145]: 周日
+              - generic [ref=e146]: 周一
+              - generic [ref=e147]: 周二
+              - generic [ref=e148]: 周三
+              - generic [ref=e149]: 周四
+              - generic [ref=e150]: 周五
+              - generic [ref=e151]: 周六
+            - generic [ref=e152]:
+              - generic [ref=e154]: "31"
+              - generic [ref=e158] [cursor=pointer]: "1"
+              - generic [ref=e162] [cursor=pointer]: "2"
+              - generic [ref=e166] [cursor=pointer]: "3"
+              - generic [ref=e170] [cursor=pointer]: "4"
+              - generic [ref=e174] [cursor=pointer]: "5"
+              - generic [ref=e178] [cursor=pointer]: "6"
+              - generic [ref=e182] [cursor=pointer]: "7"
+              - generic [ref=e186] [cursor=pointer]: "8"
+              - generic [ref=e190] [cursor=pointer]: "9"
+              - generic [ref=e194] [cursor=pointer]: "10"
+              - generic [ref=e198] [cursor=pointer]: "11"
+              - generic [ref=e202] [cursor=pointer]: "12"
+              - generic [ref=e206] [cursor=pointer]: "13"
+              - generic [ref=e210] [cursor=pointer]: "14"
+              - generic [ref=e214] [cursor=pointer]: "15"
+              - generic [ref=e218] [cursor=pointer]: "16"
+              - generic [ref=e222] [cursor=pointer]: "17"
+              - generic [ref=e226] [cursor=pointer]: "18"
+              - generic [ref=e230] [cursor=pointer]: "19"
+              - generic [ref=e234] [cursor=pointer]: "20"
+              - generic [ref=e238] [cursor=pointer]: "21"
+              - generic [ref=e242] [cursor=pointer]: "22"
+              - generic [ref=e246] [cursor=pointer]: "23"
+              - generic [ref=e250] [cursor=pointer]: "24"
+              - generic [ref=e254] [cursor=pointer]: "25"
+              - generic [ref=e258] [cursor=pointer]: "26"
+              - generic [ref=e262] [cursor=pointer]: "27"
+              - generic [ref=e266] [cursor=pointer]: "28"
+              - generic [ref=e270] [cursor=pointer]: "29"
+              - generic [ref=e274] [cursor=pointer]: "30"
+              - generic [ref=e276]: "1"
+              - generic [ref=e278]: "2"
+              - generic [ref=e280]: "3"
+              - generic [ref=e282]: "4"
+  - region "Notifications alt+T"

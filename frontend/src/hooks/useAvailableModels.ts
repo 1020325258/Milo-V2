@@ -1,15 +1,15 @@
 import { useState, useEffect, useCallback } from 'react';
 
 import { credentialApi, modelApi } from '@/api';
-import type { CredentialRecord, ModelCard } from '@/api';
+import type { SystemCredentialItem, ModelCard } from '@/api';
 
 export interface CredentialWithModels {
-	credential: CredentialRecord;
+	credential: SystemCredentialItem;
 	models: ModelCard[];
 }
 
 /**
- * Fetches all credentials and their available models, grouped by provider type.
+ * Fetches system credentials and their available models, grouped by provider type.
  * Provider type is read from `credential.data.type`.
  * Credentials without a `type` field or whose model fetch fails are silently skipped.
  */
@@ -22,7 +22,7 @@ export function useAvailableModels() {
 		setLoading(true);
 		setError(null);
 		try {
-			const { credentials } = await credentialApi.list();
+			const { credentials } = await credentialApi.listSystem();
 			const result: Record<string, CredentialWithModels[]> = {};
 
 			await Promise.all(

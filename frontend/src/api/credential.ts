@@ -1,23 +1,26 @@
 import { client } from './client';
-import type {
-	CreateCredentialRequest,
-	CreateCredentialResponse,
-	CredentialListResponse,
-	CredentialRecord,
-	CredentialSchemasResponse,
-	UpdateCredentialRequest,
-} from './types';
+
+export interface DefaultModelResponse {
+	type: string;
+	credential_id: string;
+	model: string;
+}
+
+export interface SystemCredentialItem {
+	id: string;
+	name: string;
+	data: Record<string, unknown>;
+}
+
+export interface SystemCredentialListResponse {
+	credentials: SystemCredentialItem[];
+	total: number;
+}
 
 export const credentialApi = {
-	list: () => client.get<CredentialListResponse>('/credential/'),
+	/** List system credentials (read-only, API keys masked). */
+	listSystem: () => client.get<SystemCredentialListResponse>('/api/credentials/system'),
 
-	schemas: () => client.get<CredentialSchemasResponse>('/credential/schemas'),
-
-	create: (body: CreateCredentialRequest) =>
-		client.post<CreateCredentialResponse>('/credential/', body),
-
-	update: (credentialId: string, body: UpdateCredentialRequest) =>
-		client.patch<CredentialRecord>(`/credential/${credentialId}`, body),
-
-	delete: (credentialId: string) => client.delete(`/credential/${credentialId}`),
+	/** Get the default model config from backend .env. */
+ getDefaultModel: () => client.get<DefaultModelResponse>('/api/credentials/default-model'),
 };

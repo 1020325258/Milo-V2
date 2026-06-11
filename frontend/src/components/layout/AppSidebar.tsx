@@ -1,4 +1,4 @@
-import { BotMessageSquare, Calendars, Compass, KeyRound, Languages, Settings } from 'lucide-react';
+import { BotMessageSquare, Calendars, Compass, Languages, Settings } from 'lucide-react';
 import { useOnborda } from 'onborda';
 import { useNavigate, useLocation } from 'react-router-dom';
 
@@ -72,22 +72,6 @@ export function AppSidebar() {
 									className="px-2"
 								>
 									<Calendars />
-								</SidebarMenuButton>
-							</SidebarMenuItem>
-						</SidebarMenu>
-					</SidebarGroupContent>
-				</SidebarGroup>
-				<SidebarGroup>
-					<SidebarGroupContent>
-						<SidebarMenu>
-							<SidebarMenuItem>
-								<SidebarMenuButton
-									tooltip={{ children: t('common.credential'), hidden: false }}
-									isActive={location.pathname === '/credential'}
-									onClick={() => navigate('/credential')}
-									className="px-2"
-								>
-									<KeyRound />
 								</SidebarMenuButton>
 							</SidebarMenuItem>
 						</SidebarMenu>

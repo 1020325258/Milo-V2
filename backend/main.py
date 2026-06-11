@@ -25,6 +25,8 @@ from rag import register_retriever
 from rag.ke_rag_retriever import KeRagRetriever
 from rag.tools import KnowledgeSearchTool
 from rag.api import router as rag_router
+from credential_loader import ensure_all_existing_users
+from credential_api import router as credential_api_router
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -92,6 +94,18 @@ app = create_app(
 
 # Register RAG API router
 app.include_router(rag_router)
+
+# Register system credential API router
+app.include_router(credential_api_router)
+
+
+@app.on_event("startup")
+async def _on_startup():
+    """Create system credentials for all existing users at startup."""
+    try:
+        await ensure_all_existing_users(app.state.storage)
+    except Exception:
+        logger.exception("Failed to load system credentials at startup")
 
 
 if __name__ == "__main__":

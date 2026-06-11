@@ -1,0 +1,270 @@
+- generic:
+  - generic:
+    - generic:
+      - generic:
+        - generic:
+          - generic:
+            - generic:
+              - generic:
+                - generic:
+                  - img
+              - generic:
+                - generic:
+                  - generic:
+                    - list:
+                      - listitem:
+                        - button:
+                          - img
+                      - listitem:
+                        - button:
+                          - img
+              - generic:
+                - list:
+                  - listitem:
+                    - button:
+                      - img
+                  - listitem:
+                    - button:
+                      - img
+                  - listitem:
+                    - button:
+                      - img
+            - main:
+              - generic:
+                - generic:
+                  - generic: 日程
+                  - generic:
+                    - button:
+                      - img
+                    - generic:
+                      - tablist:
+                        - tab [selected]:
+                          - img
+                          - generic: 日历
+                        - tab:
+                          - img
+                          - generic: 列表
+                - generic:
+                  - generic:
+                    - generic:
+                      - heading [level=2]: June 2026
+                      - generic:
+                        - button: 今天
+                        - button:
+                          - img
+                        - button:
+                          - img
+                        - button:
+                          - img
+                        - button:
+                          - img
+                    - generic:
+                      - generic:
+                        - generic: 周日
+                        - generic: 周一
+                        - generic: 周二
+                        - generic: 周三
+                        - generic: 周四
+                        - generic: 周五
+                        - generic: 周六
+                      - generic:
+                        - generic:
+                          - generic: "31"
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic: "1"
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic: "2"
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic: "3"
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic: "4"
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic: "5"
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic: "6"
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic: "7"
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic: "8"
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic: "9"
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic: "10"
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic: "11"
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic: "12"
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic: "13"
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic: "14"
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic: "15"
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic: "16"
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic: "17"
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic: "18"
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic: "19"
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic: "20"
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic: "21"
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic: "22"
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic: "23"
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic: "24"
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic: "25"
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic: "26"
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic: "27"
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic: "28"
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic: "29"
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic: "30"
+                        - generic:
+                          - generic: "1"
+                        - generic:
+                          - generic: "2"
+                        - generic:
+                          - generic: "3"
+                        - generic:
+                          - generic: "4"
+        - region "Notifications alt+T"
+  - dialog "创建日程" [ref=e284]:
+    - generic [ref=e285]:
+      - heading "创建日程" [level=2] [ref=e286]
+      - paragraph [ref=e287]: 为 Agent 设置定时或一次性的计划任务。
+    - generic [ref=e289]:
+      - group [ref=e290]:
+        - generic [ref=e291]: 名称
+        - textbox "例如：每日报告" [active] [ref=e292]
+      - group [ref=e293]:
+        - generic [ref=e294]: 描述
+        - textbox "描述这个计划任务的用途..." [ref=e295]
+      - generic [ref=e296]:
+        - group [ref=e297]:
+          - generic [ref=e298]: 日期
+          - button "June 11th, 2026" [ref=e299]:
+            - text: June 11th, 2026
+            - img
+        - group [ref=e300]:
+          - generic [ref=e301]: 时间
+          - textbox [ref=e302]: 18:21
+      - group [ref=e303]:
+        - generic [ref=e304]: 时区
+        - button "Asia/Shanghai" [ref=e305]:
+          - generic [ref=e306]:
+            - img
+            - generic [ref=e307]: Asia/Shanghai
+          - img
+      - group [ref=e308]:
+        - generic [ref=e309]: 频率
+        - combobox [ref=e310]:
+          - generic: 每天
+          - img
+      - group [ref=e311]:
+        - generic [ref=e312]: 结束日期
+        - button "选择日期" [ref=e313]:
+          - text: 选择日期
+          - img
+      - group [ref=e314]:
+        - generic [ref=e315]: Agent
+        - combobox [ref=e316]:
+          - generic: Milo
+          - img
+      - group [ref=e317]:
+        - generic [ref=e318]: 模型
+        - button "qwen3.7-plus" [disabled]:
+          - generic: qwen3.7-plus
+      - group [ref=e319]:
+        - generic [ref=e320]: 权限模式
+        - button "Don't Ask" [ref=e321]:
+          - generic [ref=e322]:
+            - img
+            - generic [ref=e323]: Don't Ask
+          - img
+      - group [ref=e324]:
+        - generic [ref=e325]:
+          - generic [ref=e326]:
+            - generic [ref=e327]: 有状态
+            - generic [ref=e328]: 开启后，每次触发复用同一个会话以累积上下文；关闭则每次触发都创建新会话。
+          - switch [ref=e329]
+    - generic [ref=e330]:
+      - button "取消" [ref=e331]:
+        - img
+        - text: 取消
+      - button "创建" [disabled]:
+        - img
+        - text: 创建
+    - button "Close" [ref=e332]:
+      - img
+      - generic [ref=e333]: Close

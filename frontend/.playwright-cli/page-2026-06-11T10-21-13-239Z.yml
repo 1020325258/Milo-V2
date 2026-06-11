@@ -1,0 +1,65 @@
+- generic [ref=e22]:
+  - generic [ref=e24]:
+    - generic [ref=e25]:
+      - img [ref=e28]
+      - list [ref=e44]:
+        - listitem [ref=e45]:
+          - button [ref=e46]:
+            - img [ref=e47]
+        - listitem [ref=e50]:
+          - button [ref=e51]:
+            - img [ref=e52]
+      - list [ref=e56]:
+        - listitem [ref=e57]:
+          - button [ref=e58]:
+            - img [ref=e59]
+        - listitem [ref=e63]:
+          - button [ref=e64]:
+            - img [ref=e65]
+        - listitem [ref=e68]:
+          - button [ref=e69]:
+            - img [ref=e70]
+    - main [ref=e73]:
+      - generic [ref=e74]:
+        - generic [ref=e75]:
+          - generic [ref=e77]:
+            - generic [ref=e78]: http://localhost:8001
+            - generic [ref=e79]:
+              - combobox [ref=e80]:
+                - generic: Milo
+                - img
+              - button [ref=e81]:
+                - img
+              - button [ref=e82]:
+                - img
+            - button "创建 Agent" [ref=e83]:
+              - img
+              - generic [ref=e84]: 创建 Agent
+          - generic [ref=e86]:
+            - generic [ref=e87]: 会话
+            - button [ref=e88]:
+              - button [ref=e89]:
+                - img
+            - list [ref=e91]:
+              - listitem [ref=e92]:
+                - button "2026-06-11 10:33:06" [ref=e93]:
+                  - generic [ref=e94]: 2026-06-11 10:33:06
+                - button [ref=e95]:
+                  - img [ref=e96]
+        - main [ref=e102]:
+          - generic [ref=e105]:
+            - generic [ref=e109]:
+              - generic [ref=e110]:
+                - img
+              - generic [ref=e111]: 暂无消息
+              - generic [ref=e112]: 发送一条消息开始新的对话
+            - generic [ref=e114]:
+              - textbox "输入消息..." [ref=e116]
+              - generic [ref=e118]:
+                - button [ref=e119]:
+                  - img
+                - button [disabled]:
+                  - img
+          - button [ref=e121]:
+            - img
+  - region "Notifications alt+T"

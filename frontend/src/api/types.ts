@@ -232,44 +232,6 @@ export interface JSONSchema {
 	required?: string[];
 }
 
-// ─── Credential ───────────────────────────────────────────────────────────────
-
-export type CredentialSchemaProperty = JSONSchemaProperty;
-
-// Credential schemas always include title + type (Pydantic always emits them
-// for credential data classes); we narrow the generic JSONSchema here so call
-// sites that read `schema.title` don't have to do null-checks.
-export interface CredentialSchema extends JSONSchema {
-	title: string;
-	type: string;
-}
-
-export interface CredentialSchemasResponse {
-	schemas: CredentialSchema[];
-}
-
-export interface CredentialRecord extends RecordBase {
-	user_id: string;
-	data: Record<string, unknown>;
-}
-
-export interface CreateCredentialRequest {
-	data: Record<string, unknown>;
-}
-
-export interface CreateCredentialResponse {
-	credential_id: string;
-}
-
-export interface UpdateCredentialRequest {
-	data: Record<string, unknown>;
-}
-
-export interface CredentialListResponse {
-	credentials: CredentialRecord[];
-	total: number;
-}
-
 // ─── Chat ─────────────────────────────────────────────────────────────────────
 
 export type { Msg, ContentBlock } from '@agentscope-ai/agentscope/message';

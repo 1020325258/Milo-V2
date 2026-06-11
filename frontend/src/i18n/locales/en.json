@@ -8,7 +8,6 @@
 		"confirm": "Confirm",
 		"create": "Create",
 		"creating": "Creating…",
-		"credential": "Credentials",
 		"date": "Date",
 		"delete": "Delete",
 		"deleting": "Deleting…",
@@ -101,7 +100,8 @@
 			"label": "Session",
 			"emptyTitle": "No sessions",
 			"emptyNoAgent": "Select an agent first.",
-			"emptyHasAgent": "Create a session to start chatting."
+			"emptyHasAgent": "Create a session to start chatting.",
+			"noModelWarning": "No default model configured. The session may not be able to chat."
 		}
 	},
 	"dialog-agent-create": {
@@ -154,33 +154,6 @@
 		"rename": "Rename",
 		"delete": "Delete"
 	},
-	"dialog-credential-create": {
-		"title": "Add credential",
-		"description": "Add credentials for a model provider.",
-		"selectType": "Provider",
-		"selectTypePlaceholder": "Select a provider"
-	},
-	"dialog-credential-edit": {
-		"title": "Edit Credential",
-		"description": "Update the saved credential for this provider."
-	},
-	"credential": {
-		"addConfig": "Add configuration",
-		"noProviders": "No providers available",
-		"noConfigs": "No configurations",
-		"selectHint": "No credential selected",
-		"selectHintDescription": "Select a credential from the sidebar to view its details.",
-		"availableModels": "Available Models",
-		"noModels": "No models available",
-		"noModelsDescription": "This provider returned no models.",
-		"deleteEntity": "credential",
-		"subtitle": "Model API credential configuration",
-		"reasoning": "Reasoning",
-		"maxContext": "Max. Context",
-		"maxOutput": "Max. Output",
-		"inputTypes": "Input",
-		"outputTypes": "Output"
-	},
 	"llm-select": {
 		"placeholder": "Select a model",
 		"fallbackPlaceholder": "Fallback model",
@@ -190,7 +163,6 @@
 			"description": "Add a credential to get started.",
 			"addButton": "Add credential"
 		},
-		"addCredential": "Add Credential",
 		"clear": "Clear selection",
 		"noFallback": "No fallback"
 	},
@@ -274,7 +246,8 @@
 		"thursday": "Thu",
 		"today": "Today",
 		"tuesday": "Tue",
-		"wednesday": "Wed"
+		"wednesday": "Wed",
+		"noDefaultModel": "No default model configured"
 	},
 	"model-parameters": {
 		"title": "Model Parameters",
