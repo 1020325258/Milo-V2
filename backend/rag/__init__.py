@@ -7,8 +7,6 @@ supporting multiple backend implementations (e.g., ke-rag, local ES).
 from .models import KnowledgeChunk, RetrievalConfig
 from .retriever import KnowledgeRetriever
 from .registry import get_retriever, register_retriever
-from .prompts import format_rag_context
-from .middleware import RagMiddleware
 
 __all__ = [
     "KnowledgeChunk",
@@ -16,6 +14,4 @@ __all__ = [
     "KnowledgeRetriever",
     "get_retriever",
     "register_retriever",
-    "format_rag_context",
-    "RagMiddleware",
 ]
