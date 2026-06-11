@@ -24,7 +24,6 @@ from agentscope.app.workspace_manager import LocalWorkspaceManager
 from rag import register_retriever
 from rag.ke_rag_retriever import KeRagRetriever
 from rag.tools import KnowledgeSearchTool
-from rag.middleware import RagMiddleware
 from rag.api import router as rag_router
 
 # Configure logging
@@ -65,15 +64,6 @@ async def _create_agent_tools(user_id: str, agent_id: str, session_id: str):
     ]
 
 
-async def _create_agent_middlewares(user_id: str, agent_id: str, session_id: str):
-    """Factory function to create extra middlewares for agents.
-
-    This function is called by AgentScope for each agent invocation.
-    It returns the RAG middleware for injecting citation instructions.
-    """
-    return [RagMiddleware()]
-
-
 app = create_app(
     RedisStorage(
         host=REDIS_HOST,
@@ -98,7 +88,6 @@ app = create_app(
         ),
     ],
     extra_agent_tools=_create_agent_tools,
-    extra_agent_middlewares=_create_agent_middlewares,
 )
 
 # Register RAG API router
