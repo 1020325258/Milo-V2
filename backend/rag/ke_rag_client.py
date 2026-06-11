@@ -104,6 +104,9 @@ class KeRagClient:
 
             # Parse results (API returns "docs" not "results")
             results = data.get("data", {}).get("docs", [])
+            logger.info(f"Ke-RAG returned {len(results)} docs")
+            for i, doc in enumerate(results[:5]):
+                logger.info(f"  Doc {i}: {doc.get('annotation', {}).get('file_name', 'unknown')} - {doc.get('text', '')[:100]}...")
             return self._parse_results(results)
 
         except httpx.TimeoutException:

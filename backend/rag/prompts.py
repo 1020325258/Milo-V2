@@ -50,18 +50,12 @@ def format_rag_context(chunks: list) -> str:
         return ""
 
     chunks_data = []
-    seen_files = set()
-
     for chunk in chunks:
-        # 为每个文件生成唯一标识
-        file_key = chunk.file_name
-        if file_key not in seen_files:
-            seen_files.add(file_key)
-            chunks_data.append({
-                "file_name": chunk.file_name,
-                "file_id": chunk.file_id,
-                "content": chunk.content[:800],
-            })
+        chunks_data.append({
+            "file_name": chunk.file_name,
+            "file_id": chunk.file_id,
+            "content": chunk.content[:800],
+        })
 
     import json
     chunks_json = json.dumps(chunks_data, ensure_ascii=False, indent=2)
