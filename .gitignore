@@ -35,3 +35,7 @@ __pycache__/
 # Workspace
 backend/workspaces/
 .gstack/
+
+# Python virtual environment
+backend/venv/
+.venv/

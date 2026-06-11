@@ -13,10 +13,22 @@
 docker-compose up -d
 
 # 启动后端 (端口 8001)
-cd backend && python main.py
+cd backend
+source venv/bin/activate  # 激活虚拟环境
+python main.py
 
 # 启动前端 (端口 5175)
 cd frontend && npm run dev
+```
+
+### 首次配置
+
+```bash
+# 创建后端虚拟环境并安装依赖
+cd backend
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
 ```
 
 ## 技术栈
