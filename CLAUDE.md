@@ -8,18 +8,47 @@
 
 ## 启动方式
 
+### 前置条件
+
+确保已安装：
+- Docker（用于 Redis）
+- Python 3.11+
+- Node.js 18+
+
+### 启动步骤
+
 ```bash
-# 启动 Redis
+# 1. 启动 Redis
 docker-compose up -d
 
-# 启动后端 (端口 8001)
+# 2. 启动后端 (端口 8001)
 cd backend
-source venv/bin/activate  # 激活虚拟环境
+source venv/bin/activate  # 激活虚拟环境（必须）
 python main.py
 
-# 启动前端 (端口 5175)
+# 3. 启动前端 (端口 5175)
 cd frontend && npm run dev
 ```
+
+### 访问地址
+
+- 前端界面: http://localhost:5175
+- 后端 API: http://localhost:8001
+
+### 关于 `source venv/bin/activate`
+
+激活 Python 虚拟环境，确保：
+- 使用项目专属的 Python 解释器（venv/bin/python3）
+- 只能访问 venv 中安装的包（如 agentscope）
+- 隔离系统 Python 环境，避免依赖冲突
+
+验证是否激活成功：
+```bash
+which python3
+# 应显示: /Users/zqy/work/AI-Project/milo-v2/backend/venv/bin/python3
+```
+
+退出虚拟环境：`deactivate`
 
 ### 首次配置
 
@@ -30,6 +59,17 @@ python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
 ```
+
+### PyCharm 配置
+
+如果使用 PyCharm，需要配置 Python 解释器：
+
+1. 打开 PyCharm → `Preferences` → `Project: milo-v2` → `Python Interpreter`
+2. 点击右上角齿轮图标 → `Add Interpreter` → `Existing`
+3. 输入路径：`/Users/zqy/work/AI-Project/milo-v2/backend/venv/bin/python3`
+4. 点击 `OK`
+
+> **注意**：不要使用系统 Python（如 `/usr/local/bin/python3`），否则 IDE 跳转会指向本地源码而非 venv 中的依赖包。
 
 ## 技术栈
 
