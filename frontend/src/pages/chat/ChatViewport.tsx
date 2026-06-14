@@ -72,7 +72,7 @@ export function ChatViewport({ agentId, sessionId, onTeamUpdated }: ChatViewport
 		// TODO: handle permission_context updates when permission UI is built
 	}, []);
 
-	const { msgs, streaming, send, onUserConfirm } = useMessages(agentId, sessionId, {
+	const { msgs, streaming, connected, send, onUserConfirm } = useMessages(agentId, sessionId, {
 		onTeamUpdated: handleTeamUpdated,
 		onStateUpdated: handleStateUpdated,
 	});
@@ -132,6 +132,7 @@ export function ChatViewport({ agentId, sessionId, onTeamUpdated }: ChatViewport
 							msgs={msgs}
 							sending={streaming}
 							disabled={!sessionId}
+							connected={connected}
 							allowedInputTypes={['text', 'image', 'file']}
 							onSend={send}
 							onUserConfirm={onUserConfirm}

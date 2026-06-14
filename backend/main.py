@@ -166,6 +166,10 @@ app = create_app(
     RedisMessageBus(
         host=REDIS_HOST,
         port=REDIS_PORT,
+        # SSE endpoints use pubsub.listen() which blocks on the Redis
+        # connection. The default socket_timeout (5s) closes the
+        # connection before any SSE heartbeat (30s) can arrive.
+        socket_timeout=300,
     ),
     workspace_manager=LocalWorkspaceManager(
         basedir=os.path.join(
@@ -208,4 +212,8 @@ if __name__ == "__main__":
         host="0.0.0.0",
         port=8001,
         reload=True,
+        # SSE (Server-Sent Events) connections need long-lived HTTP
+        # connections. The default timeout_keep_alive (5s) closes idle
+        # connections before the 30s backend heartbeat arrives.
+        timeout_keep_alive=300,
     )

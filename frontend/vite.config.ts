@@ -26,6 +26,7 @@ export default defineConfig({
 			'/workspace': 'http://localhost:8001',
 			'/schedule': 'http://localhost:8001',
 			'/rag': 'http://localhost:8001',
+			'/credential': 'http://localhost:8001',
 		},
 	},
 	resolve: {

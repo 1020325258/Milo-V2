@@ -11,6 +11,7 @@ interface ChatContentProps {
 	msgs: Msg[];
 	sending: boolean;
 	disabled: boolean;
+	connected?: boolean;
 	onSend: (content: ContentBlock[]) => void;
 	onUserConfirm: (
 		toolCall: ToolCallBlock,
@@ -30,6 +31,7 @@ const ChatContentComponent: React.FC<ChatContentProps> = ({
 	msgs,
 	sending,
 	disabled,
+	connected,
 	onSend,
 	onUserConfirm,
 	autoComplete,
@@ -82,6 +84,11 @@ const ChatContentComponent: React.FC<ChatContentProps> = ({
 
 	return (
 		<div className={cn('flex flex-col h-full w-full items-center p-2 gap-4', className)}>
+			{connected === false && (
+				<div className="w-full max-w-full px-4 py-2 bg-yellow-500/10 border border-yellow-500/20 rounded-lg text-yellow-600 text-sm">
+					连接已断开，正在尝试重新连接...
+				</div>
+			)}
 			<div
 				ref={scrollAreaRef}
 				className="flex-1 w-full max-w-full overflow-auto no-scrollbar overflow-x-hidden"

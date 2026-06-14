@@ -64,6 +64,7 @@ export function useMessages(
 	const [loading, setLoading] = useState(false);
 	const [streaming, setStreaming] = useState(false);
 	const [error, setError] = useState<Error | null>(null);
+	const [connected, setConnected] = useState(false);
 
 	const msgsRef = useRef<Msg[]>([]);
 	const currentReplyRef = useRef<Msg | null>(null);
@@ -132,6 +133,7 @@ export function useMessages(
 		setMsgs([]);
 		setError(null);
 		setStreaming(false);
+		setConnected(false);
 
 		if (!agentId || !sessionId) return;
 
@@ -154,25 +156,50 @@ export function useMessages(
 				if (!cancelled) setLoading(false);
 			}
 
-			// 2. Open SSE long connection for live events
-			try {
-				for await (const event of sessionApi.streamEvents(
-					sessionId,
-					agentId,
-					controller.signal,
-				)) {
-					if (cancelled) break;
-					processEvent(event);
-				}
-			} catch (e) {
-				if ((e as Error).name !== 'AbortError' && !cancelled) {
+			// 2. Open SSE long connection for live events with reconnect
+			let retryDelay = 1000; // Start with 1 second
+			const maxRetryDelay = 30000; // Max 30 seconds
+			const retryMultiplier = 2; // Exponential backoff
+
+			while (!cancelled) {
+				try {
+					setConnected(true);
+					setError(null);
+					for await (const event of sessionApi.streamEvents(
+						sessionId,
+						agentId,
+						controller.signal,
+					)) {
+						if (cancelled) break;
+						processEvent(event);
+						// Reset retry delay on successful event
+						retryDelay = 1000;
+					}
+					// If we get here, the stream ended normally
+					if (!cancelled) {
+						// Stream ended unexpectedly, try to reconnect
+						console.log('SSE stream ended, reconnecting...');
+						setConnected(false);
+						await new Promise((resolve) => setTimeout(resolve, retryDelay));
+						retryDelay = Math.min(retryDelay * retryMultiplier, maxRetryDelay);
+					}
+				} catch (e) {
+					if ((e as Error).name === 'AbortError' || cancelled) {
+						break;
+					}
+					console.error('SSE connection error, reconnecting...', e);
+					setConnected(false);
 					setError(e as Error);
+					// Wait before retrying
+					await new Promise((resolve) => setTimeout(resolve, retryDelay));
+					retryDelay = Math.min(retryDelay * retryMultiplier, maxRetryDelay);
 				}
 			}
 		})();
 
 		return () => {
 			cancelled = true;
+			setConnected(false);
 			controller.abort();
 			abortRef.current = null;
 		};
@@ -257,5 +284,5 @@ export function useMessages(
 		abortRef.current?.abort();
 	}, []);
 
-	return { msgs, loading, streaming, error, send, onUserConfirm, abort };
+	return { msgs, loading, streaming, error, connected, send, onUserConfirm, abort };
 }
