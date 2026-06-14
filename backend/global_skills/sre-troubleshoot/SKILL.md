@@ -1,18 +1,20 @@
 ---
 name: sre-troubleshoot
 description: SRE 值班排查 - 基于工单问题排查生产环境合同相关问题
-triggers:
-  - 合同
-  - 签约
-  - 工单
-  - 排查
-  - 故障
-  - 状态异常
-  - 失败
-  - 报错
 ---
 
 # SRE 值班排查
+
+## 前置准备（必须执行）
+
+**在进行任何排查之前，必须先加载数据字典技能**：
+
+调用 `Skill(skill="contract-data-dictionary")` 获取合同域数据字典。数据字典包含：
+- 所有合同类型（type）的枚举映射（如 type=12 表示授权协议书）
+- 合同状态（status）、角色类型（roleType）、签署状态（isSign）等字段含义
+- contract_node、contract_log、contract_field 等表的字段解读规则
+
+**没有数据字典，你无法正确解读 sre_query 返回的数据。**
 
 ## 使用场景
 

@@ -42,6 +42,8 @@ class SreQueryTool(ToolBase):
         "配置快照、城市公司配置、操作日志、字段配置、协议配置、维度组合。"
         "还支持解密身份证号、手机号等敏感信息。"
         "当需要排查生产环境合同相关问题时使用此工具。"
+        "注意：返回数据中的枚举字段（如 type、status、roleType、isSign、nodeType 等）"
+        "的含义请参考 contract-data-dictionary 技能中的数据字典。"
     )
     input_schema = {
         "type": "object",
@@ -135,6 +137,74 @@ class SreQueryTool(ToolBase):
     }
     is_concurrency_safe = True
     is_read_only = True
+
+    # ── 字段含义映射 ──────────────────────────────────────────────
+    # key = "action.field" 或 "field"（通用兜底）
+    # value = (中文含义, 枚举类型名或None)
+    _FIELD_MEANINGS: Dict[str, tuple] = {
+        # ── 通用字段 ──
+        "contractCode": ("合同编号", None),
+        "delStatus": ("删除标记", None),
+        "ctime": ("创建时间", None),
+        "mtime": ("更新时间", None),
+        # ── contract ──
+        "contract.contractNo": ("合同编号", None),
+        "contract.businessType": ("业务类型", "BusinessTypeEnum"),
+        "contract.projectOrderId": ("订单号", None),
+        "contract.type": ("合同类型", "ContractTypeEnum"),
+        "contract.status": ("合同状态", "ContractStatusEnum"),
+        "contract.pdfGenerationMode": ("PDF生成模式", "PdfGenerationModeEnum"),
+        "contract.userQueryStatus": ("用户可见性", None),
+        "contract.userConfirmStatus": ("用户确认状态", None),
+        "contract.userSignStatus": ("用户签署状态", None),
+        "contract.signChannelType": ("签署方式", "SignChannelTypeEnum"),
+        "contract.userSignType": ("用户签署方式", "UserSignTypeEnum"),
+        "contract.auditType": ("审核类型", "AuditTypeEnum"),
+        "contract.amount": ("合同金额", None),
+        "contract.relateContractCode": ("关联合同编号", None),
+        "contract.platformInstanceId": ("协议平台实例ID", None),
+        "contract.errorMessage": ("发起失败信息", None),
+        # ── contract_user ──
+        "contract_user.roleType": ("用户角色", "RoleTypeEnum"),
+        "contract_user.name": ("姓名", None),
+        "contract_user.phone": ("手机号(加密)", None),
+        "contract_user.isSign": ("是否为签约人", "IsSignEnum"),
+        "contract_user.isAuth": ("是否已认证", None),
+        "contract_user.certificateType": ("证件类型", "CertificateTypeEnum"),
+        "contract_user.certificateNo": ("证件号码(加密)", None),
+        # ── contract_node ──
+        "contract_node.nodeType": ("节点类型", "NodeTypeEnum"),
+        "contract_node.fireTime": ("发生时间戳", None),
+        # ── contract_log ──
+        "contract_log.type": ("操作类型", "LogTypeEnum"),
+        "contract_log.content": ("日志内容", None),
+        "contract_log.remark": ("备注", None),
+        # ── contract_field ──
+        "contract_field.fieldKey": ("字段名称", None),
+        "contract_field.fieldValue": ("字段值", None),
+        # ── contract_quotation ──
+        "contract_quotation.billCode": ("关联单据编号", None),
+        "contract_quotation.bindType": ("绑定类型", "BindTypeEnum"),
+        "contract_quotation.status": ("关联状态", None),
+        # ── city_company_info ──
+        "city_company_info.businessType": ("业务类型", "BusinessTypeEnum"),
+        "city_company_info.contractType": ("合同类型", "ContractTypeEnum"),
+        "city_company_info.signChannelType": ("签署方式", "SignChannelTypeEnum"),
+        "city_company_info.auditType": ("审核类型", "AuditTypeEnum"),
+        "city_company_info.processMode": ("流程模式", None),
+        "city_company_info.formId": ("版式ID", None),
+        "city_company_info.version": ("版本号", None),
+    }
+
+    def _get_meaning(self, action: str, field_name: str) -> tuple:
+        """查询字段含义，返回 (含义, 枚举类型名) 或 None。
+
+        优先匹配 "action.field"，未命中则匹配 "field"（通用兜底）。
+        """
+        return (
+            self._FIELD_MEANINGS.get(f"{action}.{field_name}")
+            or self._FIELD_MEANINGS.get(field_name)
+        )
 
     def __init__(self, client: SreQueryClient):
         """初始化 SRE 查询工具。
@@ -377,27 +447,27 @@ class SreQueryTool(ToolBase):
         if action == "decrypt":
             return self._format_decrypt(data)
         elif action == "contract":
-            return self._format_contract(data)
+            return self._format_contract(action, data)
         elif action == "contract_node":
-            return self._format_contract_node(data)
+            return self._format_contract_node(action, data)
         elif action == "contract_user":
-            return self._format_contract_user(data)
+            return self._format_contract_user(action, data)
         elif action == "contract_field":
-            return self._format_contract_field(data)
+            return self._format_contract_field(action, data)
         elif action == "contract_quotation":
-            return self._format_contract_quotation(data)
+            return self._format_contract_quotation(action, data)
         elif action == "config_snap":
-            return self._format_config_snap(data)
+            return self._format_config_snap(action, data)
         elif action == "city_company_info":
-            return self._format_city_company_info(data)
+            return self._format_city_company_info(action, data)
         elif action == "contract_log":
-            return self._format_contract_log(data)
+            return self._format_contract_log(action, data)
         elif action == "field_config":
-            return self._format_field_config(data)
+            return self._format_field_config(action, data)
         elif action == "protocol_config":
-            return self._format_protocol_config(data)
+            return self._format_protocol_config(action, data)
         elif action == "dim_combos":
-            return self._format_dim_combos(data)
+            return self._format_dim_combos(action, data)
         else:
             return self._format_generic(data)
 
@@ -409,100 +479,109 @@ class SreQueryTool(ToolBase):
             content=[TextBlock(id="sre_result", text=f"## 解密结果\n\n{data}")]
         )
 
-    def _format_contract(self, data: Any) -> ToolChunk:
+    def _format_contract(self, action: str, data: Any) -> ToolChunk:
         """格式化合同信息。"""
         if isinstance(data, list):
-            return self._format_list(data, "合同列表")
-        return self._format_object(data, "合同信息")
+            return self._format_list(action, data, "合同列表")
+        return self._format_object(action, data, "合同信息")
 
-    def _format_contract_node(self, data: Any) -> ToolChunk:
+    def _format_contract_node(self, action: str, data: Any) -> ToolChunk:
         """格式化合同节点。"""
         if isinstance(data, list):
-            return self._format_list(data, "合同节点")
-        return self._format_object(data, "合同节点")
+            return self._format_list(action, data, "合同节点")
+        return self._format_object(action, data, "合同节点")
 
-    def _format_contract_user(self, data: Any) -> ToolChunk:
+    def _format_contract_user(self, action: str, data: Any) -> ToolChunk:
         """格式化签约人。"""
         if isinstance(data, list):
-            return self._format_list(data, "签约人")
-        return self._format_object(data, "签约人")
+            return self._format_list(action, data, "签约人")
+        return self._format_object(action, data, "签约人")
 
-    def _format_contract_field(self, data: Any) -> ToolChunk:
+    def _format_contract_field(self, action: str, data: Any) -> ToolChunk:
         """格式化合同扩展字段。"""
         if isinstance(data, dict):
             lines = ["## 合同扩展字段\n"]
-            lines.append("| 字段 | 值 |")
-            lines.append("|------|-----|")
+            lines.append("| 字段 | 值 | 含义 |")
+            lines.append("|------|-----|------|")
             for key, value in data.items():
-                lines.append(f"| {key} | {value} |")
+                meaning = self._get_meaning(action, key)
+                col3 = meaning[0] if meaning else "-"
+                lines.append(f"| {key} | {value} | {col3} |")
             return ToolChunk(
                 content=[TextBlock(id="sre_result", text="\n".join(lines))]
             )
         return self._format_generic(data)
 
-    def _format_contract_quotation(self, data: Any) -> ToolChunk:
+    def _format_contract_quotation(self, action: str, data: Any) -> ToolChunk:
         """格式化签约单据。"""
         if isinstance(data, list):
-            return self._format_list(data, "签约单据")
-        return self._format_object(data, "签约单据")
+            return self._format_list(action, data, "签约单据")
+        return self._format_object(action, data, "签约单据")
 
-    def _format_config_snap(self, data: Any) -> ToolChunk:
+    def _format_config_snap(self, action: str, data: Any) -> ToolChunk:
         """格式化配置快照。"""
-        return self._format_object(data, "配置快照")
+        return self._format_object(action, data, "配置快照")
 
-    def _format_city_company_info(self, data: Any) -> ToolChunk:
+    def _format_city_company_info(self, action: str, data: Any) -> ToolChunk:
         """格式化城市公司配置。"""
         if isinstance(data, list):
-            return self._format_list(data, "城市公司配置")
-        return self._format_object(data, "城市公司配置")
+            return self._format_list(action, data, "城市公司配置")
+        return self._format_object(action, data, "城市公司配置")
 
-    def _format_contract_log(self, data: Any) -> ToolChunk:
+    def _format_contract_log(self, action: str, data: Any) -> ToolChunk:
         """格式化合同操作日志。"""
         if isinstance(data, list):
-            return self._format_list(data, "合同操作日志")
-        return self._format_object(data, "合同操作日志")
+            return self._format_list(action, data, "合同操作日志")
+        return self._format_object(action, data, "合同操作日志")
 
-    def _format_field_config(self, data: Any) -> ToolChunk:
+    def _format_field_config(self, action: str, data: Any) -> ToolChunk:
         """格式化字段配置。"""
         if isinstance(data, dict) and "list" in data:
-            return self._format_list(data["list"], "字段配置")
+            return self._format_list(action, data["list"], "字段配置")
         if isinstance(data, list):
-            return self._format_list(data, "字段配置")
-        return self._format_object(data, "字段配置")
+            return self._format_list(action, data, "字段配置")
+        return self._format_object(action, data, "字段配置")
 
-    def _format_protocol_config(self, data: Any) -> ToolChunk:
+    def _format_protocol_config(self, action: str, data: Any) -> ToolChunk:
         """格式化协议配置。"""
         if isinstance(data, list):
-            return self._format_list(data, "协议配置")
-        return self._format_object(data, "协议配置")
+            return self._format_list(action, data, "协议配置")
+        return self._format_object(action, data, "协议配置")
 
-    def _format_dim_combos(self, data: Any) -> ToolChunk:
+    def _format_dim_combos(self, action: str, data: Any) -> ToolChunk:
         """格式化维度组合。"""
         if isinstance(data, list):
-            return self._format_list(data, "维度组合")
-        return self._format_object(data, "维度组合")
+            return self._format_list(action, data, "维度组合")
+        return self._format_object(action, data, "维度组合")
 
-    def _format_object(self, obj: Dict[str, Any], title: str) -> ToolChunk:
-        """格式化单个对象为 Markdown 表格。"""
+    def _format_object(self, action: str, obj: Dict[str, Any], title: str) -> ToolChunk:
+        """格式化单个对象为 Markdown 表格，含字段含义列。"""
         if not isinstance(obj, dict):
             return self._format_generic(obj)
 
         lines = [f"## {title}\n"]
-        lines.append("| 字段 | 值 |")
-        lines.append("|------|-----|")
+        lines.append("| 字段 | 值 | 含义 |")
+        lines.append("|------|-----|------|")
         for key, value in obj.items():
             # 截断过长的值
             str_value = str(value)
             if len(str_value) > 200:
                 str_value = str_value[:200] + "..."
-            lines.append(f"| {key} | {str_value} |")
+            # 查字段含义
+            meaning = self._get_meaning(action, key)
+            if meaning:
+                desc, enum_name = meaning
+                col3 = f"{desc} (见 {enum_name})" if enum_name else desc
+            else:
+                col3 = "-"
+            lines.append(f"| {key} | {str_value} | {col3} |")
 
         return ToolChunk(
             content=[TextBlock(id="sre_result", text="\n".join(lines))]
         )
 
-    def _format_list(self, items: list, title: str) -> ToolChunk:
-        """格式化列表为 Markdown 表格。"""
+    def _format_list(self, action: str, items: list, title: str) -> ToolChunk:
+        """格式化列表为 Markdown 表格，含字段含义行。"""
         if not items:
             return self._info_response(f"{title}为空")
 
@@ -512,6 +591,17 @@ class SreQueryTool(ToolBase):
             lines = [f"## {title}\n"]
             lines.append(f"| {' | '.join(keys)} |")
             lines.append(f"| {' | '.join(['---'] * len(keys))} |")
+            # 含义行
+            meanings = []
+            for key in keys:
+                meaning = self._get_meaning(action, key)
+                if meaning:
+                    desc, enum_name = meaning
+                    cell = f"{desc}(见 {enum_name})" if enum_name else desc
+                else:
+                    cell = ""
+                meanings.append(cell)
+            lines.append(f"| {' | '.join(meanings)} |")
 
             for item in items:
                 values = []
