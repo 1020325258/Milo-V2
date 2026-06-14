@@ -24,6 +24,8 @@ from agentscope.mcp import MCPClient, StdioMCPConfig, HttpMCPConfig
 
 from apollo.client import ApolloClient
 from apollo.tools import ApolloQueryTool
+from sre.client import SreQueryClient
+from sre.tools import SreQueryTool
 from rag import register_retriever
 from rag.ke_rag_retriever import KeRagRetriever
 from rag.tools import KnowledgeSearchTool
@@ -46,6 +48,10 @@ APOLLO_DEFAULT_ENV = os.getenv("APOLLO_DEFAULT_ENV", "PROD")
 APOLLO_DEFAULT_APP_ID = os.getenv("APOLLO_DEFAULT_APP_ID", "utopia-nrs-sales-project")
 APOLLO_DEFAULT_CLUSTER = os.getenv("APOLLO_DEFAULT_CLUSTER", "default")
 APOLLO_DEFAULT_NAMESPACE = os.getenv("APOLLO_DEFAULT_NAMESPACE", "application")
+
+# SRE configuration
+SRE_BASE_URL = os.getenv("SRE_BASE_URL", "http://preview.i.nrs-sales-project.home.ke.com")
+SRE_APP = os.getenv("SRE_APP", "sreAgent")
 
 # Ke-RAG configuration
 KE_RAG_SPACE_ID = os.getenv("KE_RAG_SPACE_ID", "be5fb25a-7ce8-4268-a7ac-cc90010bf976")
@@ -118,6 +124,12 @@ _apollo_client = ApolloClient(
     token=APOLLO_TOKEN,
 )
 
+# SRE 客户端（全局复用）
+_sre_client = SreQueryClient(
+    base_url=SRE_BASE_URL,
+    app=SRE_APP,
+)
+
 
 async def _create_agent_tools(user_id: str, agent_id: str, session_id: str):
     """Factory function to create extra tools for agents.
@@ -139,6 +151,9 @@ async def _create_agent_tools(user_id: str, agent_id: str, session_id: str):
             default_app_id=APOLLO_DEFAULT_APP_ID,
             default_cluster=APOLLO_DEFAULT_CLUSTER,
             default_namespace=APOLLO_DEFAULT_NAMESPACE,
+        ),
+        SreQueryTool(
+            client=_sre_client,
         ),
     ]
 
