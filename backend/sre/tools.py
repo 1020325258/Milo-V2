@@ -75,7 +75,9 @@ class SreQueryTool(ToolBase):
                     "- config_snap: 查询配置快照\n"
                     "- city_company_info: 查询城市公司配置\n"
                     "- contract_log: 查询合同操作日志\n"
-                    "- field_config: 查询字段配置\n"
+                    "- field_config: 查询字段配置（5维度：business_type/gb_code/company_code/contract_type/version）\n"
+                    "  被窝场景: gb_code=110000, company_code='V201601528', version=1(被窝2.5)\n"
+                    "  圣都场景: gb_code=0, company_code='', version=1(2.0)/2(2.5)/3(2.5预报价)\n"
                     "- protocol_config: 查询协议配置\n"
                     "- dim_combos: 查询维度组合"
                 ),
@@ -102,23 +104,40 @@ class SreQueryTool(ToolBase):
             },
             "business_type": {
                 "type": "integer",
-                "description": "业务类型，city_company_info/field_config/dim_combos 时使用",
+                "description": (
+                    "业务类型。field_config/city_company_info 必填，dim_combos 可选。"
+                    "枚举值：1=整装, 2=团装, 3=局装, 4=翻新全案"
+                ),
             },
             "gb_code": {
                 "type": "integer",
-                "description": "城市code，city_company_info/field_config/dim_combos 时使用",
+                "description": (
+                    "城市code。field_config/city_company_info 必填，dim_combos 可选。"
+                    "被窝场景使用 110000，圣都场景使用 0（兜底配置）"
+                ),
             },
             "company_code": {
                 "type": "string",
-                "description": "分公司code，city_company_info/field_config/dim_combos 时使用",
+                "description": (
+                    "分公司code。field_config/city_company_info 必填，dim_combos 可选。"
+                    "被窝场景使用 'V201601528'，圣都场景使用 ''（空字符串，兜底配置）。"
+                    "注意：圣都的空字符串 '' 是有效值，必须显式传入"
+                ),
             },
             "version": {
                 "type": "integer",
-                "description": "版本号，city_company_info/field_config/dim_combos 时使用",
+                "description": (
+                    "版本号。field_config/city_company_info 必填，dim_combos 可选。"
+                    "圣都场景：1=圣都2.0, 2=圣都2.5, 3=圣都2.5开启预报价；"
+                    "被窝场景：只有 version=1，表示被窝2.5"
+                ),
             },
             "contract_type": {
                 "type": "integer",
-                "description": "合同类型，city_company_info/field_config/dim_combos 时使用",
+                "description": (
+                    "合同类型。field_config/city_company_info 必填，dim_combos 可选。"
+                    "见 ContractTypeEnum（如 1=认购合同, 2=设计合同, 3=正式套餐合同等）"
+                ),
             },
             "form_id": {
                 "type": "integer",
@@ -126,11 +145,18 @@ class SreQueryTool(ToolBase):
             },
             "page_num": {
                 "type": "integer",
-                "description": "页码（默认1），field_config 时使用",
+                "description": (
+                    "页码（默认1），field_config 时使用。"
+                    "字段配置数据量大时需要分页查询，"
+                    "返回结果会提示是否有下一页及下一页页码"
+                ),
             },
             "page_size": {
                 "type": "integer",
-                "description": "每页大小（默认50），field_config 时使用",
+                "description": (
+                    "每页大小（默认50，最大取决于服务端限制），field_config 时使用。"
+                    "建议使用默认值50，数据量大时可通过 page_num 翻页"
+                ),
             },
         },
         "required": ["action"],
@@ -194,6 +220,29 @@ class SreQueryTool(ToolBase):
         "city_company_info.processMode": ("流程模式", None),
         "city_company_info.formId": ("版式ID", None),
         "city_company_info.version": ("版本号", None),
+        # ── field_config ──
+        "field_config.businessType": ("业务类型", "BusinessTypeEnum"),
+        "field_config.gbcode": ("城市code（110000=被窝, 0=圣都兜底）", None),
+        "field_config.companyCode": ("分公司code（V201601528=被窝, ''=圣都兜底）", None),
+        "field_config.contractType": ("合同类型", "ContractTypeEnum"),
+        "field_config.version": ("版本号（圣都:1=2.0/2=2.5/3=2.5预报价; 被窝:1=2.5）", None),
+        "field_config.moduleKey": ("字段所属模块", None),
+        "field_config.fieldKey": ("字段key", None),
+        "field_config.fieldName": ("字段名称", None),
+        "field_config.description": ("字段描述", None),
+        "field_config.descriptionBlock": ("块描述", None),
+        "field_config.tips": ("模块问号提示内容", None),
+        "field_config.fieldOrder": ("字段展示顺序", None),
+        "field_config.dictKey": ("字典key", None),
+        "field_config.required": ("是否必填（0=否, 1=是）", None),
+        "field_config.disabled": ("是否只读（0=否, 1=是）", None),
+        "field_config.formTypeH5": ("H5表单类型", None),
+        "field_config.formTypePc": ("PC表单类型", None),
+        "field_config.displayCondition": ("字段展示条件", None),
+        "field_config.event": ("事件类型", None),
+        "field_config.defaultSupportChange": ("默认支持变更条件", None),
+        "field_config.checkCondition": ("字段校验条件", None),
+        "field_config.checkFunction": ("字段校验方法", None),
     }
 
     def _get_meaning(self, action: str, field_name: str) -> tuple:
@@ -235,7 +284,7 @@ class SreQueryTool(ToolBase):
         log_type: int = None,
         business_type: int = None,
         gb_code: int = None,
-        company_code: str = "",
+        company_code: str = None,
         version: int = None,
         contract_type: int = None,
         form_id: int = None,
@@ -280,6 +329,15 @@ class SreQueryTool(ToolBase):
                 encrypted_text, log_type, business_type, gb_code, company_code,
                 version, contract_type, form_id, page_num, page_size,
             )
+
+            # 保存维度上下文（供 field_config 格式化使用）
+            self._dim_context = {
+                "business_type": business_type,
+                "gb_code": gb_code,
+                "company_code": company_code,
+                "version": version,
+                "contract_type": contract_type,
+            }
 
             # 执行查询
             response = await self.client.query(action, params)
@@ -341,11 +399,30 @@ class SreQueryTool(ToolBase):
             if missing:
                 return f"city_company_info 操作需要以下参数: {', '.join(missing)}"
 
+        elif action == "field_config":
+            missing = []
+            if business_type is None:
+                missing.append("business_type（业务类型：1=整装, 2=团装, 3=局装, 4=翻新全案）")
+            if gb_code is None:
+                missing.append("gb_code（城市code：被窝=110000, 圣都=0）")
+            if company_code is None:
+                # 注意：空字符串 "" 是圣都的合法值，只有 None 才算未传
+                missing.append("company_code（分公司code：被窝='V201601528', 圣都=''）")
+            if contract_type is None:
+                missing.append("contract_type（合同类型：见 ContractTypeEnum）")
+            if version is None:
+                missing.append("version（版本号：圣都 1=2.0/2=2.5/3=2.5预报价, 被窝 1=2.5）")
+            if missing:
+                return (
+                    "field_config 操作需要明确全部 5 个维度参数，请向用户确认以下缺失参数：\n"
+                    + "\n".join(f"- {m}" for m in missing)
+                )
+
         elif action == "protocol_config":
             if form_id is None and not platform_instance_id:
                 return "protocol_config 操作需要 form_id 或 platform_instance_id 参数"
 
-        elif action not in ("field_config", "dim_combos"):
+        elif action not in ("dim_combos",):
             return f"未知的操作类型: {action}"
 
         return ""
@@ -395,16 +472,12 @@ class SreQueryTool(ToolBase):
             params["type"] = contract_type
 
         elif action == "field_config":
-            if business_type is not None:
-                params["businessType"] = business_type
-            if gb_code is not None:
-                params["gbcode"] = gb_code
-            if company_code:
-                params["companyCode"] = company_code
-            if contract_type is not None:
-                params["contractType"] = contract_type
-            if version is not None:
-                params["version"] = version
+            # field_config 要求 5 个维度全部明确，验证通过后直接赋值
+            params["businessType"] = business_type
+            params["gbcode"] = gb_code
+            params["companyCode"] = company_code  # 圣都场景为空字符串 ""
+            params["contractType"] = contract_type
+            params["version"] = version
             if page_num is not None:
                 params["pageNum"] = page_num
             if page_size is not None:
@@ -421,8 +494,8 @@ class SreQueryTool(ToolBase):
                 params["businessType"] = business_type
             if gb_code is not None:
                 params["gbcode"] = gb_code
-            if company_code:
-                params["companyCode"] = company_code
+            if company_code is not None:
+                params["companyCode"] = company_code  # 圣都场景为空字符串 ""
             if contract_type is not None:
                 params["contractType"] = contract_type
             if version is not None:
@@ -535,12 +608,152 @@ class SreQueryTool(ToolBase):
         return self._format_object(action, data, "合同操作日志")
 
     def _format_field_config(self, action: str, data: Any) -> ToolChunk:
-        """格式化字段配置。"""
-        if isinstance(data, dict) and "list" in data:
-            return self._format_list(action, data["list"], "字段配置")
-        if isinstance(data, list):
-            return self._format_list(action, data, "字段配置")
-        return self._format_object(action, data, "字段配置")
+        """格式化字段配置，附带维度语义描述和分页信息。"""
+        # 生成维度语义描述
+        dim_ctx = getattr(self, "_dim_context", {})
+        dim_desc = self.describe_field_config_dims(
+            business_type=dim_ctx.get("business_type"),
+            gb_code=dim_ctx.get("gb_code"),
+            company_code=dim_ctx.get("company_code"),
+            version=dim_ctx.get("version"),
+            contract_type=dim_ctx.get("contract_type"),
+        )
+
+        # 处理 OneIdPageInfo 分页结构（data 字段存放列表，不是 list）
+        if isinstance(data, dict) and "data" in data:
+            items = data.get("data") or []
+            result = self._format_list(action, items, "字段配置")
+            # 追加分页摘要信息
+            page_info = self._build_pagination_summary(data)
+            if page_info and result.content:
+                result.content[0].text += f"\n\n{page_info}"
+        elif isinstance(data, list):
+            result = self._format_list(action, data, "字段配置")
+        else:
+            result = self._format_object(action, data, "字段配置")
+
+        # 在结果前面插入维度语义描述
+        dim_header = f"\n> **查询维度**: {dim_desc}\n\n"
+        if result.content:
+            original_text = result.content[0].text
+            result.content[0].text = original_text.replace(
+                "## 字段配置\n",
+                f"## 字段配置\n{dim_header}",
+                1,
+            )
+        return result
+
+    @staticmethod
+    def _build_pagination_summary(data: dict) -> str:
+        """从 OneIdPageInfo 结构中提取分页摘要。"""
+        total = data.get("total", 0)
+        page_num = data.get("pageNum", 1)
+        page_size = data.get("pageSize", 50)
+        pages = data.get("pages", 1)
+        has_next = data.get("hasNextPage", False)
+
+        lines = [
+            "---",
+            f"**分页信息**: 第 {page_num}/{pages} 页 | "
+            f"每页 {page_size} 条 | 共 {total} 条",
+        ]
+        if has_next:
+            next_page = data.get("nextPage", page_num + 1)
+            lines.append(
+                f"💡 还有下一页，使用 `page_num={next_page}` 查询下一页"
+            )
+        else:
+            lines.append("✅ 已是最后一页")
+        return "\n".join(lines)
+
+    # ── 维度语义解读 ──────────────────────────────────────────────
+
+    # 场景维度常量
+    _SCENE_DIMS = {
+        # (gb_code, company_code) -> 场景名称
+        (110000, "V201601528"): "被窝",
+        (0, ""): "圣都（兜底配置）",
+    }
+
+    _BUSINESS_TYPE_NAMES = {
+        1: "整装",
+        2: "团装",
+        3: "局装",
+        4: "翻新全案",
+    }
+
+    _VERSION_NAMES = {
+        # (scene, version) -> 版本名称
+        ("圣都", 1): "圣都2.0",
+        ("圣都", 2): "圣都2.5",
+        ("圣都", 3): "圣都2.5开启预报价",
+        ("被窝", 1): "被窝2.5",
+    }
+
+    def describe_field_config_dims(
+        self,
+        business_type: int = None,
+        gb_code: int = None,
+        company_code: str = None,
+        version: int = None,
+        contract_type: int = None,
+    ) -> str:
+        """根据维度参数生成语义化描述，帮助理解查询条件。
+
+        Args:
+            business_type: 业务类型。
+            gb_code: 城市code。
+            company_code: 分公司code。
+            version: 版本号。
+            contract_type: 合同类型。
+
+        Returns:
+            维度语义描述文本。
+        """
+        parts = []
+
+        # 识别场景
+        scene = None
+        if gb_code is not None and company_code is not None:
+            scene = self._SCENE_DIMS.get((gb_code, company_code))
+            if scene is None:
+                # 尝试不区分 company_code 的精确匹配
+                if gb_code == 110000:
+                    scene = "被窝"
+                elif gb_code == 0:
+                    scene = "圣都"
+
+        # 业务类型
+        if business_type is not None:
+            bt_name = self._BUSINESS_TYPE_NAMES.get(business_type, f"未知({business_type})")
+            parts.append(f"业务类型: {business_type}={bt_name}")
+
+        # 场景 + gb_code + company_code
+        if scene:
+            # 去掉"（兜底配置）"后缀用于 version 查询
+            scene_key = scene.split("（")[0]
+            parts.append(f"场景: {scene} (gbcode={gb_code}, company_code='{company_code}')")
+        else:
+            if gb_code is not None:
+                parts.append(f"城市code: {gb_code}")
+            if company_code is not None:
+                parts.append(f"分公司code: '{company_code}'")
+
+        # 版本号
+        if version is not None and scene:
+            scene_key = scene.split("（")[0]
+            version_name = self._VERSION_NAMES.get(
+                (scene_key, version), f"未知({version})"
+            )
+            parts.append(f"版本: {version}={version_name}")
+        elif version is not None:
+            parts.append(f"版本: {version}")
+
+        # 合同类型
+        if contract_type is not None:
+            parts.append(f"合同类型: {contract_type}")
+
+        return " | ".join(parts) if parts else "未指定维度参数（查询全部配置）"
 
     def _format_protocol_config(self, action: str, data: Any) -> ToolChunk:
         """格式化协议配置。"""

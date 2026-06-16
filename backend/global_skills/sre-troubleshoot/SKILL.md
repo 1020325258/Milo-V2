@@ -118,10 +118,56 @@ sre_query(action="contract_log", contract_code="C001")
 sre_query(action="config_snap", project_order_id="P001")
 ```
 
-**查询字段配置**：
+**查询字段配置**（field_config）：
+
+⚠️ **必须明确全部 5 个维度**：`business_type`、`gb_code`、`company_code`、`contract_type`、`version`。缺少任何一个维度都无法查询，需要向用户确认后再查。
+
+**维度取值规则**：
+
+| 维度 | 说明 | 取值 |
+|------|------|------|
+| business_type | 业务类型 | 1=整装, 2=团装, 3=局装, 4=翻新全案 |
+| gb_code | 城市code | 被窝场景=110000, 圣都场景=0（兜底） |
+| company_code | 分公司code | 被窝场景='V201601528', 圣都场景=''（空字符串，兜底） |
+| contract_type | 合同类型 | 见 ContractTypeEnum（1=认购合同, 2=设计合同, 3=正式套餐合同...） |
+| version | 版本号 | 圣都: 1=圣都2.0, 2=圣都2.5, 3=圣都2.5开启预报价；被窝: 1=被窝2.5 |
+
+**被窝场景查询示例**（整装 + 认购合同）：
 ```
-sre_query(action="field_config", business_type=1, gb_code=100, company_code="C001", contract_type=1, version=1)
+sre_query(action="field_config", business_type=1, gb_code=110000, company_code="V201601528", contract_type=1, version=1)
 ```
+
+**圣都场景查询示例**（整装 + 认购合同 + 圣都2.5）：
+```
+sre_query(action="field_config", business_type=1, gb_code=0, company_code="", contract_type=1, version=2)
+```
+
+**说明**：
+- `gb_code=0, company_code=''` 是圣都的兜底配置，表示所有没有特殊城市/分公司配置的都走此默认值
+- `gb_code=110000, company_code='V201601528'` 是被窝的固定配置
+- 所有维度参数均可省略，省略时不作为过滤条件（查询更广泛的数据）
+- 可使用 `dim_combos` action 查询所有存在的维度组合
+
+**分页查询**：
+
+field_config 返回分页结构，默认每页 50 条。当配置项较多时，需要翻页获取完整数据：
+
+```
+# 第1页（默认）
+sre_query(action="field_config", business_type=1, gb_code=0, company_code="", contract_type=1, version=2)
+
+# 返回结果末尾会显示分页信息，如：
+# **分页信息**: 第 1/3 页 | 每页 50 条 | 共 128 条
+# 💡 还有下一页，使用 page_num=2 查询下一页
+
+# 第2页
+sre_query(action="field_config", business_type=1, gb_code=0, company_code="", contract_type=1, version=2, page_num=2)
+```
+
+**分页策略**：
+- 返回结果末尾的分页信息会告知总条数、总页数、是否有下一页
+- 如果提示"还有下一页"，应继续查询下一页直到"已是最后一页"
+- 如需一次性获取更多数据，可增大 `page_size`（如 `page_size=200`）
 
 **查询协议配置**：
 ```
