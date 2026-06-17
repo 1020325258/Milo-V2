@@ -49,14 +49,20 @@ type ExtendedContentBlock = ContentBlock | ToolCallGroupBlock;
 
 /**
  * Preprocess text to replace citation patterns with custom markers.
- * Converts [filename.ext] to a format that can be rendered by ReactMarkdown.
+ * Converts [filename.ext] or [filename.ext||file_id] to a format
+ * that can be rendered by ReactMarkdown.
  */
 function preprocessCitations(text: string): string {
-	// Replace [filename.ext] patterns with a custom marker
+	// Replace [filename.ext] or [filename.ext||file_id] patterns with a custom marker
 	// This marker will be handled by the custom span component
 	return text.replace(
-		/\[([^\]]+\.(md|pdf|doc|docx|txt))\]/g,
-		'`📄 $1`',
+		/\[([^\]]+\.(md|pdf|doc|docx|txt))(?:\|\|([^\]]+))?\]/g,
+		(match, filename, ext, fileId) => {
+			if (fileId) {
+				return '`📄 ' + filename + '.' + ext + '||' + fileId + '`';
+			}
+			return '`📄 ' + filename + '.' + ext + '`';
+		},
 	);
 }
 
@@ -208,7 +214,11 @@ function renderBlock(
 									const text = String(children);
 									// Check if this is a citation marker (starts with 📄)
 									if (text.startsWith('📄 ')) {
-										const fileName = text.slice(2).trim();
+										const raw = text.slice(2).trim();
+										// Parse file_name and optional file_id (format: file_name||file_id)
+										const parts = raw.split('||');
+										const fileName = parts[0];
+										const fileId = parts[1] || '';
 										return (
 											<button
 												type="button"
@@ -217,7 +227,7 @@ function renderBlock(
 													if (onCitationClick) {
 														onCitationClick({
 															fileName,
-															fileId: '',
+															fileId,
 															title: '',
 															content: '',
 															paths: [],
@@ -264,19 +274,22 @@ function renderBlock(
 							li: ({ children, ...props }) => {
 								// Check if this is a reference list item
 								const text = String(children);
-								if (text.match(/\.(md|pdf|doc|docx|txt)$/i)) {
+								if (text.match(/\.(md|pdf|doc|docx|txt)/i)) {
 									return (
 										<li {...props}>
 											<button
 												type="button"
 												className="text-muted-foreground/70 hover:text-muted-foreground text-xs cursor-pointer transition-colors"
 												onClick={() => {
-													// Extract file name and open modal
-													const fileName = text.trim();
+													// Parse file_name and optional file_id (format: file_name||file_id)
+													const raw = text.trim();
+													const parts = raw.split('||');
+													const fileName = parts[0];
+													const fileId = parts[1] || '';
 													if (onCitationClick) {
 														onCitationClick({
 															fileName,
-															fileId: '',
+															fileId,
 															title: '',
 															content: '',
 															paths: [],

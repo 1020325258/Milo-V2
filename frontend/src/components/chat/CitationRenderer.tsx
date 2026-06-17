@@ -42,14 +42,15 @@ export function parseCitations(text: string): {
 	cleanText: string;
 } {
 	const citations: CitationData[] = [];
-	// Match [filename] pattern (not [来源：xxx] or [chunk-xxx])
-	const citationRegex = /\[([^\]]+\.(md|pdf|doc|docx|txt))\]/g;
+	// Match [filename] or [filename||file_id] pattern (not [来源：xxx] or [chunk-xxx])
+	const citationRegex = /\[([^\]]+\.(md|pdf|doc|docx|txt))(?:\|\|([^\]]+))?\]/g;
 
 	let match: RegExpExecArray | null;
 	// biome-ignore lint/suspicious/noAssignInExpressions: needed for regex parsing
 	while ((match = citationRegex.exec(text)) !== null) {
 		citations.push({
 			fileName: match[1],
+			fileId: match[3] || '',
 			title: '',
 			content: '',
 			paths: [],
@@ -75,16 +76,21 @@ export function parseCitationList(text: string): CitationData[] {
 	if (!refSectionMatch) return citations;
 
 	const refText = refSectionMatch[1];
-	// Match entries like "- filename.md" or "- [filename.md](url)"
+	// Match entries like "- filename.md" or "- [filename.md](url)" or "- filename.md||file_id"
 	const entryRegex = /^-\s+(?:\[([^\]]+)\]\([^\)]+\)|(.+))$/gm;
 
 	let match: RegExpExecArray | null;
 	// biome-ignore lint/suspicious/noAssignInExpressions: needed for regex parsing
 	while ((match = entryRegex.exec(refText)) !== null) {
-		const fileName = (match[1] || match[2]).trim();
-		if (fileName) {
+		const raw = (match[1] || match[2]).trim();
+		if (raw) {
+			// Parse file_name and optional file_id (format: file_name||file_id)
+			const parts = raw.split('||');
+			const fileName = parts[0];
+			const fileId = parts[1] || '';
 			citations.push({
 				fileName,
+				fileId,
 				title: '',
 				content: '',
 				paths: [],

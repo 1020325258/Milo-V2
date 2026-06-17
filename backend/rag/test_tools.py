@@ -111,3 +111,28 @@ def test_format_results(tool):
     assert "Title 1" in result
     assert "Title 2" in result
     assert "..." in result  # Content was truncated
+
+
+def test_format_results_with_file_id(tool):
+    """Test result formatting includes file_id when available."""
+    chunks = [
+        KnowledgeChunk(
+            content="Content 1",
+            file_name="file1.txt",
+            file_id="file-001",
+            title="Title 1",
+        ),
+        KnowledgeChunk(
+            content="Content 2",
+            file_name="file2.txt",
+            file_id="",  # No file_id
+            title="Title 2",
+        ),
+    ]
+
+    result = tool._format_results(chunks)
+
+    # First chunk should have file_id in format: file_name||file_id
+    assert "file1.txt||file-001" in result
+    # Second chunk should only have file_name (no || separator)
+    assert "file2.txt\n" in result  # Ensure no || after file2.txt

@@ -39,68 +39,40 @@ class FileContentResponse(BaseModel):
 
 @router.post("/file-content", response_model=FileContentResponse)
 async def get_file_content(request: FileContentRequest):
-    """Get file content by file_id or file_name.
+    """Get file content by file_id.
 
-    This endpoint queries the ke-rag API to retrieve the full content
-    of a specific file. It supports two modes:
-    1. By file_id: Direct query with file scope
-    2. By file_name: Search in space scope and filter by file name
+    This endpoint calls the Ke-RAG file content API directly
+    to retrieve the full content of a specific file.
 
     Args:
-        request: FileContentRequest with file_id or file_name.
+        request: FileContentRequest with file_id.
 
     Returns:
         FileContentResponse with file content.
     """
+    if not request.file_id:
+        raise HTTPException(
+            status_code=400,
+            detail="file_id is required"
+        )
+
     try:
-        results = []
+        user_id = os.getenv("KE_RAG_USER_ID", "")
+        content = await _ke_rag_client.get_file_content(
+            file_id=request.file_id,
+            user_id=user_id,
+        )
 
-        if request.file_id:
-            # Mode 1: Query by file_id with file scope
-            results = await _ke_rag_client.search(
-                query=request.file_name or "全部内容",
-                space_id=request.file_id,
-                mode="normal",
-                limit=10,
-                user_id=os.getenv("KE_RAG_USER_ID", ""),
-                scope_type="file",
-            )
-        elif request.file_name:
-            # Mode 2: Search by file_name in space scope
-            space_id = os.getenv("KE_RAG_SPACE_ID", "")
-            all_results = await _ke_rag_client.search(
-                query=request.file_name,
-                space_id=space_id,
-                mode="normal",
-                limit=20,
-                user_id=os.getenv("KE_RAG_USER_ID", ""),
-                scope_type="space",
-            )
-            # Filter results by file_name
-            results = [r for r in all_results if r.file_name == request.file_name]
-
-            # If exact match not found, use all results
-            if not results and all_results:
-                results = all_results
-        else:
+        if content is None:
             raise HTTPException(
-                status_code=400,
-                detail="Either file_id or file_name must be provided"
+                status_code=404,
+                detail="File not found or failed to retrieve content"
             )
-
-        if not results:
-            raise HTTPException(status_code=404, detail="File not found or empty")
-
-        # Combine all chunks into full content
-        file_id = results[0].file_id if results else ""
-        file_name = results[0].file_name if results else ""
-        content_parts = [chunk.content for chunk in results]
-        full_content = "\n\n---\n\n".join(content_parts)
 
         return FileContentResponse(
-            file_id=file_id,
-            file_name=file_name,
-            content=full_content,
+            file_id=request.file_id,
+            file_name=request.file_name,
+            content=content,
         )
 
     except HTTPException:

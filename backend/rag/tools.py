@@ -34,7 +34,11 @@ class KnowledgeSearchTool(ToolBase):
     description = (
         "搜索知识库获取相关信息。"
         "当用户问题涉及企业内部知识时使用此工具。"
-        "【重要】使用此工具后，必须在回答中引用来源：在引用信息后标注 [文件名]。"
+        "【强制要求】使用此工具后，必须在回答中引用来源。"
+        "引用格式必须严格为：[文件名||文件ID]"
+        "例如：根据知识库信息 [退款政策.md||file-001] 的说明..."
+        "【重要】文件ID来自搜索结果中的'来源：'字段，格式为 file_name||file_id"
+        "【禁止】不要只写文件名，必须包含||file_id部分"
     )
     input_schema = {
         "type": "object",
@@ -154,7 +158,9 @@ class KnowledgeSearchTool(ToolBase):
             if len(content) > MAX_CONTENT_LENGTH:
                 content = content[:MAX_CONTENT_LENGTH] + "..."
 
-            lines.append(f"{i}. **{title}** | 来源：{chunk.file_name}")
+            # Include file_id in the format for frontend parsing
+            file_ref = f"{chunk.file_name}||{chunk.file_id}" if chunk.file_id else chunk.file_name
+            lines.append(f"{i}. **{title}** | 来源：{file_ref}")
             lines.append(f"   {content}\n")
 
         return "\n".join(lines)

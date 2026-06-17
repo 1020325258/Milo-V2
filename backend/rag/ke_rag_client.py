@@ -47,6 +47,7 @@ class KeRagClient:
                     "Content-Type": "application/json",
                 },
                 timeout=self.timeout,
+                follow_redirects=True,
             )
         return self._client
 
@@ -106,7 +107,11 @@ class KeRagClient:
             results = data.get("data", {}).get("docs", [])
             logger.info(f"Ke-RAG returned {len(results)} docs")
             for i, doc in enumerate(results[:5]):
-                logger.info(f"  Doc {i}: {doc.get('annotation', {}).get('file_name', 'unknown')} - {doc.get('text', '')[:100]}...")
+                annotation = doc.get('annotation', {})
+                file_name = annotation.get('file_name', 'unknown')
+                file_id = annotation.get('file_id', 'empty')
+                text_preview = doc.get('text', '')[:100]
+                logger.info(f"  Doc {i}: file_name={file_name}, file_id={file_id}, text={text_preview}")
             return self._parse_results(results)
 
         except httpx.TimeoutException:
@@ -169,6 +174,66 @@ class KeRagClient:
             chunks.append(chunk)
 
         return chunks
+
+    async def get_file_content(
+        self,
+        file_id: str,
+        user_id: str = "",
+    ) -> Optional[str]:
+        """Get full file content by file_id.
+
+        Args:
+            file_id: The file ID to retrieve content for.
+            user_id: User ID for access control.
+
+        Returns:
+            File content as string, or None if error.
+        """
+        try:
+            client = await self._get_client()
+            headers = {}
+            if user_id:
+                headers["X-NRS-User-Id"] = user_id
+
+            response = await client.get(
+                f"files/{file_id}/content",
+                headers=headers,
+            )
+            response.raise_for_status()
+
+            content_type = response.headers.get("content-type", "")
+
+            # If response is JSON (API wrapper format)
+            if "application/json" in content_type:
+                data = response.json()
+                if data.get("code") != 0:
+                    logger.error(
+                        "Ke-RAG get file content failed: code=%s, message=%s",
+                        data.get("code"),
+                        data.get("message"),
+                    )
+                    return None
+                content = data.get("data", {}).get("content", "")
+            else:
+                # Direct file content (application/octet-stream, text/plain, etc.)
+                content = response.text
+
+            logger.info(f"Ke-RAG returned file content for {file_id}, length={len(content)}")
+            return content
+
+        except httpx.TimeoutException:
+            logger.error("Ke-RAG get file content timeout after %ds", self.timeout)
+            return None
+        except httpx.HTTPStatusError as e:
+            logger.error(
+                "Ke-RAG get file content HTTP error: %s %s",
+                e.response.status_code,
+                e.response.text,
+            )
+            return None
+        except Exception as e:
+            logger.error("Ke-RAG get file content unexpected error: %s", e)
+            return None
 
     async def health_check(self) -> bool:
         """Check if the Ke-RAG service is available.
