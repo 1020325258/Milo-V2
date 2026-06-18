@@ -30,7 +30,7 @@ async def test_tool_call_success(tool):
         ),
     ]
 
-    with patch("backend.rag.tools.get_retriever") as mock_get_retriever:
+    with patch("rag.tools.get_retriever") as mock_get_retriever:
         mock_retriever = AsyncMock()
         mock_retriever.retrieve.return_value = chunks
         mock_get_retriever.return_value = mock_retriever
@@ -45,7 +45,7 @@ async def test_tool_call_success(tool):
 @pytest.mark.asyncio
 async def test_tool_call_no_retriever(tool):
     """Test tool execution when no retriever is configured."""
-    with patch("backend.rag.tools.get_retriever") as mock_get_retriever:
+    with patch("rag.tools.get_retriever") as mock_get_retriever:
         mock_get_retriever.return_value = None
 
         result = await tool(query="test query")
@@ -57,7 +57,7 @@ async def test_tool_call_no_retriever(tool):
 @pytest.mark.asyncio
 async def test_tool_call_empty_results(tool):
     """Test tool execution with no search results."""
-    with patch("backend.rag.tools.get_retriever") as mock_get_retriever:
+    with patch("rag.tools.get_retriever") as mock_get_retriever:
         mock_retriever = AsyncMock()
         mock_retriever.retrieve.return_value = []
         mock_get_retriever.return_value = mock_retriever
@@ -65,13 +65,13 @@ async def test_tool_call_empty_results(tool):
         result = await tool(query="test query")
 
         assert len(result.content) == 1
-        assert "未找到相关知识" in result.content[0].text
+        assert "知识库中未找到相关信息" in result.content[0].text
 
 
 @pytest.mark.asyncio
 async def test_tool_call_error(tool):
     """Test tool execution when search fails."""
-    with patch("backend.rag.tools.get_retriever") as mock_get_retriever:
+    with patch("rag.tools.get_retriever") as mock_get_retriever:
         mock_retriever = AsyncMock()
         mock_retriever.retrieve.side_effect = Exception("Search failed")
         mock_get_retriever.return_value = mock_retriever

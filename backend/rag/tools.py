@@ -32,9 +32,9 @@ class KnowledgeSearchTool(ToolBase):
 
     name = "knowledge_search"
     description = (
-        "搜索知识库获取相关信息。"
-        "当用户问题涉及企业内部知识时使用此工具。"
-        "【强制要求】使用此工具后，必须在回答中引用来源。"
+        "【必须首先调用】搜索知识库获取相关信息。"
+        "回答任何问题前，必须先调用此工具检索知识库，禁止凭记忆回答。"
+        "调用此工具后，必须在回答中引用来源。"
         "引用格式必须严格为：[文件名||文件ID]"
         "例如：根据知识库信息 [退款政策.md||file-001] 的说明..."
         "【重要】文件ID来自搜索结果中的'来源：'字段，格式为 file_name||file_id"
@@ -146,7 +146,7 @@ class KnowledgeSearchTool(ToolBase):
             Formatted Markdown string.
         """
         if not chunks:
-            return "未找到相关知识，请尝试其他关键词或直接回答。"
+            return "知识库中未找到相关信息。请告知用户：抱歉，知识库中未找到与您问题相关的信息，无法提供准确回答。"
 
         lines = [f"找到 {len(chunks)} 条相关知识：\n"]
 
