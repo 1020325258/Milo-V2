@@ -1,0 +1,2595 @@
+[
+  {
+    "ticket_id": "772161018",
+    "title": "创建合同问题",
+    "original_category": "定软电签约 / 线上签约流程咨询",
+    "scenarios": [
+      "合同创建与配置",
+      "客源与渠道管理"
+    ]
+  },
+  {
+    "ticket_id": "772302352",
+    "title": "客户签约手机号变更",
+    "original_category": "整装签约 / 合同内容修改",
+    "scenarios": [
+      "合同变更管理"
+    ]
+  },
+  {
+    "ticket_id": "772312217",
+    "title": "业主端合同签署问题",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "签约工具与小程序"
+    ]
+  },
+  {
+    "ticket_id": "772476844",
+    "title": "无法签约",
+    "original_category": "定软电签约 / 线上签约流程咨询",
+    "scenarios": [
+      "签约工具与小程序"
+    ]
+  },
+  {
+    "ticket_id": "772499530",
+    "title": "合同地址变更",
+    "original_category": "整装签约 / 合同内容修改",
+    "scenarios": [
+      "合同变更管理"
+    ]
+  },
+  {
+    "ticket_id": "772607315",
+    "title": "圣都家装小程序无法签约",
+    "original_category": "定软电签约 / 线上签约流程咨询",
+    "scenarios": [
+      "签约工具与小程序"
+    ]
+  },
+  {
+    "ticket_id": "772611192",
+    "title": "人脸识别问题",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "合同创建与配置"
+    ]
+  },
+  {
+    "ticket_id": "772623388",
+    "title": "审批流程取消",
+    "original_category": "整装签约 / 合同审批",
+    "scenarios": [
+      "合同审批与风控"
+    ]
+  },
+  {
+    "ticket_id": "772647021",
+    "title": "合同装修类型修改",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "合同创建与配置"
+    ]
+  },
+  {
+    "ticket_id": "772781379",
+    "title": "修改签约手机号",
+    "original_category": "整装签约 / 合同内容修改",
+    "scenarios": [
+      "合同变更管理",
+      "签后管理"
+    ]
+  },
+  {
+    "ticket_id": "772809526",
+    "title": "实名认证修改",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "身份认证与登录",
+      "合同签署流程"
+    ]
+  },
+  {
+    "ticket_id": "772846106",
+    "title": "未完成交易无法注销实名",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "身份认证与登录",
+      "线下签约与补录"
+    ]
+  },
+  {
+    "ticket_id": "772865974",
+    "title": "签约咨询",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "合同签署流程",
+      "线下签约与补录"
+    ]
+  },
+  {
+    "ticket_id": "772957214",
+    "title": "合同生成失败解决方法",
+    "original_category": "整装签约 / 合同配置",
+    "scenarios": [
+      "合同创建与配置",
+      "合同类型管理"
+    ]
+  },
+  {
+    "ticket_id": "772965550",
+    "title": "系统修改问题",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "合同变更管理"
+    ]
+  },
+  {
+    "ticket_id": "773091895",
+    "title": "人脸识别认证不一致解决方法",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "身份认证与登录",
+      "合同创建与配置"
+    ]
+  },
+  {
+    "ticket_id": "773160275",
+    "title": "合同签约问题",
+    "original_category": "定软电签约 / 线上签约流程咨询",
+    "scenarios": [
+      "身份认证与登录",
+      "合同签署流程"
+    ]
+  },
+  {
+    "ticket_id": "773181611",
+    "title": "销售合同变更及补充协议签署",
+    "original_category": "定软电签约 / 合同内容修改",
+    "scenarios": [
+      "选品与销售签约",
+      "合同变更管理"
+    ]
+  },
+  {
+    "ticket_id": "773182904",
+    "title": "离爽系统报错及优惠券领取问题",
+    "original_category": "定软电签约 / 合同内容修改",
+    "scenarios": [
+      "签约工具与小程序",
+      "合同签署流程",
+      "优惠券管理"
+    ]
+  },
+  {
+    "ticket_id": "773203612",
+    "title": "合同生成失败",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "合同创建与配置"
+    ]
+  },
+  {
+    "ticket_id": "773325756",
+    "title": "业主登录小程序手机号不一致",
+    "original_category": "定软电签约 / 线上签约流程咨询",
+    "scenarios": [
+      "合同签署流程",
+      "客源与渠道管理"
+    ]
+  },
+  {
+    "ticket_id": "773370363",
+    "title": "客户认证问题",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "合同创建与配置",
+      "合同签署流程",
+      "签后管理"
+    ]
+  },
+  {
+    "ticket_id": "773405240",
+    "title": "合同签署问题",
+    "original_category": "定软电签约 / 线上签约流程咨询",
+    "scenarios": [
+      "合同创建与配置",
+      "身份认证与登录"
+    ]
+  },
+  {
+    "ticket_id": "773604860",
+    "title": "项目变更审核中",
+    "original_category": "整装签约 / 合同审批",
+    "scenarios": [
+      "合同变更管理",
+      "合同审批与风控"
+    ]
+  },
+  {
+    "ticket_id": "773654141",
+    "title": "木作首期款合同客户确认无法签约",
+    "original_category": "定软电签约 / 线上签约流程咨询",
+    "scenarios": [
+      "合同签署流程",
+      "合同创建与配置",
+      "客源与渠道管理"
+    ]
+  },
+  {
+    "ticket_id": "773687291",
+    "title": "合同生成问题",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "合同创建与配置",
+      "合同签署流程"
+    ]
+  },
+  {
+    "ticket_id": "773688673",
+    "title": "主体变更",
+    "original_category": "整装签约 / 合同内容修改",
+    "scenarios": [
+      "合同变更管理",
+      "客源与渠道管理"
+    ]
+  },
+  {
+    "ticket_id": "773718945",
+    "title": "客户无法确认合同变更",
+    "original_category": "整装签约 / 合同内容修改",
+    "scenarios": [
+      "合同变更管理"
+    ]
+  },
+  {
+    "ticket_id": "773913903",
+    "title": "正式合同小区物业地址修改",
+    "original_category": "整装签约 / 合同内容修改",
+    "scenarios": [
+      "合同变更管理"
+    ]
+  },
+  {
+    "ticket_id": "774049911",
+    "title": "香港身份证签约问题",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "身份认证与登录",
+      "合同签署流程"
+    ]
+  },
+  {
+    "ticket_id": "774066447",
+    "title": "硬装合同线下签署线上流程",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "线下签约与补录",
+      "合同审批与风控"
+    ]
+  },
+  {
+    "ticket_id": "774101952",
+    "title": "合同审批流程终止",
+    "original_category": "整装签约 / 合同审批",
+    "scenarios": [
+      "合同审批与风控"
+    ]
+  },
+  {
+    "ticket_id": "774125038",
+    "title": "合同下载打不开",
+    "original_category": "整装签约 / 合同查看/管理/下载",
+    "scenarios": [
+      "签后管理"
+    ]
+  },
+  {
+    "ticket_id": "774145378",
+    "title": "设计费变更流程",
+    "original_category": "整装签约 / 合同内容修改",
+    "scenarios": [
+      "合同变更管理",
+      "签约工具与小程序"
+    ]
+  },
+  {
+    "ticket_id": "774224715",
+    "title": "合同发起问题",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "合同签署流程",
+      "报价管理"
+    ]
+  },
+  {
+    "ticket_id": "774244142",
+    "title": "签约咨询",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "合同签署流程",
+      "合同变更管理",
+      "权限与授权管理"
+    ]
+  },
+  {
+    "ticket_id": "774328387",
+    "title": "草签合同金额不对",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "合同类型管理"
+    ]
+  },
+  {
+    "ticket_id": "774375776",
+    "title": "客户解约及退款操作",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "签后管理",
+      "合同变更管理"
+    ]
+  },
+  {
+    "ticket_id": "774408259",
+    "title": "合同变更操作",
+    "original_category": "整装签约 / 合同内容修改",
+    "scenarios": [
+      "合同变更管理"
+    ]
+  },
+  {
+    "ticket_id": "774435527",
+    "title": "设计合同无法修改签约手机号",
+    "original_category": "整装签约 / 合同内容修改",
+    "scenarios": [
+      "合同变更管理"
+    ]
+  },
+  {
+    "ticket_id": "774449286",
+    "title": "订单无法发起签约合同",
+    "original_category": "定软电签约 / 线上签约流程咨询",
+    "scenarios": [
+      "合同创建与配置",
+      "报价管理"
+    ]
+  },
+  {
+    "ticket_id": "774482957",
+    "title": "装修合同重签及退款流程",
+    "original_category": "整装签约 / 合同内容修改",
+    "scenarios": [
+      "合同变更管理",
+      "退单退款管理"
+    ]
+  },
+  {
+    "ticket_id": "774526621",
+    "title": "预报价单设计费生成问题",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "报价管理",
+      "客源与渠道管理"
+    ]
+  },
+  {
+    "ticket_id": "774537961",
+    "title": "合同备件上传问题",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "合同创建与配置",
+      "合同签署流程"
+    ]
+  },
+  {
+    "ticket_id": "774551812",
+    "title": "公对公签约变更流程",
+    "original_category": "整装签约 / 合同内容修改",
+    "scenarios": [
+      "合同变更管理",
+      "线下签约与补录"
+    ]
+  },
+  {
+    "ticket_id": "774595601",
+    "title": "法人授权小程序操作问题",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "签约模式管理"
+    ]
+  },
+  {
+    "ticket_id": "774597168",
+    "title": "合同查看问题",
+    "original_category": "定软电签约 / 线上签约流程咨询",
+    "scenarios": [
+      "签后管理",
+      "签约工具与小程序"
+    ]
+  },
+  {
+    "ticket_id": "774640772",
+    "title": "业主看不到合同",
+    "original_category": "定软电签约 / 线上签约流程咨询",
+    "scenarios": [
+      "签后管理",
+      "合同签署流程"
+    ]
+  },
+  {
+    "ticket_id": "774654011",
+    "title": "报价单客户看不到",
+    "original_category": "定软电签约 / 合同查看/管理/下载",
+    "scenarios": [
+      "报价管理",
+      "合同审批与风控"
+    ]
+  },
+  {
+    "ticket_id": "774654625",
+    "title": "合同为空白",
+    "original_category": "定软电签约 / 线上签约流程咨询",
+    "scenarios": [
+      "签约工具与小程序"
+    ]
+  },
+  {
+    "ticket_id": "774675771",
+    "title": "业主小程序签约问题",
+    "original_category": "定软电签约 / 线上签约流程咨询",
+    "scenarios": [
+      "签约工具与小程序"
+    ]
+  },
+  {
+    "ticket_id": "774737957",
+    "title": "合同变更操作",
+    "original_category": "整装签约 / 合同内容修改",
+    "scenarios": [
+      "合同变更管理"
+    ]
+  },
+  {
+    "ticket_id": "774809549",
+    "title": "客户签约手机号更改",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "合同变更管理",
+      "签约工具与小程序"
+    ]
+  },
+  {
+    "ticket_id": "774854142",
+    "title": "合同查看",
+    "original_category": "整装签约 / 合同查看/管理/下载",
+    "scenarios": [
+      "合同状态管理"
+    ]
+  },
+  {
+    "ticket_id": "774890511",
+    "title": "签约问题",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "合同变更管理",
+      "身份认证与登录"
+    ]
+  },
+  {
+    "ticket_id": "774924641",
+    "title": "定制柜发票开具流程",
+    "original_category": "整装签约 / 合同内容修改",
+    "scenarios": [
+      "合同变更管理",
+      "收款与资金管理"
+    ]
+  },
+  {
+    "ticket_id": "774948390",
+    "title": "线上签约咨询",
+    "original_category": "定软电签约 / 线上签约流程咨询",
+    "scenarios": [
+      "人员与岗位管理",
+      "合同变更管理",
+      "选品与销售签约"
+    ]
+  },
+  {
+    "ticket_id": "774961236",
+    "title": "PDF合同问题",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "合同签署流程",
+      "合同变更管理"
+    ]
+  },
+  {
+    "ticket_id": "775001611",
+    "title": "合同图纸大小限制",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "合同文件管理",
+      "合同签署流程"
+    ]
+  },
+  {
+    "ticket_id": "775079787",
+    "title": "合同签署问题",
+    "original_category": "定软电签约 / 线上签约流程咨询",
+    "scenarios": [
+      "签约工具与小程序",
+      "身份认证与登录"
+    ]
+  },
+  {
+    "ticket_id": "775094148",
+    "title": "代理人签约问题",
+    "original_category": "整装签约 / 合同查看/管理/下载",
+    "scenarios": [
+      "合同签署流程"
+    ]
+  },
+  {
+    "ticket_id": "775108285",
+    "title": "个人转对公签约及增值税发票开具",
+    "original_category": "整装签约 / 合同内容修改",
+    "scenarios": [
+      "合同变更管理",
+      "收款与资金管理"
+    ]
+  },
+  {
+    "ticket_id": "775460077",
+    "title": "跨城作业权限问题",
+    "original_category": "定软电签约 / 线上签约流程咨询",
+    "scenarios": [
+      "客源与渠道管理"
+    ]
+  },
+  {
+    "ticket_id": "775719980",
+    "title": "Home系统2.0客源变更设计服务费设置",
+    "original_category": "整装签约 / 合同内容修改",
+    "scenarios": [
+      "合同变更管理",
+      "签后管理"
+    ]
+  },
+  {
+    "ticket_id": "775740649",
+    "title": "电子签约合同实名认证",
+    "original_category": "定软电签约 / 线上签约流程咨询",
+    "scenarios": [
+      "合同创建与配置"
+    ]
+  },
+  {
+    "ticket_id": "775760715",
+    "title": "协议确认实名认证",
+    "original_category": "定软电签约 / 线上签约流程咨询",
+    "scenarios": [
+      "合同签署流程",
+      "合同变更管理"
+    ]
+  },
+  {
+    "ticket_id": "775838033",
+    "title": "首期款合同申请用章问题",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "收款与资金管理",
+      "签约工具与小程序",
+      "合同状态管理"
+    ]
+  },
+  {
+    "ticket_id": "775839285",
+    "title": "合同签问题解决",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "合同创建与配置",
+      "合同变更管理",
+      "人员与岗位管理"
+    ]
+  },
+  {
+    "ticket_id": "775858235",
+    "title": "无法生成合同",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "合同创建与配置"
+    ]
+  },
+  {
+    "ticket_id": "775866271",
+    "title": "签约问题",
+    "original_category": "定软电签约 / 线上签约流程咨询",
+    "scenarios": [
+      "合同变更管理",
+      "人员与岗位管理",
+      "合同签署流程"
+    ]
+  },
+  {
+    "ticket_id": "775874874",
+    "title": "法人端待审批授权问题",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "合同签署流程"
+    ]
+  },
+  {
+    "ticket_id": "775908783",
+    "title": "首期款合同发送方式",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "合同签署流程"
+    ]
+  },
+  {
+    "ticket_id": "775914827",
+    "title": "代理人无法签约解约协议",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "签后管理",
+      "合同签署流程"
+    ]
+  },
+  {
+    "ticket_id": "776000200",
+    "title": "草签合同变更房号及备件上传",
+    "original_category": "整装签约 / 合同内容修改",
+    "scenarios": [
+      "合同变更管理",
+      "合同创建与配置"
+    ]
+  },
+  {
+    "ticket_id": "776011959",
+    "title": "设计合同回退申请用章中",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "合同状态管理",
+      "合同变更管理"
+    ]
+  },
+  {
+    "ticket_id": "776046120",
+    "title": "门窗首期款合同回退",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "合同状态管理",
+      "线下签约与补录",
+      "签约模式管理"
+    ]
+  },
+  {
+    "ticket_id": "776077888",
+    "title": "设计合同无法签署",
+    "original_category": "整装签约 / 合同内容修改",
+    "scenarios": [
+      "合同签署流程",
+      "合同变更管理",
+      "人员与岗位管理"
+    ]
+  },
+  {
+    "ticket_id": "776185113",
+    "title": "合同待提交审核",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "合同审批与风控"
+    ]
+  },
+  {
+    "ticket_id": "776201252",
+    "title": "合同城市分公司配置表无数据",
+    "original_category": "定软电签约 / 线上签约流程咨询",
+    "scenarios": [
+      "合同签署流程",
+      "客源与渠道管理",
+      "签约模式管理"
+    ]
+  },
+  {
+    "ticket_id": "776203673",
+    "title": "发起签约合同生成失败",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "合同签署流程",
+      "签约-收款计划配置"
+    ]
+  },
+  {
+    "ticket_id": "776260168",
+    "title": "合同生成失败，收款计划",
+    "original_category": "整装签约 / 合同配置",
+    "scenarios": [
+      "合同创建与配置",
+      "报价管理"
+    ]
+  },
+  {
+    "ticket_id": "776383469",
+    "title": "合同预览问题及线下线上合同变更",
+    "original_category": "整装签约 / 合同内容修改",
+    "scenarios": [
+      "合同文件管理",
+      "合同变更管理"
+    ]
+  },
+  {
+    "ticket_id": "776622107",
+    "title": "设计费变更操作",
+    "original_category": "整装签约 / 合同内容修改",
+    "scenarios": [
+      "合同变更管理"
+    ]
+  },
+  {
+    "ticket_id": "776742879",
+    "title": "合同待签署状态",
+    "original_category": "定软电签约 / 线上签约流程咨询",
+    "scenarios": [
+      "签约工具与小程序",
+      "合同签署流程"
+    ]
+  },
+  {
+    "ticket_id": "776776102",
+    "title": "合同签署及业绩问题",
+    "original_category": "定软电签约 / 线上签约流程咨询",
+    "scenarios": [
+      "签约工具与小程序",
+      "签后管理",
+      "业绩确认与核算"
+    ]
+  },
+  {
+    "ticket_id": "776825533",
+    "title": "合同待提交审核",
+    "original_category": "整装签约 / 合同审批",
+    "scenarios": [
+      "合同审批与风控",
+      "合同签署流程"
+    ]
+  },
+  {
+    "ticket_id": "776880219",
+    "title": "销售合同创建问题",
+    "original_category": "定软电签约 / 线上签约流程咨询",
+    "scenarios": [
+      "选品与销售签约",
+      "收款与资金管理"
+    ]
+  },
+  {
+    "ticket_id": "776884730",
+    "title": "设计师级别与设计协议金额不符",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "合同类型管理"
+    ]
+  },
+  {
+    "ticket_id": "776891459",
+    "title": "对公合同，法人认证问题",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "签约模式管理",
+      "施工与项目管理"
+    ]
+  },
+  {
+    "ticket_id": "776890914",
+    "title": "资金存管无法签约",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "收款与资金管理"
+    ]
+  },
+  {
+    "ticket_id": "776903804",
+    "title": "客户看不到合同",
+    "original_category": "整装签约 / 合同查看/管理/下载",
+    "scenarios": [
+      "合同状态管理",
+      "客源与渠道管理"
+    ]
+  },
+  {
+    "ticket_id": "776926999",
+    "title": "对客合同签章问题",
+    "original_category": "定软电签约 / 线上签约流程咨询",
+    "scenarios": [
+      "订单与客服管理"
+    ]
+  },
+  {
+    "ticket_id": "776951923",
+    "title": "局改合同违规问题",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "合同类型管理"
+    ]
+  },
+  {
+    "ticket_id": "777130315",
+    "title": "客户签约界面无法识别",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "身份认证与登录"
+    ]
+  },
+  {
+    "ticket_id": "777147078",
+    "title": "退款分享操作流程",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "退单退款管理"
+    ]
+  },
+  {
+    "ticket_id": "777158798",
+    "title": "查询全年每月签约合同金额数据",
+    "original_category": "整装签约 / 合同查看/管理/下载",
+    "scenarios": [
+      "数据看板",
+      "合同状态管理"
+    ]
+  },
+  {
+    "ticket_id": "777184957",
+    "title": "变更签收手机号",
+    "original_category": "整装签约 / 合同内容修改/变更",
+    "scenarios": [
+      "合同变更管理"
+    ]
+  },
+  {
+    "ticket_id": "777186900",
+    "title": "Home系统2.0客源设计费合同变更",
+    "original_category": "整装签约 / 合同内容修改/变更",
+    "scenarios": [
+      "合同变更管理"
+    ]
+  },
+  {
+    "ticket_id": "777300425",
+    "title": "合同信息错误导致自动签约",
+    "original_category": "定软电签约 / 合同内容修改/变更",
+    "scenarios": [
+      "选品与销售签约",
+      "合同变更管理",
+      "退单退款管理"
+    ]
+  },
+  {
+    "ticket_id": "777300519",
+    "title": "合同取消及重新签订",
+    "original_category": "定软电签约 / 合同内容修改/变更",
+    "scenarios": [
+      "签后管理",
+      "退单退款管理",
+      "合同变更管理"
+    ]
+  },
+  {
+    "ticket_id": "777323222",
+    "title": "工地客户退项及剩余工程尾款处理",
+    "original_category": "整装签约 / 合同内容修改/变更",
+    "scenarios": [
+      "合同变更管理"
+    ]
+  },
+  {
+    "ticket_id": "777397359",
+    "title": "2.0系统订单下单流程",
+    "original_category": "定软电签约 / 线上签约流程咨询",
+    "scenarios": [
+      "选品与销售签约",
+      "合同创建与配置"
+    ]
+  },
+  {
+    "ticket_id": "777519010",
+    "title": "客户登录小程序显示手机号问题",
+    "original_category": "定软电签约 / 线上签约流程咨询",
+    "scenarios": [
+      "身份认证与登录",
+      "施工与项目管理"
+    ]
+  },
+  {
+    "ticket_id": "777581381",
+    "title": "Home系统批量导出正签合同",
+    "original_category": "整装签约 / 合同查看/管理/下载",
+    "scenarios": [
+      "签后管理"
+    ]
+  },
+  {
+    "ticket_id": "777637578",
+    "title": "合同下载问题",
+    "original_category": "定软电签约 / 合同查看/管理/下载",
+    "scenarios": [
+      "合同文件管理"
+    ]
+  },
+  {
+    "ticket_id": "777642354",
+    "title": "签约无套餐显示",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "合同签署流程",
+      "人员与岗位管理"
+    ]
+  },
+  {
+    "ticket_id": "777703149",
+    "title": "合同无法待签",
+    "original_category": "定软电签约 / 线上签约流程咨询",
+    "scenarios": [
+      "合同审批与风控",
+      "身份认证与登录"
+    ]
+  },
+  {
+    "ticket_id": "777751255",
+    "title": "客户人脸识别和认证信息不一致",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "身份认证与登录",
+      "合同创建与配置"
+    ]
+  },
+  {
+    "ticket_id": "777755045",
+    "title": "零售订单签约问题",
+    "original_category": "定软电签约 / 线上签约流程咨询",
+    "scenarios": [
+      "签约模式管理"
+    ]
+  },
+  {
+    "ticket_id": "777843479",
+    "title": "安置房签合同无购房合同和房产证输入问题",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "合同创建与配置",
+      "合同审批与风控"
+    ]
+  },
+  {
+    "ticket_id": "777983903",
+    "title": "业主无法签约问题",
+    "original_category": "定软电签约 / 线上签约流程咨询",
+    "scenarios": [
+      "签约-业主手机号修改",
+      "签约工具与小程序"
+    ]
+  },
+  {
+    "ticket_id": "778065189",
+    "title": "合同变更操作",
+    "original_category": "整装签约 / 合同内容修改/变更",
+    "scenarios": [
+      "合同变更管理"
+    ]
+  },
+  {
+    "ticket_id": "778133393",
+    "title": "签约后增加代理人",
+    "original_category": "整装签约 / 合同内容修改/变更",
+    "scenarios": [
+      "合同变更管理"
+    ]
+  },
+  {
+    "ticket_id": "778135881",
+    "title": "系统页面截图及负责人联系方式",
+    "original_category": "整装签约 / 合同查看/管理/下载",
+    "scenarios": [
+      "签后管理",
+      "人员与岗位管理"
+    ]
+  },
+  {
+    "ticket_id": "778181795",
+    "title": "管理费审批",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "合同审批与风控"
+    ]
+  },
+  {
+    "ticket_id": "778186831",
+    "title": "跨区域签约权限配置",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "客源与渠道管理",
+      "合同创建与配置"
+    ]
+  },
+  {
+    "ticket_id": "778207875",
+    "title": "瓦木验收节点修改影响及解决方法",
+    "original_category": "整装签约 / 合同配置",
+    "scenarios": [
+      "合同创建与配置"
+    ]
+  },
+  {
+    "ticket_id": "778211119",
+    "title": "查询手机号实名认证姓名——已反馈查询",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "身份认证与登录"
+    ]
+  },
+  {
+    "ticket_id": "778225781",
+    "title": "客源详情页填写问题",
+    "original_category": "整装签约 / 合同配置",
+    "scenarios": [
+      "客源与渠道管理",
+      "合同创建与配置"
+    ]
+  },
+  {
+    "ticket_id": "778227191",
+    "title": "跨城合作流程确认",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "客源与渠道管理"
+    ]
+  },
+  {
+    "ticket_id": "778230777",
+    "title": "正签合同预约开工日期修改",
+    "original_category": "整装签约 / 合同内容修改/变更",
+    "scenarios": [
+      "合同创建与配置",
+      "退单退款管理"
+    ]
+  },
+  {
+    "ticket_id": "778243157",
+    "title": "设计费退款",
+    "original_category": "整装签约 / 合同内容修改/变更",
+    "scenarios": [
+      "合同变更管理",
+      "退单退款管理"
+    ]
+  },
+  {
+    "ticket_id": "778243314",
+    "title": "锁手机号实名认证问题",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "合同签署流程",
+      "合同变更管理"
+    ]
+  },
+  {
+    "ticket_id": "778245290",
+    "title": "跨城作业流程咨询",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "客源与渠道管理"
+    ]
+  },
+  {
+    "ticket_id": "778253111",
+    "title": "跨城签约审批配置",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "客源与渠道管理"
+    ]
+  },
+  {
+    "ticket_id": "778261152",
+    "title": "跨城审批流程",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "客源与渠道管理"
+    ]
+  },
+  {
+    "ticket_id": "778263033",
+    "title": "客户无法在系统中找到相关合同",
+    "original_category": "整装签约 / 合同查看/管理/下载",
+    "scenarios": [
+      "签后管理"
+    ]
+  },
+  {
+    "ticket_id": "778319097",
+    "title": "实名认证修改及线下签约",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "身份认证与登录",
+      "人员与岗位管理",
+      "合同签署流程"
+    ]
+  },
+  {
+    "ticket_id": "778387437",
+    "title": "房屋信息变更",
+    "original_category": "整装签约 / 合同内容修改/变更",
+    "scenarios": [
+      "合同变更管理",
+      "合同创建与配置"
+    ]
+  },
+  {
+    "ticket_id": "778456082",
+    "title": "公司材料更换合同类备注",
+    "original_category": "整装签约 / 合同内容修改/变更",
+    "scenarios": [
+      "合同变更管理"
+    ]
+  },
+  {
+    "ticket_id": "778459485",
+    "title": "合同签署问题及解决方案",
+    "original_category": "定软电签约 / 线上签约流程咨询",
+    "scenarios": [
+      "订单与客服管理",
+      "线下签约与补录",
+      "合同签署流程"
+    ]
+  },
+  {
+    "ticket_id": "778467155",
+    "title": "小产权房装修签约",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "签约模式管理"
+    ]
+  },
+  {
+    "ticket_id": "778516183",
+    "title": "无法签约",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "签约模式管理"
+    ]
+  },
+  {
+    "ticket_id": "778565650",
+    "title": "合同变更进度查询",
+    "original_category": "整装签约 / 合同内容修改/变更",
+    "scenarios": [
+      "合同变更管理"
+    ]
+  },
+  {
+    "ticket_id": "778591061",
+    "title": "湖州客源配置问题",
+    "original_category": "定软电签约 / 线上签约流程咨询",
+    "scenarios": [
+      "合同创建与配置"
+    ]
+  },
+  {
+    "ticket_id": "778617745",
+    "title": "设计师系统套餐配置",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "合同签署流程"
+    ]
+  },
+  {
+    "ticket_id": "778642969",
+    "title": "正签问题",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "合同类型管理"
+    ]
+  },
+  {
+    "ticket_id": "778645425",
+    "title": "圣都整装小程序合同问题",
+    "original_category": "定软电签约 / 线上签约流程咨询",
+    "scenarios": [
+      "签约工具与小程序",
+      "合同审批与风控"
+    ]
+  },
+  {
+    "ticket_id": "778652102",
+    "title": "Home签约系统配置问题",
+    "original_category": "整装签约 / 合同配置",
+    "scenarios": [
+      "合同签署流程",
+      "权限与授权管理"
+    ]
+  },
+  {
+    "ticket_id": "778754671",
+    "title": "设计费体现问题",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "客源与渠道管理",
+      "合同变更管理"
+    ]
+  },
+  {
+    "ticket_id": "778885982",
+    "title": "合同金额不对",
+    "original_category": "定软电签约 / 线上签约流程咨询",
+    "scenarios": [
+      "合同创建与配置",
+      "合同变更管理"
+    ]
+  },
+  {
+    "ticket_id": "778892792",
+    "title": "跨城作业审批流程",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "合同创建与配置"
+    ]
+  },
+  {
+    "ticket_id": "778947472",
+    "title": "客户人脸验证问题",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "身份认证与登录"
+    ]
+  },
+  {
+    "ticket_id": "778954120",
+    "title": "设计合同创建问题",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "合同创建与配置"
+    ]
+  },
+  {
+    "ticket_id": "778996473",
+    "title": "合同签约户型带出有误",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "合同创建与配置",
+      "客源与渠道管理"
+    ]
+  },
+  {
+    "ticket_id": "779029086",
+    "title": "贝壳精工电脑端使用教程",
+    "original_category": "整装签约 / 合同查看/管理/下载",
+    "scenarios": [
+      "施工与项目管理"
+    ]
+  },
+  {
+    "ticket_id": "779030350",
+    "title": "已签署合同取消操作",
+    "original_category": "定软电签约 / 合同内容修改/变更",
+    "scenarios": [
+      "合同签署流程",
+      "合同创建与配置"
+    ]
+  },
+  {
+    "ticket_id": "779142469",
+    "title": "补签代理人协议操作路径",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "合同签署流程"
+    ]
+  },
+  {
+    "ticket_id": "779151128",
+    "title": "补充协议及代理人签约路径",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "合同变更管理"
+    ]
+  },
+  {
+    "ticket_id": "779202457",
+    "title": "定制销售合同查询",
+    "original_category": "定软电签约 / 线上签约流程咨询",
+    "scenarios": [
+      "合同状态管理",
+      "权限与授权管理"
+    ]
+  },
+  {
+    "ticket_id": "779220646",
+    "title": "房本上传问题",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "身份认证与登录"
+    ]
+  },
+  {
+    "ticket_id": "779360642",
+    "title": "销售合同中手机号修改",
+    "original_category": "定软电签约 / 合同内容修改/变更",
+    "scenarios": [
+      "合同变更管理"
+    ]
+  },
+  {
+    "ticket_id": "779433015",
+    "title": "新建报价无法签约合同",
+    "original_category": "定软电签约 / 线下签约流程咨询",
+    "scenarios": [
+      "合同签署流程",
+      "报价管理"
+    ]
+  },
+  {
+    "ticket_id": "779591990",
+    "title": "合同内设计费退款操作",
+    "original_category": "整装签约 / 合同内容修改/变更",
+    "scenarios": [
+      "合同变更管理"
+    ]
+  },
+  {
+    "ticket_id": "779675926",
+    "title": "线下合同模板下载问题",
+    "original_category": "定软电签约 / 线上签约流程咨询",
+    "scenarios": [
+      "合同文件管理"
+    ]
+  },
+  {
+    "ticket_id": "779693678",
+    "title": "线下签约模板",
+    "original_category": "整装签约 / 线下签约流程咨询",
+    "scenarios": [
+      "线下签约与补录"
+    ]
+  },
+  {
+    "ticket_id": "779746557",
+    "title": "新团装签合同操作问题",
+    "original_category": "定软电签约 / 线上签约流程咨询",
+    "scenarios": [
+      "合同创建与配置",
+      "合同签署流程",
+      "合同变更管理"
+    ]
+  },
+  {
+    "ticket_id": "779769269",
+    "title": "首期款协议重签",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "合同变更管理",
+      "线下签约与补录"
+    ]
+  },
+  {
+    "ticket_id": "779799835",
+    "title": "合同变更无法提交",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "合同变更管理",
+      "客源与渠道管理",
+      "合同类型管理"
+    ]
+  },
+  {
+    "ticket_id": "779814936",
+    "title": "公对公合同法人授权问题",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "合同签署流程"
+    ]
+  },
+  {
+    "ticket_id": "779870935",
+    "title": "销售合同对公签约",
+    "original_category": "定软电签约 / 线上签约流程咨询",
+    "scenarios": [
+      "合同签署流程",
+      "合同变更管理"
+    ]
+  },
+  {
+    "ticket_id": "779927848",
+    "title": "整装签约主体变更",
+    "original_category": "定软电签约 / 线上签约流程咨询",
+    "scenarios": [
+      "合同变更管理",
+      "签约模式管理",
+      "合同签署流程"
+    ]
+  },
+  {
+    "ticket_id": "779975085",
+    "title": "整装合同设计费调整",
+    "original_category": "整装签约 / 合同内容修改/变更",
+    "scenarios": [
+      "合同变更管理"
+    ]
+  },
+  {
+    "ticket_id": "779976395",
+    "title": "法人授权委托书线下签署",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "权限与授权管理",
+      "线下签约与补录"
+    ]
+  },
+  {
+    "ticket_id": "779991532",
+    "title": "变更签约备件信息操作流程",
+    "original_category": "整装签约 / 合同内容修改/变更",
+    "scenarios": [
+      "合同变更管理"
+    ]
+  },
+  {
+    "ticket_id": "780042093",
+    "title": "查看并下载合同",
+    "original_category": "定软电签约 / 合同查看/管理/下载",
+    "scenarios": [
+      "合同文件管理",
+      "合同状态管理"
+    ]
+  },
+  {
+    "ticket_id": "780080931",
+    "title": "精装细则系统规则",
+    "original_category": "整装签约 / 合同配置",
+    "scenarios": [
+      "合同创建与配置",
+      "合同类型管理"
+    ]
+  },
+  {
+    "ticket_id": "780146814",
+    "title": "公对公签约操作",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "合同签署流程",
+      "收款与资金管理"
+    ]
+  },
+  {
+    "ticket_id": "780180391",
+    "title": "公对公签约问题",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "合同签署流程"
+    ]
+  },
+  {
+    "ticket_id": "780184191",
+    "title": "业主端签约系统问题",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "合同签署流程"
+    ]
+  },
+  {
+    "ticket_id": "780254197",
+    "title": "PDF文件无法打开",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "合同文件管理"
+    ]
+  },
+  {
+    "ticket_id": "780304643",
+    "title": "整装合同签署问题",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "身份认证与登录",
+      "人员与岗位管理",
+      "合同签署流程"
+    ]
+  },
+  {
+    "ticket_id": "780325388",
+    "title": "合同分享无法跳转到微信",
+    "original_category": "定软电签约 / 合同查看/管理/下载",
+    "scenarios": [
+      "合同签署流程"
+    ]
+  },
+  {
+    "ticket_id": "780479548",
+    "title": "线下补录合同获取范本",
+    "original_category": "整装签约 / 线下签约流程咨询",
+    "scenarios": [
+      "线下签约与补录"
+    ]
+  },
+  {
+    "ticket_id": "780481922",
+    "title": "跨城作业权限开通",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "客源与渠道管理"
+    ]
+  },
+  {
+    "ticket_id": "780496042",
+    "title": "个人签约改对公操作流程",
+    "original_category": "整装签约 / 合同内容修改/变更",
+    "scenarios": [
+      "合同变更管理"
+    ]
+  },
+  {
+    "ticket_id": "780531557",
+    "title": "主动维保上门时间",
+    "original_category": "整装签约 / 合同查看/管理/下载",
+    "scenarios": [
+      "合同状态管理",
+      "合同创建与配置"
+    ]
+  },
+  {
+    "ticket_id": "780751120",
+    "title": "客户小程序看不到添加的附件",
+    "original_category": "定软电签约 / 线上签约流程咨询",
+    "scenarios": [
+      "合同文件管理",
+      "合同签署流程"
+    ]
+  },
+  {
+    "ticket_id": "780779978",
+    "title": "设计师合同变更操作流程",
+    "original_category": "整装签约 / 合同内容修改/变更",
+    "scenarios": [
+      "合同变更管理"
+    ]
+  },
+  {
+    "ticket_id": "780794743",
+    "title": "签约问题",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "合同审批与风控",
+      "合同变更管理",
+      "合同签署流程"
+    ]
+  },
+  {
+    "ticket_id": "780846427",
+    "title": "客户主体变更及合同签署问题",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "合同变更管理",
+      "签约模式管理"
+    ]
+  },
+  {
+    "ticket_id": "780929041",
+    "title": "pc端无法查看合同",
+    "original_category": "定软电签约 / 合同查看/管理/下载",
+    "scenarios": [
+      "合同状态管理",
+      "客源与渠道管理"
+    ]
+  },
+  {
+    "ticket_id": "780937575",
+    "title": "身份证上传问题",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "身份认证与登录",
+      "合同审批与风控"
+    ]
+  },
+  {
+    "ticket_id": "780938750",
+    "title": "签约状态审核问题",
+    "original_category": "整装签约 / 合同审批",
+    "scenarios": [
+      "合同审批与风控"
+    ]
+  },
+  {
+    "ticket_id": "781015090",
+    "title": "合同起草中未提交审核",
+    "original_category": "整装签约 / 合同审批",
+    "scenarios": [
+      "合同签署流程",
+      "合同审批与风控"
+    ]
+  },
+  {
+    "ticket_id": "781044677",
+    "title": "外籍用户签约报错",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "身份认证与登录",
+      "订单与客服管理"
+    ]
+  },
+  {
+    "ticket_id": "781055557",
+    "title": "修改签约姓名",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "合同变更管理",
+      "退单退款管理"
+    ]
+  },
+  {
+    "ticket_id": "781221245",
+    "title": "定制柜报价合同附件查看",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "合同文件管理"
+    ]
+  },
+  {
+    "ticket_id": "781300514",
+    "title": "系统问题反馈",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "订单与客服管理"
+    ]
+  },
+  {
+    "ticket_id": "781332383",
+    "title": "公对公付款定制合同签约",
+    "original_category": "定软电签约 / 线上签约流程咨询",
+    "scenarios": [
+      "合同签署流程",
+      "收款与资金管理"
+    ]
+  },
+  {
+    "ticket_id": "781344279",
+    "title": "查询签约手机号",
+    "original_category": "定软电签约 / 线上签约流程咨询",
+    "scenarios": [
+      "合同审批与风控",
+      "合同创建与配置"
+    ]
+  },
+  {
+    "ticket_id": "781391399",
+    "title": "零售合同认证问题",
+    "original_category": "定软电签约 / 线上签约流程咨询",
+    "scenarios": [
+      "身份认证与登录"
+    ]
+  },
+  {
+    "ticket_id": "781457802",
+    "title": "2.5系统对公签约流程",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "签约模式管理"
+    ]
+  },
+  {
+    "ticket_id": "781458567",
+    "title": "整装首期款合同姓名更改",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "身份认证与登录",
+      "合同变更管理",
+      "退单退款管理"
+    ]
+  },
+  {
+    "ticket_id": "781630400",
+    "title": "合同设计费设置",
+    "original_category": "整装签约 / 合同内容修改/变更",
+    "scenarios": [
+      "合同变更管理"
+    ]
+  },
+  {
+    "ticket_id": "781737570",
+    "title": "合同创建失败",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "合同创建与配置"
+    ]
+  },
+  {
+    "ticket_id": "781812266",
+    "title": "客户变更单无法确认及签署",
+    "original_category": "定软电签约 / 线上签约流程咨询",
+    "scenarios": [
+      "合同变更管理",
+      "签约工具与小程序"
+    ]
+  },
+  {
+    "ticket_id": "781894456",
+    "title": "精装细则匹配客户时间查询",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "合同创建与配置",
+      "合同签署流程"
+    ]
+  },
+  {
+    "ticket_id": "781895169",
+    "title": "订单未分配分公司，获取合同列表失败",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "合同创建与配置"
+    ]
+  },
+  {
+    "ticket_id": "781996713",
+    "title": "客户销售合同确认不了",
+    "original_category": "定软电签约 / 线上签约流程咨询",
+    "scenarios": [
+      "合同签署流程",
+      "签约工具与小程序"
+    ]
+  },
+  {
+    "ticket_id": "782013508",
+    "title": "无法查看合同",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "合同状态管理",
+      "合同变更管理"
+    ]
+  },
+  {
+    "ticket_id": "782043224",
+    "title": "正签审核驳回复审流程",
+    "original_category": "整装签约 / 合同内容修改/变更",
+    "scenarios": [
+      "合同类型管理",
+      "合同变更管理"
+    ]
+  },
+  {
+    "ticket_id": "782051419",
+    "title": "收款计划刷新问题",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "收款与资金管理"
+    ]
+  },
+  {
+    "ticket_id": "782090317",
+    "title": "草签转正签操作",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "合同类型管理",
+      "合同签署流程"
+    ]
+  },
+  {
+    "ticket_id": "782122623",
+    "title": "合同地址错误处理",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "合同变更管理",
+      "退单退款管理"
+    ]
+  },
+  {
+    "ticket_id": "782167101",
+    "title": "M单号界面查看合同",
+    "original_category": "定软电签约 / 合同查看/管理/下载",
+    "scenarios": [
+      "合同状态管理"
+    ]
+  },
+  {
+    "ticket_id": "782348228",
+    "title": "合同行政地址变更",
+    "original_category": "整装签约 / 合同内容修改/变更",
+    "scenarios": [
+      "合同变更管理"
+    ]
+  },
+  {
+    "ticket_id": "782360196",
+    "title": "合同变更",
+    "original_category": "整装签约 / 合同内容修改/变更",
+    "scenarios": [
+      "合同变更管理"
+    ]
+  },
+  {
+    "ticket_id": "782391135",
+    "title": "客户无法签约",
+    "original_category": "定软电签约 / 线上签约流程咨询",
+    "scenarios": [
+      "合同变更管理",
+      "签约工具与小程序"
+    ]
+  },
+  {
+    "ticket_id": "782392302",
+    "title": "跨城签约开通",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "客源与渠道管理",
+      "合同变更管理"
+    ]
+  },
+  {
+    "ticket_id": "782429934",
+    "title": "合同首签精装细则及下架套餐选择问题",
+    "original_category": "整装签约 / 合同查看/管理/下载",
+    "scenarios": [
+      "合同文件管理",
+      "报价管理"
+    ]
+  },
+  {
+    "ticket_id": "782454704",
+    "title": "邀请授权操作指南",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": []
+  },
+  {
+    "ticket_id": "782505907",
+    "title": "合同生成问题",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "合同创建与配置",
+      "合同签署流程"
+    ]
+  },
+  {
+    "ticket_id": "782578623",
+    "title": "合同无法发起",
+    "original_category": "定软电签约 / 线上签约流程咨询",
+    "scenarios": [
+      "系统功能支持"
+    ]
+  },
+  {
+    "ticket_id": "782579046",
+    "title": "设计合同申请用章撤回修改",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "合同类型管理",
+      "签后管理"
+    ]
+  },
+  {
+    "ticket_id": "782586449",
+    "title": "设计协议退款问题",
+    "original_category": "整装签约 / 合同内容修改/变更",
+    "scenarios": [
+      "合同类型管理"
+    ]
+  },
+  {
+    "ticket_id": "782593087",
+    "title": "法人授权代理人签约",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "权限与授权管理",
+      "合同创建与配置"
+    ]
+  },
+  {
+    "ticket_id": "782672563",
+    "title": "签约问题",
+    "original_category": "定软电签约 / 线上签约流程咨询",
+    "scenarios": [
+      "签约工具与小程序",
+      "订单与客服管理"
+    ]
+  },
+  {
+    "ticket_id": "782710945",
+    "title": "客户看不到自己签约的合同",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "签约工具与小程序"
+    ]
+  },
+  {
+    "ticket_id": "782711576",
+    "title": "客户手机号码更改导致无法签署新零售合同",
+    "original_category": "定软电签约 / 线上签约流程咨询",
+    "scenarios": [
+      "身份认证与登录",
+      "选品与销售签约"
+    ]
+  },
+  {
+    "ticket_id": "782755296",
+    "title": "销售合同查看问题及线下签约问题",
+    "original_category": "定软电签约 / 线上签约流程咨询",
+    "scenarios": [
+      "合同状态管理",
+      "身份认证与登录"
+    ]
+  },
+  {
+    "ticket_id": "782770178",
+    "title": "设计费合同变更",
+    "original_category": "整装签约 / 合同内容修改/变更",
+    "scenarios": [
+      "合同变更管理"
+    ]
+  },
+  {
+    "ticket_id": "782838377",
+    "title": "实名认证问题",
+    "original_category": "定软电签约 / 线上签约流程咨询",
+    "scenarios": [
+      "身份认证与登录",
+      "合同变更管理"
+    ]
+  },
+  {
+    "ticket_id": "782857268",
+    "title": "修改签约手机号",
+    "original_category": "整装签约 / 合同内容修改/变更",
+    "scenarios": [
+      "合同变更管理",
+      "签后管理",
+      "退单退款管理"
+    ]
+  },
+  {
+    "ticket_id": "782897932",
+    "title": "线下补录操作流程",
+    "original_category": "定软电签约 / 线上签约流程咨询",
+    "scenarios": [
+      "线下签约与补录"
+    ]
+  },
+  {
+    "ticket_id": "782913702",
+    "title": "改合同的电话号码",
+    "original_category": "整装签约 / 合同内容修改/变更",
+    "scenarios": [
+      "合同变更管理"
+    ]
+  },
+  {
+    "ticket_id": "782923417",
+    "title": "实名信息无法修改",
+    "original_category": "定软电签约 / 线上签约流程咨询",
+    "scenarios": [
+      "身份认证与登录",
+      "客源与渠道管理"
+    ]
+  },
+  {
+    "ticket_id": "782980846",
+    "title": "合同价格调整问题",
+    "original_category": "定软电签约 / 线上签约流程咨询",
+    "scenarios": [
+      "合同创建与配置"
+    ]
+  },
+  {
+    "ticket_id": "782991488",
+    "title": "人脸识别认证失败",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "身份认证与登录"
+    ]
+  },
+  {
+    "ticket_id": "782994262",
+    "title": "线上签约问题——答疑",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "合同创建与配置"
+    ]
+  },
+  {
+    "ticket_id": "783019317",
+    "title": "线上签约问题",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "合同类型管理",
+      "合同签署流程"
+    ]
+  },
+  {
+    "ticket_id": "783046627",
+    "title": "线下补录审批节点修改",
+    "original_category": "整装签约 / 线下签约流程咨询",
+    "scenarios": [
+      "线下签约与补录",
+      "身份认证与登录"
+    ]
+  },
+  {
+    "ticket_id": "783139787",
+    "title": "线下补录操作问题",
+    "original_category": "定软电签约 / 线下签约流程咨询",
+    "scenarios": [
+      "签约工具与小程序",
+      "线下签约与补录"
+    ]
+  },
+  {
+    "ticket_id": "783201618",
+    "title": "合同变更操作",
+    "original_category": "整装签约 / 合同内容修改/变更",
+    "scenarios": [
+      "合同变更管理"
+    ]
+  },
+  {
+    "ticket_id": "783261709",
+    "title": "淘宝变更协议发起",
+    "original_category": "整装签约 / 合同内容修改/变更",
+    "scenarios": [
+      "合同变更管理"
+    ]
+  },
+  {
+    "ticket_id": "783305625",
+    "title": "订单签约问题",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "合同创建与配置",
+      "订单与客服管理"
+    ]
+  },
+  {
+    "ticket_id": "783360835",
+    "title": "订单上传权限转移",
+    "original_category": "定软电签约 / 线下签约流程咨询",
+    "scenarios": [
+      "权限与授权管理",
+      "签约工具与小程序"
+    ]
+  },
+  {
+    "ticket_id": "783368006",
+    "title": "签约提醒和分享链接问题",
+    "original_category": "定软电签约 / 线下签约流程咨询",
+    "scenarios": [
+      "合同签署流程"
+    ]
+  },
+  {
+    "ticket_id": "783375270",
+    "title": "流程审核及工号查询",
+    "original_category": "定软电签约 / 线上签约流程咨询",
+    "scenarios": [
+      "合同审批与风控",
+      "签约工具与小程序"
+    ]
+  },
+  {
+    "ticket_id": "783413174",
+    "title": "系统上房号错误",
+    "original_category": "整装签约 / 合同内容修改/变更",
+    "scenarios": [
+      "合同变更管理",
+      "客源与渠道管理"
+    ]
+  },
+  {
+    "ticket_id": "783445157",
+    "title": "外籍客户录入问题",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "客户管理",
+      "合同变更管理",
+      "合同签署流程"
+    ]
+  },
+  {
+    "ticket_id": "783488775",
+    "title": "签约无法选港澳台证件",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "合同创建与配置"
+    ]
+  },
+  {
+    "ticket_id": "783512577",
+    "title": "公对公签约方式",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "合同创建与配置",
+      "身份认证与登录",
+      "线下签约与补录"
+    ]
+  },
+  {
+    "ticket_id": "783792803",
+    "title": "鸿蒙系统下Home分享到企业微信的问题",
+    "original_category": "定软电签约 / 线上签约流程咨询",
+    "scenarios": [
+      "合同签署流程",
+      "签约工具与小程序"
+    ]
+  },
+  {
+    "ticket_id": "783813528",
+    "title": "订单金额修改",
+    "original_category": "定软电签约 / 线上签约流程咨询",
+    "scenarios": [
+      "合同创建与配置",
+      "退单退款管理"
+    ]
+  },
+  {
+    "ticket_id": "783828511",
+    "title": "客户无法签约及开具公对公发票",
+    "original_category": "定软电签约 / 线上签约流程咨询",
+    "scenarios": [
+      "合同变更管理",
+      "合同签署流程"
+    ]
+  },
+  {
+    "ticket_id": "783831180",
+    "title": "合同号码修改",
+    "original_category": "整装签约 / 合同内容修改/变更",
+    "scenarios": [
+      "合同变更管理",
+      "合同签署流程"
+    ]
+  },
+  {
+    "ticket_id": "783845366",
+    "title": "签约手机号取值",
+    "original_category": "定软电签约 / 线上签约流程咨询",
+    "scenarios": [
+      "合同变更管理",
+      "客源与渠道管理"
+    ]
+  },
+  {
+    "ticket_id": "783848613",
+    "title": "香港法人对公合同签署问题",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "身份认证与登录"
+    ]
+  },
+  {
+    "ticket_id": "783855318",
+    "title": "合同发起页面收款计划选择问题",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "签约-收款计划配置"
+    ]
+  },
+  {
+    "ticket_id": "783865899",
+    "title": "变更跟选不了",
+    "original_category": "整装签约 / 合同内容修改/变更",
+    "scenarios": [
+      "合同变更管理"
+    ]
+  },
+  {
+    "ticket_id": "783906847",
+    "title": "局改合同配置问题",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "合同创建与配置",
+      "合同变更管理"
+    ]
+  },
+  {
+    "ticket_id": "783909654",
+    "title": "设立协议如何作废及公对公设计协议修改",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "合同状态管理",
+      "合同创建与配置",
+      "合同类型管理"
+    ]
+  },
+  {
+    "ticket_id": "783909528",
+    "title": "公对公合同签约问题",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "签约模式管理",
+      "身份认证与登录"
+    ]
+  },
+  {
+    "ticket_id": "783914873",
+    "title": "无法生成合同",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "合同创建与配置"
+    ]
+  },
+  {
+    "ticket_id": "784068773",
+    "title": "无法签约-房本不在可服务范围",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "合同审批与风控",
+      "合同类型管理"
+    ]
+  },
+  {
+    "ticket_id": "784084640",
+    "title": "订单正签被驳回原因查询",
+    "original_category": "整装签约 / 合同审批",
+    "scenarios": [
+      "合同审批与风控"
+    ]
+  },
+  {
+    "ticket_id": "784169129",
+    "title": "硬装合同生成问题",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "合同创建与配置"
+    ]
+  },
+  {
+    "ticket_id": "784173753",
+    "title": "买卖合同截图填写问题",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "合同创建与配置"
+    ]
+  },
+  {
+    "ticket_id": "784212524",
+    "title": "系统无法分享合同签约",
+    "original_category": "整装签约 / 合同查看/管理/下载",
+    "scenarios": [
+      "合同签署流程",
+      "签约工具与小程序"
+    ]
+  },
+  {
+    "ticket_id": "784226414",
+    "title": "合同设计费修改操作",
+    "original_category": "整装签约 / 合同内容修改/变更",
+    "scenarios": [
+      "合同变更管理"
+    ]
+  },
+  {
+    "ticket_id": "784229619",
+    "title": "合同变更未完成",
+    "original_category": "整装签约 / 合同内容修改/变更",
+    "scenarios": [
+      "合同变更管理"
+    ]
+  },
+  {
+    "ticket_id": "784343498",
+    "title": "设计费协议修改",
+    "original_category": "整装签约 / 合同内容修改/变更",
+    "scenarios": [
+      "合同类型管理",
+      "合同变更管理"
+    ]
+  },
+  {
+    "ticket_id": "784383745",
+    "title": "客源ID或项目ID查询及收款计划刷新",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "收款与资金管理",
+      "合同状态管理"
+    ]
+  },
+  {
+    "ticket_id": "784452085",
+    "title": "客户认证问题",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "身份认证与登录",
+      "合同变更管理",
+      "合同签署流程"
+    ]
+  },
+  {
+    "ticket_id": "784462384",
+    "title": "合同信息修改问题",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "合同变更管理"
+    ]
+  },
+  {
+    "ticket_id": "784481594",
+    "title": "河图上传材料清单失败",
+    "original_category": "整装签约 / 合同配置",
+    "scenarios": [
+      "合同创建与配置"
+    ]
+  },
+  {
+    "ticket_id": "784611228",
+    "title": "设计合同无法签署",
+    "original_category": "整装签约 / 合同内容修改/变更",
+    "scenarios": [
+      "合同签署流程",
+      "签约工具与小程序"
+    ]
+  },
+  {
+    "ticket_id": "784927112",
+    "title": "合同变更显示咨询",
+    "original_category": "整装签约 / 合同内容修改/变更",
+    "scenarios": [
+      "合同变更管理"
+    ]
+  },
+  {
+    "ticket_id": "785106834",
+    "title": "设计费合同变更",
+    "original_category": "整装签约 / 合同内容修改/变更",
+    "scenarios": [
+      "合同变更管理",
+      "签后管理"
+    ]
+  },
+  {
+    "ticket_id": "785140517",
+    "title": "合同章公章财务章名称变更流程",
+    "original_category": "整装签约 / 合同内容修改/变更",
+    "scenarios": [
+      "印章与合同工具"
+    ]
+  },
+  {
+    "ticket_id": "785171461",
+    "title": "202508版本销售合同线上解约",
+    "original_category": "定软电签约 / 线上签约流程咨询",
+    "scenarios": [
+      "签后管理",
+      "退单退款管理"
+    ]
+  },
+  {
+    "ticket_id": "785175085",
+    "title": "签约人问题",
+    "original_category": "整装签约 / 合同内容修改/变更",
+    "scenarios": [
+      "合同变更管理",
+      "收款与资金管理"
+    ]
+  },
+  {
+    "ticket_id": "785182892",
+    "title": "装修贷签约人变更",
+    "original_category": "整装签约 / 合同内容修改/变更",
+    "scenarios": [
+      "合同变更管理",
+      "收款与资金管理"
+    ]
+  },
+  {
+    "ticket_id": "785185670",
+    "title": "硬装合同设计费变更",
+    "original_category": "整装签约 / 合同内容修改/变更",
+    "scenarios": [
+      "合同变更管理",
+      "签后管理"
+    ]
+  },
+  {
+    "ticket_id": "785192420",
+    "title": "公签合同法人授权问题",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "合同签署流程",
+      "合同变更管理"
+    ]
+  },
+  {
+    "ticket_id": "785327522",
+    "title": "合同查看权限",
+    "original_category": "整装签约 / 合同查看/管理/下载",
+    "scenarios": [
+      "合同状态管理"
+    ]
+  },
+  {
+    "ticket_id": "785459269",
+    "title": "变更协议待提交审核",
+    "original_category": "整装签约 / 合同审批",
+    "scenarios": [
+      "合同变更管理"
+    ]
+  },
+  {
+    "ticket_id": "785518082",
+    "title": "设计合同退款操作",
+    "original_category": "整装签约 / 合同内容修改/变更",
+    "scenarios": [
+      "合同变更管理"
+    ]
+  },
+  {
+    "ticket_id": "785545706",
+    "title": "新零售合同确认流程",
+    "original_category": "定软电签约 / 线上签约流程咨询",
+    "scenarios": [
+      "选品与销售签约"
+    ]
+  },
+  {
+    "ticket_id": "785556744",
+    "title": "合同变更设计费",
+    "original_category": "整装签约 / 合同内容修改/变更",
+    "scenarios": [
+      "合同变更管理"
+    ]
+  },
+  {
+    "ticket_id": "785569510",
+    "title": "合同缺少材料配送表",
+    "original_category": "整装签约 / 合同查看/管理/下载",
+    "scenarios": [
+      "合同状态管理",
+      "合同创建与配置"
+    ]
+  },
+  {
+    "ticket_id": "785572620",
+    "title": "修改客源手机号和合同金额",
+    "original_category": "定软电签约 / 合同内容修改/变更",
+    "scenarios": [
+      "客源与渠道管理",
+      "合同变更管理",
+      "退单退款管理"
+    ]
+  },
+  {
+    "ticket_id": "785580810",
+    "title": "跨城签约权限申请",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "客源与渠道管理",
+      "合同变更管理",
+      "合同签署流程"
+    ]
+  },
+  {
+    "ticket_id": "785595398",
+    "title": "合同材料配送清单无法配置",
+    "original_category": "整装签约 / 合同配置",
+    "scenarios": [
+      "合同创建与配置"
+    ]
+  },
+  {
+    "ticket_id": "785753406",
+    "title": "电子签章合同客户实名认证",
+    "original_category": "定软电签约 / 线上签约流程咨询",
+    "scenarios": [
+      "身份认证与登录"
+    ]
+  },
+  {
+    "ticket_id": "785795882",
+    "title": "HONE河图系统材料清单上传问题",
+    "original_category": "整装签约 / 合同配置",
+    "scenarios": [
+      "合同创建与配置"
+    ]
+  },
+  {
+    "ticket_id": "785847071",
+    "title": "链接分享问题",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "合同签署流程",
+      "订单与客服管理"
+    ]
+  },
+  {
+    "ticket_id": "786008224",
+    "title": "签署合同实名信息对不上",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "身份认证与登录"
+    ]
+  },
+  {
+    "ticket_id": "786226217",
+    "title": "对公签约问题",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "签约模式管理",
+      "施工与项目管理"
+    ]
+  },
+  {
+    "ticket_id": "786267769",
+    "title": "竣工后线上变更合同",
+    "original_category": "整装签约 / 合同内容修改/变更",
+    "scenarios": [
+      "合同变更管理"
+    ]
+  },
+  {
+    "ticket_id": "786332229",
+    "title": "合同概要展示问题",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "签约工具与小程序"
+    ]
+  },
+  {
+    "ticket_id": "786390084",
+    "title": "合同税率变更流程",
+    "original_category": "整装签约 / 合同内容修改/变更",
+    "scenarios": [
+      "合同变更管理"
+    ]
+  },
+  {
+    "ticket_id": "786398620",
+    "title": "税率修改",
+    "original_category": "整装签约 / 合同内容修改/变更",
+    "scenarios": [
+      "合同变更管理",
+      "退单退款管理"
+    ]
+  },
+  {
+    "ticket_id": "786740973",
+    "title": "跨城签约问题",
+    "original_category": "整装签约 / 合同内容修改/变更",
+    "scenarios": [
+      "合同变更管理",
+      "客源与渠道管理"
+    ]
+  },
+  {
+    "ticket_id": "786756123",
+    "title": "跨城",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "客源与渠道管理"
+    ]
+  },
+  {
+    "ticket_id": "786762894",
+    "title": "跨城签约配置问题",
+    "original_category": "整装签约 / 合同内容修改/变更",
+    "scenarios": [
+      "合同签署流程",
+      "客源与渠道管理"
+    ]
+  },
+  {
+    "ticket_id": "786763884",
+    "title": "合同审核被驳回",
+    "original_category": "整装签约 / 合同审批",
+    "scenarios": [
+      "合同审批与风控",
+      "合同状态管理"
+    ]
+  },
+  {
+    "ticket_id": "786813650",
+    "title": "无法创建销售合同",
+    "original_category": "定软电签约 / 线上签约流程咨询",
+    "scenarios": [
+      "选品与销售签约",
+      "报价管理"
+    ]
+  },
+  {
+    "ticket_id": "786915638",
+    "title": "公章盖章功能咨询",
+    "original_category": "整装签约 / 线上签约流程咨询",
+    "scenarios": [
+      "合同签署流程"
+    ]
+  }
+]
