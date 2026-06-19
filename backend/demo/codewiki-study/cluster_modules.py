@@ -1,0 +1,477 @@
+"""
+模块聚类 — 对应 CodeWiki 的 codewiki/src/be/cluster_modules.py
+
+核心流程：
+1. 将叶子节点按文件分组，格式化为文本
+2. 计算 token 量，判断是否超过阈值
+3. 超过阈值 → 调用 LLM 将组件聚类为模块树
+4. 递归聚类：对每个子模块重复步骤 1-3，直到 token 在阈值内
+5. 输出：层级模块树 dict
+
+LLM 调用：
+- 默认使用 Claude Agent SDK（mimo-v2.5-pro）
+- 可配置 base_url / auth_token / model
+"""
+
+import os
+import json
+import logging
+from typing import Dict, List, Any, Optional, Callable
+from collections import defaultdict
+
+import tiktoken
+
+from models import Node
+
+logger = logging.getLogger(__name__)
+
+# ─────────────────────────────────────────────────────────────
+# Token 计数
+# ─────────────────────────────────────────────────────────────
+
+_enc = tiktoken.encoding_for_model("gpt-4")
+
+
+def count_tokens(text: str) -> int:
+    """计算文本的 token 数（使用 GPT-4 tokenizer）"""
+    return len(_enc.encode(text))
+
+
+# ─────────────────────────────────────────────────────────────
+# 组件格式化
+# ─────────────────────────────────────────────────────────────
+
+def format_potential_core_components(
+    leaf_nodes: List[str], components: Dict[str, Node]
+) -> tuple[str, str]:
+    """
+    将叶子节点按文件分组，生成两份文本：
+    1. 纯列表（组件 ID）
+    2. 带源码（组件 ID + 源代码）
+
+    对应 CodeWiki 的同名函数。
+    """
+    valid_leaf_nodes = [n for n in leaf_nodes if n in components]
+
+    leaf_nodes_by_file = defaultdict(list)
+    for leaf_node in valid_leaf_nodes:
+        leaf_nodes_by_file[components[leaf_node].relative_path].append(leaf_node)
+
+    potential_core_components = ""
+    potential_core_components_with_code = ""
+
+    for file, nodes in sorted(leaf_nodes_by_file.items()):
+        potential_core_components += f"# {file}\n"
+        potential_core_components_with_code += f"# {file}\n"
+        for node_id in nodes:
+            potential_core_components += f"\t{node_id}\n"
+            potential_core_components_with_code += f"\t{node_id}\n"
+            potential_core_components_with_code += f"{components[node_id].source_code}\n"
+
+    return potential_core_components, potential_core_components_with_code
+
+
+def get_clustering_input_token_count(
+    leaf_nodes: List[str], components: Dict[str, Node]
+) -> int:
+    """计算聚类输入的 token 数"""
+    _, with_code = format_potential_core_components(leaf_nodes, components)
+    return count_tokens(with_code)
+
+
+# ─────────────────────────────────────────────────────────────
+# Prompt 模板（对应 CodeWiki 的 prompt_template.py）
+# ─────────────────────────────────────────────────────────────
+
+CLUSTER_REPO_PROMPT = """以下是仓库中所有潜在核心组件的列表：
+<POTENTIAL_CORE_COMPONENTS>
+{potential_core_components}
+</POTENTIAL_CORE_COMPONENTS>
+
+请将这些组件分组，每组内的组件彼此紧密相关，共同构成一个模块。不要包含对仓库而言非核心的组件。
+
+每个组件 ID 的格式为 `<文件路径>::<名称>`。请原样返回 ID，不要去掉 `<文件路径>::` 前缀，也不要将 ID 缩短为仅名称。
+
+请先分析组件之间的关系，然后进行分组，按以下格式返回结果：
+<GROUPED_COMPONENTS>
+{{
+    "模块名_1": {{
+        "path": "<模块路径>",
+        "components": [
+            "<组件ID_1>",
+            "<组件ID_2>"
+        ]
+    }},
+    "模块名_2": {{
+        "path": "<模块路径>",
+        "components": [
+            "<组件ID_1>",
+            "<组件ID_2>"
+        ]
+    }}
+}}
+</GROUPED_COMPONENTS>"""
+
+
+CLUSTER_MODULE_PROMPT = """以下是仓库的模块树：
+
+<MODULE_TREE>
+{module_tree}
+</MODULE_TREE>
+
+以下是模块 {module_name} 中所有潜在核心组件的列表：
+<POTENTIAL_CORE_COMPONENTS>
+{potential_core_components}
+</POTENTIAL_CORE_COMPONENTS>
+
+请将这些组件分组，每组内的组件彼此紧密相关，共同构成一个更小的子模块。不要包含对该模块而言非核心的组件。
+
+每个组件 ID 的格式为 `<文件路径>::<名称>`。请原样返回 ID，不要去掉 `<文件路径>::` 前缀，也不要将 ID 缩短为仅名称。
+
+请先根据已有上下文分析组件之间的关系，然后进行分组，按以下格式返回结果：
+<GROUPED_COMPONENTS>
+{{
+    "模块名_1": {{
+        "path": "<模块路径>",
+        "components": [
+            "<组件ID_1>",
+            "<组件ID_2>"
+        ]
+    }},
+    "模块名_2": {{
+        "path": "<模块路径>",
+        "components": [
+            "<组件ID_1>",
+            "<组件ID_2>"
+        ]
+    }}
+}}
+</GROUPED_COMPONENTS>"""
+
+
+def format_cluster_prompt(
+    potential_core_components: str,
+    module_tree: dict = None,
+    module_name: str = None,
+) -> str:
+    """格式化聚类 Prompt。
+
+    两个分支对应递归聚类的两个阶段：
+    - if not module_tree: 首次聚类（仓库级），只有组件列表，LLM 自由分组
+    - else: 递归聚类（子模块级），额外传入已有模块树作为上下文，
+            避免 LLM 把同一组件重复归类到不同模块
+    """
+    if not module_tree:
+        # 首次聚类：没有已有模块树，只传组件列表
+        return CLUSTER_REPO_PROMPT.format(
+            potential_core_components=potential_core_components
+        )
+    else:
+        # 递归聚类：已有部分模块树，格式化为可读文本作为 LLM 上下文
+        # 格式化已有的模块树为可读文本
+        lines = []
+
+        def _format_tree(tree, indent=0):
+            for key, value in tree.items():
+                if key == module_name:
+                    lines.append(f"{'  ' * indent}{key} (current module)")
+                else:
+                    lines.append(f"{'  ' * indent}{key}")
+
+                by_file = defaultdict(list)
+                for c in value.get("components", []):
+                    if "::" in c:
+                        fpath, name = c.split("::", 1)
+                        by_file[fpath].append(name)
+                    else:
+                        by_file[""].append(c)
+                for fpath, names in by_file.items():
+                    prefix = f"{fpath}: " if fpath else ""
+                    lines.append(f"{'  ' * (indent + 1)} {prefix}{', '.join(names)}")
+
+                children = value.get("children", {})
+                if isinstance(children, dict) and len(children) > 0:
+                    lines.append(f"{'  ' * (indent + 1)} Children:")
+                    _format_tree(children, indent + 2)
+
+        _format_tree(module_tree)
+        formatted_tree = "\n".join(lines)
+
+        return CLUSTER_MODULE_PROMPT.format(
+            potential_core_components=potential_core_components,
+            module_tree=formatted_tree,
+            module_name=module_name,
+        )
+
+
+# ─────────────────────────────────────────────────────────────
+# LLM 调用
+# ─────────────────────────────────────────────────────────────
+
+def create_claude_code_completer(  # 实际使用 claude_agent_sdk
+    base_url: str = None,
+    auth_token: str = None,
+    model: str = None,
+) -> Callable[[str], str]:
+    """
+    创建 Claude Agent SDK 补全函数。
+
+    配置优先级：参数 > 环境变量 > 默认值。
+
+    Args:
+        base_url: API 地址
+        auth_token: 认证 Token
+        model: 模型名
+
+    Returns:
+        completer: (prompt: str) -> str 的函数
+    """
+    import asyncio
+    from claude_agent_sdk import query, ClaudeAgentOptions
+
+    _base_url = base_url or os.getenv("ANTHROPIC_BASE_URL", "https://token-plan-cn.xiaomimimo.com/anthropic")
+    _auth_token = auth_token or os.getenv("ANTHROPIC_AUTH_TOKEN", "tp-cxq9g672kqgmcpmgvzhktpk7vucswrn9atq4i4ehwyxc6ngl")
+    _model = model or os.getenv("ANTHROPIC_MODEL", "mimo-v2.5-pro")
+
+    def completer(prompt: str) -> str:
+        async def _query():
+            result_text = ""
+            turn = 0
+            async for message in query(
+                prompt=prompt,
+                options=ClaudeAgentOptions(
+                    model=_model,
+                    env={
+                        "ANTHROPIC_BASE_URL": _base_url,
+                        "ANTHROPIC_AUTH_TOKEN": _auth_token,
+                    },
+                    allowed_tools=[],
+                    max_turns=50,
+                ),
+            ):
+                msg_type = type(message).__name__
+
+                if msg_type == "AssistantMessage":
+                    turn += 1
+                    logger.info(f"      🤖 [Turn {turn}] model={message.model}")
+                    for block in message.content:
+                        if hasattr(block, "text"):
+                            preview = block.text[:200].replace("\n", " ")
+                            logger.info(f"         💬 {preview}...")
+
+                elif msg_type == "ResultMessage":
+                    logger.info(f"      ✅ ResultMessage (stop_reason={message.stop_reason})")
+                    if message.total_cost_usd:
+                        logger.info(f"         💰 cost: ${message.total_cost_usd:.4f}")
+                    if message.result:
+                        result_text = message.result
+
+                # SystemMessage / UserMessage 是 SDK 内部协议消息，跳过不打印
+
+            return result_text
+
+        return asyncio.run(_query())
+
+    return completer
+
+
+# ─────────────────────────────────────────────────────────────
+# 聚类响应解析
+# ─────────────────────────────────────────────────────────────
+
+def parse_cluster_response(response: str) -> Optional[Dict[str, Any]]:
+    """
+    从 LLM 响应中提取 <GROUPED_COMPONENTS> 标签内的 JSON。
+
+    Returns:
+        解析后的 dict，或 None（解析失败）
+    """
+    if "<GROUPED_COMPONENTS>" not in response or "</GROUPED_COMPONENTS>" not in response:
+        logger.warning("LLM response missing <GROUPED_COMPONENTS> tags")
+        return None
+
+    content = response.split("<GROUPED_COMPONENTS>")[1].split("</GROUPED_COMPONENTS>")[0].strip()
+
+    try:
+        module_tree = json.loads(content)
+    except json.JSONDecodeError:
+        # 兜底：尝试 eval（CodeWiki 原始代码用的 eval）
+        try:
+            module_tree = eval(content)
+        except Exception as e:
+            logger.warning(f"Failed to parse cluster response: {e}")
+            return None
+
+    if not isinstance(module_tree, dict):
+        logger.warning(f"Expected dict, got {type(module_tree)}")
+        return None
+
+    return module_tree
+
+
+# ─────────────────────────────────────────────────────────────
+# 核心聚类逻辑
+# ─────────────────────────────────────────────────────────────
+
+def cluster_modules(
+    leaf_nodes: List[str],
+    components: Dict[str, Node],
+    max_token_per_module: int = 36_369,
+    current_module_tree: dict = None,
+    current_module_name: str = None,
+    current_module_path: List[str] = None,
+    completer: Callable[[str], str] = None,
+) -> Dict[str, Any]:
+    """
+    递归聚类：将组件分组为层级模块树。
+
+    流程：
+    1. 格式化组件列表 + 源码
+    2. 计算 token 量
+    3. 如果 ≤ 阈值 → 不需要聚类，返回 {}
+    4. 如果 > 阈值 → 调用 LLM 聚类
+    5. 对每个子模块递归调用自身
+
+    Args:
+        leaf_nodes: 叶子节点 ID 列表
+        components: 组件字典
+        max_token_per_module: token 阈值（超过则需要聚类）
+        current_module_tree: 当前已有的模块树（递归时用）
+        current_module_name: 当前模块名（递归时用）
+        current_module_path: 当前模块路径（递归时用）
+        completer: LLM 补全函数 (prompt) -> str
+
+    Returns:
+        模块树 dict，格式：
+        {
+            "模块A": {
+                "path": "src/a/",
+                "components": ["comp1", "comp2"],
+                "children": {}  # 递归子模块
+            }
+        }
+        如果不需要聚类，返回 {}
+    """
+    if current_module_tree is None:
+        current_module_tree = {}
+    if current_module_path is None:
+        current_module_path = []
+
+    if completer is None:
+        completer = create_claude_code_completer()
+
+    # ── 1. 格式化组件 ──
+    potential_core_components, potential_core_components_with_code = (
+        format_potential_core_components(leaf_nodes, components)
+    )
+
+    # ── 2. 计算 token ──
+    input_tokens = count_tokens(potential_core_components_with_code)
+    module_label = current_module_name or "repository"
+
+    logger.info(
+        "Module clustering input for %s: %d leaf nodes, %d tokens, threshold %d",
+        module_label, len(leaf_nodes), input_tokens, max_token_per_module,
+    )
+
+    # ── 3. 判断是否需要聚类 ──
+    if input_tokens <= max_token_per_module:
+        logger.info(
+            "Skipping LLM clustering for %s (%d tokens ≤ %d threshold)",
+            module_label, input_tokens, max_token_per_module,
+        )
+        return {}
+
+    # ── 4. 调用 LLM 聚类 ──
+    prompt = format_cluster_prompt(
+        potential_core_components, current_module_tree, current_module_name
+    )
+
+    logger.info("Requesting LLM clustering for %s...", module_label)
+    response = completer(prompt)
+
+    # ── 5. 解析响应 ──
+    module_tree = parse_cluster_response(response)
+
+    if module_tree is None:
+        logger.warning("Clustering failed for %s, falling back to whole-module", module_label)
+        return {}
+
+    if len(module_tree) <= 1:
+        logger.info(
+            "LLM returned ≤1 module for %s, skipping clustering", module_label
+        )
+        return {}
+
+    logger.info(
+        "LLM clustering for %s produced %d top-level modules: %s",
+        module_label, len(module_tree), list(module_tree.keys()),
+    )
+
+    # ── 6. 合并到总模块树 ──
+    if not current_module_tree:
+        # 首次聚类：直接用 LLM 返回的模块树初始化
+        current_module_tree = module_tree
+    else:
+        # 递归聚类：把新的子模块树合并到已有树的对应位置
+        # current_module_path 指向当前正在递归的父模块路径，如 ["ContractCore"]
+        value = current_module_tree
+        for key in current_module_path:
+            # 确保 children 字段存在（递归时可能还没设置）
+            if "children" not in value[key]:
+                value[key]["children"] = {}
+            value = value[key]["children"]
+        for name, info in module_tree.items():
+            info.pop("path", None)
+            value[name] = info
+
+    # ── 7. 递归聚类每个子模块 ──
+    for module_name, module_info in module_tree.items():
+        sub_leaf_nodes = module_info.get("components", [])
+        valid_sub_nodes = [n for n in sub_leaf_nodes if n in components]
+
+        current_module_path.append(module_name)
+        module_info["children"] = cluster_modules(
+            valid_sub_nodes,
+            components,
+            max_token_per_module,
+            current_module_tree,
+            module_name,
+            current_module_path,
+            completer,
+        )
+        current_module_path.pop()
+
+    return module_tree
+
+
+# ─────────────────────────────────────────────────────────────
+# 打印模块树
+# ─────────────────────────────────────────────────────────────
+
+def print_module_tree(module_tree: Dict[str, Any], components: Dict[str, Node], indent: int = 0):
+    """递归打印模块树"""
+    prefix = "  " * indent
+    for module_name, module_info in module_tree.items():
+        comp_ids = module_info.get("components", [])
+        children = module_info.get("children", {})
+
+        # 统计模块内的组件类型
+        type_counts = defaultdict(int)
+        for cid in comp_ids:
+            if cid in components:
+                type_counts[components[cid].component_type] += 1
+
+        type_str = ", ".join(f"{t}:{c}" for t, c in sorted(type_counts.items()))
+        print(f"{prefix}📁 {module_name}  ({len(comp_ids)} components: {type_str})")
+
+        # 列出组件
+        for cid in comp_ids:
+            if cid in components:
+                comp = components[cid]
+                short = cid.split("::")[-1] if "::" in cid else cid
+                print(f"{prefix}  • {short} ({comp.component_type})")
+
+        # 递归子模块
+        if children:
+            print_module_tree(children, components, indent + 1)

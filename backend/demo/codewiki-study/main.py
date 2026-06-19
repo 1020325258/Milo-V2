@@ -1,20 +1,17 @@
 #!/usr/bin/env python3
 """
-CodeWiki 依赖图构建 Demo — 可独立运行
+CodeWiki 源码解析 Demo — 可独立运行
 
-对应 CodeWiki 的步骤 ① build_dependency_graph()
+对应 CodeWiki 的两个步骤：
+  ① build_dependency_graph() — 源码解析 & 依赖图构建
+  ② cluster_modules()        — LLM 驱动的递归模块聚类
 
 用法:
-    # 使用 CodeWiki 的 venv
-    /Users/zqy/work/AI-Project/CodeWiki/.venv/bin/python main.py <仓库路径>
+    # 直接运行（使用默认路径）
+    python main.py
 
-    # 示例
-    /Users/zqy/work/AI-Project/CodeWiki/.venv/bin/python main.py \
-        /Users/zqy/work/project/nrs-sales-project/utopia-nrs-sales-project-service/src/main/java/com/ke/utopia/nrs/salesproject/service/contract/v2/personal
-
-输出:
-    1. 终端打印依赖图摘要
-    2. 保存 dependency_graph.json 到当前目录
+    # 指定路径
+    python main.py /path/to/your/java/project
 """
 
 import os
@@ -22,7 +19,6 @@ import sys
 import json
 import logging
 import time
-from pathlib import Path
 from typing import Dict, List, Any
 from collections import defaultdict
 
@@ -33,6 +29,12 @@ from graph_builder import (
     get_leaf_nodes,
     topological_sort,
     detect_cycles,
+)
+from cluster_modules import (
+    cluster_modules,
+    print_module_tree,
+    get_clustering_input_token_count,
+    create_claude_code_completer,
 )
 
 logging.basicConfig(
@@ -276,13 +278,15 @@ def save_dependency_graph(components: Dict[str, Node], output_path: str):
 # 5. 主入口
 # ─────────────────────────────────────────────────────────────
 
-def main():
-    if len(sys.argv) < 2:
-        print("用法: python main.py <仓库路径>")
-        print("示例: python main.py /path/to/your/java/project")
-        sys.exit(1)
 
-    repo_path = os.path.abspath(sys.argv[1])
+
+
+def main():
+    if len(sys.argv) >= 2:
+        repo_path = os.path.abspath(sys.argv[1])
+    else:
+        repo_path = DEFAULT_REPO_PATH
+        print(f"(未指定路径，使用默认: {repo_path})")
 
     if not os.path.isdir(repo_path):
         print(f"错误: 路径不存在或不是目录: {repo_path}")
@@ -318,13 +322,58 @@ def main():
     leaf_nodes = get_leaf_nodes(graph, components)
     logger.info(f"   Found {len(leaf_nodes)} leaf nodes")
 
-    # ── 打印结果 ──
+    # ── 打印依赖图结果 ──
     print_summary(components, leaf_nodes, graph)
 
-    # ── 保存 JSON ──
+    # ── 保存依赖图 JSON ──
     output_path = os.path.join(os.path.dirname(__file__), f"dependency_graph.json")
     save_dependency_graph(components, output_path)
 
+    # ════════════════════════════════════════════════════════════
+    #  步骤 ②  模块聚类
+    # ════════════════════════════════════════════════════════════
+
+    logger.info("\n" + "=" * 70)
+    logger.info("  步骤 ②  模块聚类 (cluster_modules)")
+    logger.info("=" * 70)
+
+    # ── 检查 token 量 ──
+    clustering_tokens = get_clustering_input_token_count(leaf_nodes, components)
+    logger.info(f"   叶子节点: {len(leaf_nodes)}")
+    logger.info(f"   Token 量: {clustering_tokens}")
+
+    # ── 选择 LLM 补全方式 ──
+    completer = create_claude_code_completer()
+    logger.info("   使用 Claude Agent SDK (mimo-v2.5-pro)")
+
+    # ── 执行聚类 ──
+    module_tree = cluster_modules(
+        leaf_nodes=leaf_nodes,
+        components=components,
+        max_token_per_module=36_369,
+        completer=completer,
+    )
+
+    # ── 打印聚类结果 ──
+    if module_tree:
+        print(f"\n{'=' * 70}")
+        print(f"  模块聚类结果")
+        print(f"{'=' * 70}")
+        print(f"\n🌳 模块树 ({len(module_tree)} top-level modules):")
+        print_module_tree(module_tree, components)
+        print()
+    else:
+        logger.info("   聚类结果: 不需要聚类（token 在阈值内，整体作为一个模块处理）")
+
+    # ── 保存模块树 JSON ──
+    tree_output_path = os.path.join(os.path.dirname(__file__), "module_tree.json")
+    with open(tree_output_path, "w", encoding="utf-8") as f:
+        json.dump(module_tree, f, indent=2, ensure_ascii=False)
+    logger.info(f"✓ Module tree saved to {tree_output_path}")
+
+# 默认路径，方便 IDE 直接 debug 运行（无需命令行参数）
+# DEFAULT_REPO_PATH = "/Users/zqy/work/project/nrs-sales-project/utopia-nrs-sales-project-service/src/main/java/com/ke/utopia/nrs/salesproject/service/contract/v2/personal"
+DEFAULT_REPO_PATH = "/Users/zqy/work/project/nrs-sales-project/utopia-nrs-sales-project-service/src/main/java/com/ke/utopia/nrs/salesproject/service/contract/v2"
 
 if __name__ == "__main__":
     main()
