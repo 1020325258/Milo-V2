@@ -1,0 +1,330 @@
+#!/usr/bin/env python3
+"""
+CodeWiki 依赖图构建 Demo — 可独立运行
+
+对应 CodeWiki 的步骤 ① build_dependency_graph()
+
+用法:
+    # 使用 CodeWiki 的 venv
+    /Users/zqy/work/AI-Project/CodeWiki/.venv/bin/python main.py <仓库路径>
+
+    # 示例
+    /Users/zqy/work/AI-Project/CodeWiki/.venv/bin/python main.py \
+        /Users/zqy/work/project/nrs-sales-project/utopia-nrs-sales-project-service/src/main/java/com/ke/utopia/nrs/salesproject/service/contract/v2/personal
+
+输出:
+    1. 终端打印依赖图摘要
+    2. 保存 dependency_graph.json 到当前目录
+"""
+
+import os
+import sys
+import json
+import logging
+import time
+from pathlib import Path
+from typing import Dict, List, Any
+from collections import defaultdict
+
+from models import Node, CallRelationship
+from java_analyzer import analyze_java_file
+from graph_builder import (
+    build_graph_from_components,
+    get_leaf_nodes,
+    topological_sort,
+    detect_cycles,
+)
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    datefmt="%H:%M:%S",
+)
+logger = logging.getLogger(__name__)
+
+
+# ─────────────────────────────────────────────────────────────
+# 1. 扫描目录，收集所有 Java 文件
+# ─────────────────────────────────────────────────────────────
+
+def scan_java_files(repo_path: str) -> List[Dict[str, str]]:
+    """
+    递归扫描目录，收集所有 .java 文件。
+
+    对应 CodeWiki 的 RepoAnalyzer._build_file_tree() + extract_code_files()
+    """
+    java_files = []
+    repo_path = os.path.abspath(repo_path)
+
+    for root, dirs, files in os.walk(repo_path):
+        # 跳过隐藏目录和构建目录
+        dirs[:] = [
+            d for d in dirs
+            if not d.startswith(".")
+            and d not in ("target", "build", "node_modules", "__pycache__")
+        ]
+
+        for filename in sorted(files):
+            if filename.endswith(".java"):
+                full_path = os.path.join(root, filename)
+                rel_path = os.path.relpath(full_path, repo_path)
+                java_files.append({
+                    "path": full_path,
+                    "relative_path": rel_path,
+                    "name": filename,
+                })
+
+    return java_files
+
+
+# ─────────────────────────────────────────────────────────────
+# 2. 解析所有文件，提取组件和调用关系
+# ─────────────────────────────────────────────────────────────
+
+def parse_all_files(
+    java_files: List[Dict[str, str]], repo_path: str
+) -> Dict[str, Node]:
+    """
+    逐文件调用 Java Analyzer，汇总所有组件。
+
+    对应 CodeWiki 的 CallGraphAnalyzer.analyze_code_files()
+    """
+    components: Dict[str, Node] = {}
+    all_relationships: List[CallRelationship] = []
+
+    start_time = time.time()
+
+    for idx, file_info in enumerate(java_files, 1):
+        file_path = file_info["path"]
+        rel_path = file_info["relative_path"]
+
+        try:
+            with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
+                content = f.read()
+
+            nodes, relationships = analyze_java_file(file_path, content, repo_path)
+
+            for node in nodes:
+                components[node.id] = node
+
+            all_relationships.extend(relationships)
+
+            logger.info(
+                f"  [{idx}/{len(java_files)}] {rel_path} → "
+                f"{len(nodes)} components, {len(relationships)} relationships"
+            )
+
+        except Exception as e:
+            logger.warning(f"  [{idx}/{len(java_files)}] Failed: {rel_path}: {e}")
+
+    elapsed = time.time() - start_time
+    logger.info(
+        f"\n✓ Parsing complete: {len(java_files)} files, "
+        f"{len(components)} components, {len(all_relationships)} relationships "
+        f"({elapsed:.1f}s)"
+    )
+
+    # ── 解析调用关系：将 callee 名称匹配到实际组件 ID ──
+    resolve_call_relationships(components, all_relationships)
+
+    return components
+
+
+# ─────────────────────────────────────────────────────────────
+# 3. 调用关系解析（对应 CodeWiki 的 _resolve_call_relationships）
+# ─────────────────────────────────────────────────────────────
+
+def resolve_call_relationships(
+    components: Dict[str, Node], relationships: List[CallRelationship]
+):
+    """
+    将 callee 名称解析为实际的组件 ID，并写入 components 的 depends_on。
+
+    CodeWiki 的策略：精确匹配 → 后缀匹配 → 简名匹配
+    这里简化为：精确匹配 → 简名匹配
+    """
+    # 构建索引
+    exact_index: Dict[str, List[str]] = defaultdict(list)   # 全名 → [组件ID]
+    simple_index: Dict[str, List[str]] = defaultdict(list)  # 简名 → [组件ID]
+
+    for comp_id, comp in components.items():
+        exact_index[comp_id].append(comp_id)
+        if comp.qualified_name:
+            exact_index[comp.qualified_name].append(comp_id)
+        exact_index[comp.name].append(comp_id)
+
+        simple_index[comp.name].append(comp_id)
+        if comp.qualified_name:
+            simple_index[comp.qualified_name.split(".")[-1]].append(comp_id)
+        if "::" in comp_id:
+            short = comp_id.split("::")[-1]
+            simple_index[short].append(comp_id)
+
+    resolved_count = 0
+    for rel in relationships:
+        if rel.is_resolved and rel.callee in components:
+            # 已解析，直接写入 depends_on
+            if rel.caller in components:
+                components[rel.caller].depends_on.add(rel.callee)
+            resolved_count += 1
+            continue
+
+        callee_name = rel.callee
+        resolved_id = None
+
+        # 1. 精确匹配
+        if callee_name in exact_index and len(exact_index[callee_name]) == 1:
+            resolved_id = exact_index[callee_name][0]
+
+        # 2. 简名匹配
+        if not resolved_id:
+            simple_name = callee_name.split(".")[-1] if "." in callee_name else callee_name
+            if simple_name in simple_index and len(simple_index[simple_name]) == 1:
+                resolved_id = simple_index[simple_name][0]
+
+        if resolved_id and resolved_id in components:
+            rel.callee = resolved_id
+            rel.is_resolved = True
+            if rel.caller in components:
+                components[rel.caller].depends_on.add(resolved_id)
+            resolved_count += 1
+
+    logger.info(f"✓ Resolved {resolved_count}/{len(relationships)} call relationships")
+
+
+# ─────────────────────────────────────────────────────────────
+# 4. 打印结果
+# ─────────────────────────────────────────────────────────────
+
+def print_summary(components: Dict[str, Node], leaf_nodes: List[str], graph: Dict):
+    """打印依赖图摘要"""
+    print("\n" + "=" * 70)
+    print("  依赖图构建结果")
+    print("=" * 70)
+
+    # 组件统计
+    type_counts = defaultdict(int)
+    for comp in components.values():
+        type_counts[comp.component_type] += 1
+
+    print(f"\n📦 组件总数: {len(components)}")
+    for comp_type, count in sorted(type_counts.items(), key=lambda x: -x[1]):
+        print(f"   {comp_type}: {count}")
+
+    # 依赖关系统计
+    total_deps = sum(len(comp.depends_on) for comp in components.values())
+    print(f"\n🔗 依赖关系总数: {total_deps}")
+
+    # 依赖图
+    print(f"\n📊 有向依赖图 (A → B 表示 A 依赖 B):")
+    for comp_id in sorted(components.keys()):
+        comp = components[comp_id]
+        if comp.depends_on:
+            short_id = comp_id.split("::")[-1] if "::" in comp_id else comp_id
+            for dep_id in sorted(comp.depends_on):
+                short_dep = dep_id.split("::")[-1] if "::" in dep_id else dep_id
+                print(f"   {short_id} → {short_dep}")
+
+    # 叶子节点
+    print(f"\n🍃 叶子节点 (不被任何组件依赖): {len(leaf_nodes)}")
+    for leaf in leaf_nodes:
+        comp = components[leaf]
+        print(f"   • {comp.name} ({comp.component_type}) @ {comp.relative_path}")
+
+    # 拓扑排序
+    topo_order = topological_sort(graph)
+    print(f"\n📐 拓扑排序 (依赖在前，被依赖在后):")
+    for i, node_id in enumerate(topo_order, 1):
+        comp = components.get(node_id)
+        if comp:
+            print(f"   {i}. {comp.name} ({comp.component_type})")
+
+    # 环检测
+    cycles = detect_cycles(graph)
+    if cycles:
+        print(f"\n⚠️  检测到 {len(cycles)} 个循环依赖:")
+        for i, cycle in enumerate(cycles, 1):
+            names = []
+            for node_id in cycle:
+                comp = components.get(node_id)
+                names.append(comp.name if comp else node_id.split("::")[-1])
+            print(f"   环 {i}: {' → '.join(names)} → {names[0]}")
+    else:
+        print(f"\n✅ 无循环依赖")
+
+    print("\n" + "=" * 70)
+
+
+def save_dependency_graph(components: Dict[str, Node], output_path: str):
+    """保存依赖图到 JSON 文件"""
+    result = {}
+    for comp_id, comp in components.items():
+        comp_dict = comp.model_dump()
+        # set 不能直接 JSON 序列化，转为 list
+        if "depends_on" in comp_dict and isinstance(comp_dict["depends_on"], set):
+            comp_dict["depends_on"] = list(comp_dict["depends_on"])
+        result[comp_id] = comp_dict
+
+    os.makedirs(os.path.dirname(output_path) or ".", exist_ok=True)
+    with open(output_path, "w", encoding="utf-8") as f:
+        json.dump(result, f, indent=2, ensure_ascii=False)
+
+    logger.info(f"✓ Dependency graph saved to {output_path}")
+
+
+# ─────────────────────────────────────────────────────────────
+# 5. 主入口
+# ─────────────────────────────────────────────────────────────
+
+def main():
+    if len(sys.argv) < 2:
+        print("用法: python main.py <仓库路径>")
+        print("示例: python main.py /path/to/your/java/project")
+        sys.exit(1)
+
+    repo_path = os.path.abspath(sys.argv[1])
+
+    if not os.path.isdir(repo_path):
+        print(f"错误: 路径不存在或不是目录: {repo_path}")
+        sys.exit(1)
+
+    repo_name = os.path.basename(repo_path)
+
+    print(f"\n🔍 CodeWiki 依赖图构建 Demo")
+    print(f"   仓库路径: {repo_path}")
+    print(f"   仓库名称: {repo_name}")
+    print()
+
+    # ── 步骤 1: 扫描 Java 文件 ──
+    logger.info("📂 Scanning Java files...")
+    java_files = scan_java_files(repo_path)
+    logger.info(f"   Found {len(java_files)} Java files")
+
+    if not java_files:
+        print("未找到 Java 文件，退出。")
+        sys.exit(0)
+
+    # ── 步骤 2: 解析所有文件，提取组件 ──
+    logger.info("\n🔬 Parsing Java files with tree-sitter...")
+    components = parse_all_files(java_files, repo_path)
+
+    # ── 步骤 3: 构建依赖图 ──
+    logger.info("\n📊 Building dependency graph...")
+    graph = build_graph_from_components(components)
+    logger.info(f"   Graph: {len(graph)} nodes, {sum(len(d) for d in graph.values())} edges")
+
+    # ── 步骤 4: 找叶子节点 ──
+    logger.info("\n🍃 Finding leaf nodes...")
+    leaf_nodes = get_leaf_nodes(graph, components)
+    logger.info(f"   Found {len(leaf_nodes)} leaf nodes")
+
+    # ── 打印结果 ──
+    print_summary(components, leaf_nodes, graph)
+
+    # ── 保存 JSON ──
+    output_path = os.path.join(os.path.dirname(__file__), f"dependency_graph.json")
+    save_dependency_graph(components, output_path)
+
+
+if __name__ == "__main__":
+    main()
