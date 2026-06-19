@@ -208,6 +208,47 @@ def format_cluster_prompt(
 # LLM 调用
 # ─────────────────────────────────────────────────────────────
 
+def create_openai_completer(
+    base_url: str = None,
+    api_key: str = None,
+    model: str = None,
+) -> Callable[[str], str]:
+    """
+    创建 OpenAI 兼容 API 补全函数。
+
+    直接调用 HTTP API，无 CLI 子进程开销，速度快。
+    适用于小米 mimo token plan、vLLM、Ollama 等 OpenAI 兼容服务。
+
+    Args:
+        base_url: API 地址
+        api_key: API Key
+        model: 模型名
+
+    Returns:
+        completer: (prompt: str) -> str 的函数
+    """
+    from openai import OpenAI
+
+    _base_url = base_url or os.getenv("OPENAI_BASE_URL", "https://token-plan-cn.xiaomimimo.com/v1")
+    _api_key = api_key or os.getenv("OPENAI_API_KEY", "tp-cxq9g672kqgmcpmgvzhktpk7vucswrn9atq4i4ehwyxc6ngl")
+    _model = model or os.getenv("OPENAI_MODEL", "mimo-v2.5-pro")
+
+    client = OpenAI(base_url=_base_url, api_key=_api_key)
+
+    def completer(prompt: str) -> str:
+        response = client.chat.completions.create(
+            model=_model,
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.0,
+            max_tokens=8192,
+        )
+        result = response.choices[0].message.content
+        logger.info(f"      ✅ OpenAI response: {response.usage.total_tokens} tokens, model={response.model}")
+        return result
+
+    return completer
+
+
 def create_claude_code_completer(  # 实际使用 claude_agent_sdk
     base_url: str = None,
     auth_token: str = None,

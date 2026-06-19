@@ -34,7 +34,7 @@ from cluster_modules import (
     cluster_modules,
     print_module_tree,
     get_clustering_input_token_count,
-    create_claude_code_completer,
+    create_openai_completer, create_claude_code_completer,
 )
 
 logging.basicConfig(
@@ -343,8 +343,9 @@ def main():
     logger.info(f"   Token 量: {clustering_tokens}")
 
     # ── 选择 LLM 补全方式 ──
+    # completer = create_openai_completer()
     completer = create_claude_code_completer()
-    logger.info("   使用 Claude Agent SDK (mimo-v2.5-pro)")
+    logger.info("   使用 OpenAI API (mimo-v2.5-pro)")
 
     # ── 执行聚类 ──
     module_tree = cluster_modules(
