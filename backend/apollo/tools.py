@@ -32,6 +32,9 @@ class ApolloQueryTool(ToolBase):
         "查询 Apollo 配置中心的配置数据。"
         "支持按 key 精确查询、列出全部配置、模糊搜索 key、查看 release 信息。"
         "当你需要了解某个服务的配置项、配置值、或排查配置相关问题时使用。"
+        "【重要】配置可能分布在不同 namespace 中，常见 namespace 包括："
+        "application（默认）、contract、bootstrap 等。"
+        "如果在默认 namespace 中找不到配置，请尝试其他 namespace。"
     )
     input_schema = {
         "type": "object",
@@ -149,7 +152,14 @@ class ApolloQueryTool(ToolBase):
 
         data = await self.client.get_item(env, app_id, cluster, namespace, key)
         if data is None:
-            return self._error_response(f"配置项不存在: {key}")
+            # 提供更详细的错误提示，建议尝试其他 namespace
+            suggestion = ""
+            if namespace == "application":
+                suggestion = "\n\n【建议】该配置可能在其他 namespace 中，请尝试：\n- namespace='contract'\n- namespace='bootstrap'"
+            return self._error_response(
+                f"在 namespace='{namespace}' 中未找到配置项: {key}"
+                f"{suggestion}"
+            )
 
         value = data.get("value", "")
         result = (
@@ -170,7 +180,14 @@ class ApolloQueryTool(ToolBase):
         """列出 namespace 下所有配置项。"""
         data = await self.client.list_items(env, app_id, cluster, namespace)
         if data is None or not isinstance(data, list):
-            return self._error_response(f"无法获取 namespace={namespace} 的配置列表")
+            return self._error_response(
+                f"无法获取 namespace={namespace} 的配置列表。\n"
+                f"可能原因：\n"
+                f"1. Apollo token 过期或无效\n"
+                f"2. namespace '{namespace}' 不存在\n"
+                f"3. Apollo 服务不可达\n"
+                f"建议：尝试使用其他 namespace（如 'application', 'contract'）或检查 Apollo 配置"
+            )
 
         if not data:
             return self._info_response(f"namespace={namespace} 下没有配置项")
@@ -204,7 +221,14 @@ class ApolloQueryTool(ToolBase):
 
         data = await self.client.list_items(env, app_id, cluster, namespace)
         if data is None or not isinstance(data, list):
-            return self._error_response(f"无法获取 namespace={namespace} 的配置列表")
+            return self._error_response(
+                f"无法获取 namespace={namespace} 的配置列表。\n"
+                f"可能原因：\n"
+                f"1. Apollo token 过期或无效\n"
+                f"2. namespace '{namespace}' 不存在\n"
+                f"3. Apollo 服务不可达\n"
+                f"建议：尝试使用其他 namespace（如 'application', 'contract'）或检查 Apollo 配置"
+            )
 
         keyword_lower = keyword.lower()
         matched = [

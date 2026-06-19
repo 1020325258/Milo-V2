@@ -54,12 +54,40 @@ class ApolloClient:
 
         Returns:
             配置项列表，每个元素含 key, value, comment 等。
+            自动处理分页，返回所有配置项。
         """
-        url = (
-            f"{self.base_url}/openapi/v1/envs/{env}/apps/{app_id}"
-            f"/clusters/{cluster}/namespaces/{namespace}/items"
-        )
-        return await self._get(url)
+        all_items = []
+        page = 0
+        page_size = 100  # 每页获取更多数据
+
+        while True:
+            url = (
+                f"{self.base_url}/openapi/v1/envs/{env}/apps/{app_id}"
+                f"/clusters/{cluster}/namespaces/{namespace}/items"
+                f"?page={page}&size={page_size}"
+            )
+            data = await self._get(url)
+
+            if data is None:
+                return None if page == 0 else all_items
+
+            # 处理分页格式的响应
+            if isinstance(data, dict) and "content" in data:
+                items = data["content"]
+                all_items.extend(items)
+
+                # 检查是否还有更多页
+                total = data.get("total", 0)
+                if len(all_items) >= total or len(items) < page_size:
+                    break
+                page += 1
+            elif isinstance(data, list):
+                # 非分页格式，直接返回
+                return data
+            else:
+                return None
+
+        return all_items
 
     async def get_latest_release(
         self, env: str, app_id: str, cluster: str, namespace: str,
@@ -85,18 +113,33 @@ class ApolloClient:
         if self.token:
             headers["Authorization"] = self.token
 
-        async with httpx.AsyncClient(timeout=self.timeout) as client:
-            response = await client.get(url, headers=headers)
+        try:
+            async with httpx.AsyncClient(timeout=self.timeout) as client:
+                response = await client.get(url, headers=headers)
 
-            if response.status_code == 404:
-                logger.info("Apollo resource not found: %s", url)
-                return None
+                if response.status_code == 404:
+                    logger.info("Apollo resource not found: %s", url)
+                    return None
 
-            if response.status_code != 200:
-                logger.warning(
-                    "Apollo API error: status=%d, url=%s, body=%s",
-                    response.status_code, url, response.text[:500],
-                )
-                return None
+                if response.status_code == 401:
+                    logger.warning("Apollo authentication failed: token may be invalid or expired")
+                    return None
 
-            return response.json()
+                if response.status_code == 403:
+                    logger.warning("Apollo access denied: insufficient permissions")
+                    return None
+
+                if response.status_code != 200:
+                    logger.warning(
+                        "Apollo API error: status=%d, url=%s, body=%s",
+                        response.status_code, url, response.text[:500],
+                    )
+                    return None
+
+                return response.json()
+        except httpx.ConnectError:
+            logger.error("Apollo connection failed: %s", url)
+            return None
+        except httpx.TimeoutException:
+            logger.error("Apollo request timeout: %s", url)
+            return None
