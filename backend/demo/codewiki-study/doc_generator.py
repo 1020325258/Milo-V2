@@ -188,9 +188,12 @@ LEAF_USER_PROMPT = """请为 {module_name} 模块生成综合文档。
 {formatted_core_component_codes}
 </CORE_COMPONENT_CODES>
 
-重要：请直接输出完整的 {module_name}.md 文档内容（Markdown 格式，包含 Mermaid 图表）。
-不要输出文档目录、结构概览或描述你要写什么。直接输出完整的文档正文，从 # 标题开始。
-文档应包含：模块概述、架构图、核心组件详解、依赖关系、数据流、关键设计模式等。"""
+重要要求：
+1. 直接输出完整的 {module_name}.md 文档正文，从 # 标题开始
+2. 不要输出任何前缀说明（如"文档已生成"、"Now I have enough context"等）
+3. 不要输出文档目录或结构概览
+4. 不要描述你要写什么，直接写出来
+5. 文档应包含：模块概述、架构图、核心组件详解、依赖关系、数据流、关键设计模式等"""
 
 # 用户 Prompt：父模块概览
 PARENT_USER_PROMPT = """请为 {module_name} 模块生成简要概览文档。

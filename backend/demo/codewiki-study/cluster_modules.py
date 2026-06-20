@@ -338,9 +338,18 @@ def create_claude_code_completer(  # 实际使用 claude_agent_sdk
                     turn += 1
                     logger.info(f"      🤖 [Turn {turn}] model={message.model}")
                     for block in message.content:
-                        if hasattr(block, "text"):
-                            preview = block.text[:200].replace("\n", " ")
-                            logger.info(f"         💬 {preview}...")
+                        block_type = type(block).__name__
+                        if hasattr(block, "text") and block.text:
+                            text = block.text
+                            if len(text) > 500:
+                                logger.info(f"         💬 {text[:500]}...")
+                            else:
+                                logger.info(f"         💬 {text}")
+                        elif block_type == "ToolUseBlock":
+                            logger.info(f"         🔧 tool_use: {block.name}({json.dumps(block.input, ensure_ascii=False)[:200]})")
+                        elif block_type == "ToolResultBlock":
+                            content = str(block.content)[:300] if block.content else ""
+                            logger.info(f"         📋 tool_result: {content}")
 
                 elif msg_type == "ResultMessage":
                     logger.info(f"      ✅ ResultMessage (stop_reason={message.stop_reason})")
@@ -348,6 +357,8 @@ def create_claude_code_completer(  # 实际使用 claude_agent_sdk
                         logger.info(f"         💰 cost: ${message.total_cost_usd:.4f}")
                     if message.result:
                         result_text = message.result
+                        preview = result_text[:500] if len(result_text) > 500 else result_text
+                        logger.info(f"         📝 result: {preview}")
 
             return result_text
 
@@ -406,9 +417,18 @@ def create_claude_code_doc_completer(
                     turn += 1
                     logger.info(f"      🤖 [Turn {turn}] model={message.model}")
                     for block in message.content:
-                        if hasattr(block, "text"):
-                            preview = block.text[:200].replace("\n", " ")
-                            logger.info(f"         💬 {preview}...")
+                        block_type = type(block).__name__
+                        if hasattr(block, "text") and block.text:
+                            text = block.text
+                            if len(text) > 500:
+                                logger.info(f"         💬 {text[:500]}...")
+                            else:
+                                logger.info(f"         💬 {text}")
+                        elif block_type == "ToolUseBlock":
+                            logger.info(f"         🔧 tool_use: {block.name}({json.dumps(block.input, ensure_ascii=False)[:200]})")
+                        elif block_type == "ToolResultBlock":
+                            content = str(block.content)[:300] if block.content else ""
+                            logger.info(f"         📋 tool_result: {content}")
 
                 elif msg_type == "ResultMessage":
                     logger.info(f"      ✅ ResultMessage (stop_reason={message.stop_reason})")
@@ -416,6 +436,8 @@ def create_claude_code_doc_completer(
                         logger.info(f"         💰 cost: ${message.total_cost_usd:.4f}")
                     if message.result:
                         result_text = message.result
+                        preview = result_text[:500] if len(result_text) > 500 else result_text
+                        logger.info(f"         📝 result: {preview}")
 
             return result_text
 
