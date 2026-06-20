@@ -150,7 +150,7 @@ LEAF_SYSTEM_PROMPT = """<ROLE>
 <WORKFLOW>
 1. 分析提供的代码组件和模块结构
 2. 探索组件之间的依赖关系（如有需要）
-3. 生成完整的 {module_name}.md 文档文件
+3. 直接输出完整的 {module_name}.md 文档正文（从 # 标题开始，不要输出目录或概览）
 </WORKFLOW>
 {custom_instructions}"""
 
@@ -176,6 +176,9 @@ PARENT_SYSTEM_PROMPT = """<ROLE>
 # 用户 Prompt：叶子模块
 LEAF_USER_PROMPT = """请为 {module_name} 模块生成综合文档。
 
+源码仓库路径：{repo_path}
+如果需要查看额外的源码文件以理解依赖关系，请直接读取。
+
 <MODULE_TREE>
 {module_tree}
 </MODULE_TREE>
@@ -185,7 +188,9 @@ LEAF_USER_PROMPT = """请为 {module_name} 模块生成综合文档。
 {formatted_core_component_codes}
 </CORE_COMPONENT_CODES>
 
-请生成 {module_name}.md 文档，使用 Markdown 格式，包含 Mermaid 图表。"""
+重要：请直接输出完整的 {module_name}.md 文档内容（Markdown 格式，包含 Mermaid 图表）。
+不要输出文档目录、结构概览或描述你要写什么。直接输出完整的文档正文，从 # 标题开始。
+文档应包含：模块概述、架构图、核心组件详解、依赖关系、数据流、关键设计模式等。"""
 
 # 用户 Prompt：父模块概览
 PARENT_USER_PROMPT = """请为 {module_name} 模块生成简要概览文档。
@@ -304,12 +309,14 @@ def format_leaf_prompt(
     component_ids: List[str],
     components: Dict[str, Node],
     module_tree: dict,
+    repo_path: str = "",
 ) -> str:
     """格式化叶子模块的文档生成 Prompt"""
     tree_text = _format_module_tree_text(module_tree, target_module=module_name)
     codes = _format_component_codes(component_ids, components)
     return LEAF_USER_PROMPT.format(
         module_name=module_name,
+        repo_path=repo_path,
         module_tree=tree_text,
         formatted_core_component_codes=codes,
     )
@@ -455,7 +462,7 @@ def generate_documentation(
         # 没有模块树 → 整体作为一个模块处理
         logger.info("No module tree, processing whole repo as one module")
         _generate_single_module_docs(
-            repo_name, list(components.keys()), components, module_tree, docs_dir, completer
+            repo_name, list(components.keys()), components, module_tree, docs_dir, completer, repo_path
         )
         _rename_to_overview(docs_dir, repo_name)
         return docs_dir
@@ -477,7 +484,7 @@ def generate_documentation(
         if is_leaf_module(module_info):
             logger.info(f"  📄 Processing leaf module: {module_key}")
             _generate_leaf_module_docs(
-                module_name, module_info, components, module_tree, docs_dir, completer
+                module_name, module_info, components, module_tree, docs_dir, completer, repo_path
             )
         else:
             logger.info(f"  📁 Processing parent module: {module_key}")
@@ -499,6 +506,7 @@ def _generate_leaf_module_docs(
     module_tree: dict,
     docs_dir: str,
     completer: Callable[[str, str], str],
+    repo_path: str = "",
     max_retries: int = 2,
 ):
     """为叶子模块生成文档，包含 Mermaid 语法验证 + 自动重试"""
@@ -513,7 +521,7 @@ def _generate_leaf_module_docs(
         return
 
     system_prompt = LEAF_SYSTEM_PROMPT.format(module_name=module_name, custom_instructions="")
-    user_prompt = format_leaf_prompt(module_name, component_ids, components, module_tree)
+    user_prompt = format_leaf_prompt(module_name, component_ids, components, module_tree, repo_path)
 
     for attempt in range(max_retries + 1):
         # 调用 LLM
@@ -654,10 +662,11 @@ def _generate_single_module_docs(
     module_tree: dict,
     docs_dir: str,
     completer: Callable[[str, str], str],
+    repo_path: str = "",
 ):
     """当没有模块树时，整体作为一个模块生成文档"""
     system_prompt = LEAF_SYSTEM_PROMPT.format(module_name=repo_name, custom_instructions="")
-    user_prompt = format_leaf_prompt(repo_name, component_ids, components, module_tree)
+    user_prompt = format_leaf_prompt(repo_name, component_ids, components, module_tree, repo_path)
 
     logger.info(f"    Calling LLM for {repo_name}.md...")
     response = completer(system_prompt, user_prompt)

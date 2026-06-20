@@ -115,7 +115,10 @@ def get_clustering_input_token_count(
 # Prompt 模板（对应 CodeWiki 的 prompt_template.py）
 # ─────────────────────────────────────────────────────────────
 
-CLUSTER_REPO_PROMPT = """以下是仓库中所有潜在核心组件的列表：
+CLUSTER_REPO_PROMPT = """源码仓库路径：{repo_path}
+如果需要查看源码文件以理解组件之间的关系，请直接读取。
+
+以下是仓库中所有潜在核心组件的列表：
 <POTENTIAL_CORE_COMPONENTS>
 {potential_core_components}
 </POTENTIAL_CORE_COMPONENTS>
@@ -149,7 +152,10 @@ CLUSTER_REPO_PROMPT = """以下是仓库中所有潜在核心组件的列表：
 </GROUPED_COMPONENTS>"""
 
 
-CLUSTER_MODULE_PROMPT = """以下是仓库的模块树：
+CLUSTER_MODULE_PROMPT = """源码仓库路径：{repo_path}
+如果需要查看源码文件以理解组件之间的关系，请直接读取。
+
+以下是仓库的模块树：
 
 <MODULE_TREE>
 {module_tree}
@@ -193,6 +199,7 @@ def format_cluster_prompt(
     potential_core_components: str,
     module_tree: dict = None,
     module_name: str = None,
+    repo_path: str = "",
 ) -> str:
     """格式化聚类 Prompt。
 
@@ -204,7 +211,8 @@ def format_cluster_prompt(
     if not module_tree:
         # 首次聚类：没有已有模块树，只传组件列表
         return CLUSTER_REPO_PROMPT.format(
-            potential_core_components=potential_core_components
+            repo_path=repo_path,
+            potential_core_components=potential_core_components,
         )
     else:
         # 递归聚类：已有部分模块树，格式化为可读文本作为 LLM 上下文
@@ -238,6 +246,7 @@ def format_cluster_prompt(
         formatted_tree = "\n".join(lines)
 
         return CLUSTER_MODULE_PROMPT.format(
+            repo_path=repo_path,
             potential_core_components=potential_core_components,
             module_tree=formatted_tree,
             module_name=module_name,
@@ -356,6 +365,65 @@ def create_claude_code_completer(  # 实际使用 claude_agent_sdk
     return completer
 
 
+def create_claude_code_doc_completer(
+    base_url: str = None,
+    auth_token: str = None,
+    model: str = None,
+) -> Callable[[str, str], str]:
+    """
+    创建 Claude Agent SDK 文档生成补全函数（system + user 双 prompt）。
+
+    用于步骤③文档生成，支持多轮交互，LLM 可以主动读取源码文件。
+    """
+    import asyncio
+    from claude_agent_sdk import query, ClaudeAgentOptions
+
+    _base_url = base_url or os.getenv("ANTHROPIC_BASE_URL", "https://token-plan-cn.xiaomimimo.com/anthropic")
+    _auth_token = auth_token or os.getenv("ANTHROPIC_AUTH_TOKEN", "tp-cxq9g672kqgmcpmgvzhktpk7vucswrn9atq4i4ehwyxc6ngl")
+    _model = model or os.getenv("ANTHROPIC_MODEL", "mimo-v2.5-pro")
+
+    def completer(system_prompt: str, user_prompt: str) -> str:
+        full_prompt = f"{system_prompt}\n\n---\n\n{user_prompt}"
+
+        async def _query():
+            result_text = ""
+            turn = 0
+            async for message in query(
+                prompt=full_prompt,
+                options=ClaudeAgentOptions(
+                    model=_model,
+                    env={
+                        "ANTHROPIC_BASE_URL": _base_url,
+                        "ANTHROPIC_AUTH_TOKEN": _auth_token,
+                    },
+                    allowed_tools=[],
+                    max_turns=50,
+                ),
+            ):
+                msg_type = type(message).__name__
+
+                if msg_type == "AssistantMessage":
+                    turn += 1
+                    logger.info(f"      🤖 [Turn {turn}] model={message.model}")
+                    for block in message.content:
+                        if hasattr(block, "text"):
+                            preview = block.text[:200].replace("\n", " ")
+                            logger.info(f"         💬 {preview}...")
+
+                elif msg_type == "ResultMessage":
+                    logger.info(f"      ✅ ResultMessage (stop_reason={message.stop_reason})")
+                    if message.total_cost_usd:
+                        logger.info(f"         💰 cost: ${message.total_cost_usd:.4f}")
+                    if message.result:
+                        result_text = message.result
+
+            return result_text
+
+        return asyncio.run(_query())
+
+    return completer
+
+
 # ─────────────────────────────────────────────────────────────
 # 聚类响应解析
 # ─────────────────────────────────────────────────────────────
@@ -402,6 +470,7 @@ def cluster_modules(
     current_module_name: str = None,
     current_module_path: List[str] = None,
     completer: Callable[[str], str] = None,
+    repo_path: str = "",
 ) -> Dict[str, Any]:
     """
     递归聚类：将组件分组为层级模块树。
@@ -468,7 +537,7 @@ def cluster_modules(
     # ── 4. 调用 LLM 聚类 ──
     # 使用带摘要的版本，让 LLM 看到依赖/行数/Javadoc，更好地理解组件职责
     prompt = format_cluster_prompt(
-        potential_core_components_with_summary, current_module_tree, current_module_name
+        potential_core_components_with_summary, current_module_tree, current_module_name, repo_path
     )
 
     logger.info("Requesting LLM clustering for %s...", module_label)
@@ -523,6 +592,7 @@ def cluster_modules(
             module_name,
             current_module_path,
             completer,
+            repo_path,
         )
         current_module_path.pop()
 

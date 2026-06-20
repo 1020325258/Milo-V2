@@ -35,8 +35,13 @@ from cluster_modules import (
     cluster_modules,
     print_module_tree,
     get_clustering_input_token_count,
+    create_openai_completer,
+    create_claude_code_completer,
+    create_claude_code_doc_completer,
 )
 from doc_generator import generate_documentation
+
+
 
 logging.basicConfig(
     level=logging.INFO,
@@ -331,16 +336,34 @@ def main():
     save_dependency_graph(components, output_path)
 
     # ════════════════════════════════════════════════════════════
-    #  创建共享的 OpenAI 客户端（步骤②③共用）
+    #  创建 LLM completer（根据 LLM_BACKEND 配置选择）
     # ════════════════════════════════════════════════════════════
 
-    from openai import OpenAI
-
-    _openai_base_url = "https://token-plan-cn.xiaomimimo.com/v1"
-    _openai_api_key = "tp-cxq9g672kqgmcpmgvzhktpk7vucswrn9atq4i4ehwyxc6ngl"
-    _openai_model = "mimo-v2.5-pro"
-    _openai_client = OpenAI(base_url=_openai_base_url, api_key=_openai_api_key)
-    logger.info(f"   OpenAI client: {_openai_base_url}, model={_openai_model}")
+    if LLM_BACKEND == "claude_code":
+        cluster_completer = create_claude_code_completer()
+        doc_completer = create_claude_code_doc_completer()
+        logger.info(f"   LLM Backend: Claude Code SDK (mimo-v2.5-pro)")
+    else:
+        cluster_completer = create_openai_completer()
+        # OpenAI 的 doc_completer 需要 system + user 双 prompt
+        from openai import OpenAI
+        _client = OpenAI(
+            base_url="https://token-plan-cn.xiaomimimo.com/v1",
+            api_key="tp-cxq9g672kqgmcpmgvzhktpk7vucswrn9atq4i4ehwyxc6ngl",
+        )
+        def doc_completer(system_prompt: str, user_prompt: str) -> str:
+            response = _client.chat.completions.create(
+                model="mimo-v2.5-pro",
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt},
+                ],
+                temperature=0.0, max_tokens=8192,
+            )
+            result = response.choices[0].message.content
+            logger.info(f"      ✅ LLM response: {response.usage.total_tokens} tokens")
+            return result
+        logger.info(f"   LLM Backend: OpenAI API (mimo-v2.5-pro)")
 
     # ════════════════════════════════════════════════════════════
     #  步骤 ②  模块聚类
@@ -355,25 +378,13 @@ def main():
     logger.info(f"   叶子节点: {len(leaf_nodes)}")
     logger.info(f"   Token 量: {clustering_tokens}")
 
-    # ── 聚类用的 completer（单 prompt）──
-    def cluster_completer(prompt: str) -> str:
-        response = _openai_client.chat.completions.create(
-            model=_openai_model,
-            messages=[{"role": "user", "content": prompt}],
-            temperature=0.0, max_tokens=8192,
-        )
-        result = response.choices[0].message.content
-        logger.info(f"      ✅ LLM response: {response.usage.total_tokens} tokens")
-        return result
-
-    logger.info("   使用 OpenAI API (mimo-v2.5-pro)")
-
     # ── 执行聚类 ──
     module_tree = cluster_modules(
         leaf_nodes=leaf_nodes,
         components=components,
         max_token_per_module=36_369,
         completer=cluster_completer,
+        repo_path=repo_path,
     )
 
     # ── 打印聚类结果 ──
@@ -401,20 +412,6 @@ def main():
     logger.info("  步骤 ③  生成模块文档 (generate_documentation)")
     logger.info("=" * 70)
 
-    # ── 文档生成用的 completer（system + user 双 prompt，复用共享客户端）──
-    def doc_completer(system_prompt: str, user_prompt: str) -> str:
-        response = _openai_client.chat.completions.create(
-            model=_openai_model,
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_prompt},
-            ],
-            temperature=0.0, max_tokens=8192,
-        )
-        result = response.choices[0].message.content
-        logger.info(f"      ✅ LLM response: {response.usage.total_tokens} tokens")
-        return result
-
     # ── 配置 ──
     docs_dir = os.path.join(os.path.dirname(__file__), "output_docs")
     repo_name = os.path.basename(repo_path)
@@ -434,6 +431,10 @@ def main():
 # 默认路径，方便 IDE 直接 debug 运行（无需命令行参数）
 # DEFAULT_REPO_PATH = "/Users/zqy/work/project/nrs-sales-project/utopia-nrs-sales-project-service/src/main/java/com/ke/utopia/nrs/salesproject/service/contract/v2/personal"
 DEFAULT_REPO_PATH = "/Users/zqy/work/project/nrs-sales-project/utopia-nrs-sales-project-service/src/main/java/com/ke/utopia/nrs/salesproject/service/contract/v2"
+# ════════════════════════════════════════════════════════════
+#  LLM 后端配置：切换此处即可在 OpenAI / Claude Code SDK 之间切换
+# ════════════════════════════════════════════════════════════
+LLM_BACKEND = "claude_code"  # "openai" 或 "claude_code"
 
 if __name__ == "__main__":
     main()
