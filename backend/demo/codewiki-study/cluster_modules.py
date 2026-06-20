@@ -41,13 +41,36 @@ def count_tokens(text: str) -> int:
 # 组件格式化
 # ─────────────────────────────────────────────────────────────
 
+def _build_component_summary(comp: Node) -> str:
+    """构建组件的简要摘要（依赖 + 行数 + Javadoc），帮助 LLM 理解职责"""
+    parts = []
+
+    # 行数
+    if comp.start_line and comp.end_line:
+        lines = comp.end_line - comp.start_line + 1
+        parts.append(f"{lines} lines")
+
+    # 依赖的其他组件
+    if comp.depends_on:
+        short_deps = [d.split("::")[-1] if "::" in d else d for d in sorted(comp.depends_on)]
+        parts.append(f"depends on: {', '.join(short_deps)}")
+
+    # Javadoc（取前 200 字符）
+    if comp.docstring:
+        doc = comp.docstring[:200].replace("\n", " ").strip()
+        parts.append(f"doc: {doc}")
+
+    return " | ".join(parts) if parts else ""
+
+
 def format_potential_core_components(
     leaf_nodes: List[str], components: Dict[str, Node]
-) -> tuple[str, str]:
+) -> tuple[str, str, str]:
     """
-    将叶子节点按文件分组，生成两份文本：
+    将叶子节点按文件分组，生成三份文本：
     1. 纯列表（组件 ID）
     2. 带源码（组件 ID + 源代码）
+    3. 带摘要（组件 ID + 依赖/行数/Javadoc）
 
     对应 CodeWiki 的同名函数。
     """
@@ -59,23 +82,32 @@ def format_potential_core_components(
 
     potential_core_components = ""
     potential_core_components_with_code = ""
+    potential_core_components_with_summary = ""
 
     for file, nodes in sorted(leaf_nodes_by_file.items()):
         potential_core_components += f"# {file}\n"
         potential_core_components_with_code += f"# {file}\n"
+        potential_core_components_with_summary += f"# {file}\n"
         for node_id in nodes:
+            comp = components[node_id]
             potential_core_components += f"\t{node_id}\n"
             potential_core_components_with_code += f"\t{node_id}\n"
-            potential_core_components_with_code += f"{components[node_id].source_code}\n"
+            potential_core_components_with_code += f"{comp.source_code}\n"
+            # 带摘要的版本
+            summary = _build_component_summary(comp)
+            if summary:
+                potential_core_components_with_summary += f"\t{node_id}  [{summary}]\n"
+            else:
+                potential_core_components_with_summary += f"\t{node_id}\n"
 
-    return potential_core_components, potential_core_components_with_code
+    return potential_core_components, potential_core_components_with_code, potential_core_components_with_summary
 
 
 def get_clustering_input_token_count(
     leaf_nodes: List[str], components: Dict[str, Node]
 ) -> int:
     """计算聚类输入的 token 数"""
-    _, with_code = format_potential_core_components(leaf_nodes, components)
+    _, with_code, _ = format_potential_core_components(leaf_nodes, components)
     return count_tokens(with_code)
 
 
@@ -402,7 +434,9 @@ def cluster_modules(
         completer = create_claude_code_completer()
 
     # ── 1. 格式化组件 ──
-    potential_core_components, potential_core_components_with_code = (
+    # with_summary: 组件 ID + 依赖/行数/Javadoc（发给 LLM 做聚类）
+    # with_code:    组件 ID + 完整源码（仅用于计算 token 数）
+    _, potential_core_components_with_code, potential_core_components_with_summary = (
         format_potential_core_components(leaf_nodes, components)
     )
 
@@ -424,8 +458,9 @@ def cluster_modules(
         return {}
 
     # ── 4. 调用 LLM 聚类 ──
+    # 使用带摘要的版本，让 LLM 看到依赖/行数/Javadoc，更好地理解组件职责
     prompt = format_cluster_prompt(
-        potential_core_components, current_module_tree, current_module_name
+        potential_core_components_with_summary, current_module_tree, current_module_name
     )
 
     logger.info("Requesting LLM clustering for %s...", module_label)

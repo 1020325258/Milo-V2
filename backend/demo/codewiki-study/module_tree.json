@@ -1,65 +1,6 @@
 {
-  "ContractContext": {
-    "path": "service/contract/v2",
-    "components": [
-      "ContractContextAspect.java::ContractContextAspect",
-      "ContractContextHandler.java::ContractContextHandler",
-      "ContractSaveDraftService.java::ContractSaveDraftService"
-    ],
-    "children": {}
-  },
-  "ContractDetail": {
-    "path": "service/contract/v2",
-    "components": [
-      "ContractDetailAspect.java::ContractDetailAspect",
-      "ContractDetailContextHandler.java::ContractDetailContextHandler",
-      "ContractDetailService.java::ContractDetailService"
-    ],
-    "children": {
-      "ContractDetail_ContextAndOrchestration": {
-        "components": [
-          "ContractDetailAspect.java::ContractDetailAspect",
-          "ContractDetailContextHandler.java::ContractDetailContextHandler"
-        ],
-        "children": {}
-      },
-      "ContractDetail_BusinessService": {
-        "components": [
-          "ContractDetailService.java::ContractDetailService"
-        ],
-        "children": {}
-      }
-    }
-  },
-  "ContractSigning": {
-    "path": "service/contract/v2/personal",
-    "components": [
-      "ContractCompanySignService.java::ContractCompanySignService",
-      "personal/PersonalRelationHandler.java::PersonalRelationHandler",
-      "personal/PersonalRelationHandlerImpl.java::PersonalRelationHandlerImpl",
-      "personal/bind/ContractSigningSource.java::ContractSigningSource",
-      "personal/bind/strategy/BillSigningSourceStrategy.java::BillSigningSourceStrategy",
-      "personal/bind/strategy/ChangeOrderSigningSourceStrategy.java::ChangeOrderSigningSourceStrategy",
-      "personal/bind/strategy/SubOrderSigningSourceStrategy.java::SubOrderSigningSourceStrategy"
-    ],
-    "children": {}
-  },
-  "ContractPdfGeneration": {
-    "path": "service/contract/v2",
-    "components": [
-      "TerminalContractPdfBuildService.java::TerminalContractPdfBuildService",
-      "ContractScriptCreateService.java::ContractScriptCreateService",
-      "ContractSelfSealService.java::ContractSelfSealService",
-      "combo/material/pdf/MaterialPdfDiffService.java::MaterialPdfDiffService",
-      "combo/material/pdf/MaterialPdfUtil.java::MaterialPdfUtil",
-      "createcontractpdfbyself/DrawingContractPdfBySelfStrategy.java::DrawingContractPdfBySelfStrategy",
-      "createcontractpdfbyself/GroupFormalContractPdfBySelfStrategy.java::GroupFormalContractPdfBySelfStrategy",
-      "createcontractpdfbyself/ReformAllFormalContractPdfBySelfStrategy.java::ReformAllFormalContractPdfBySelfStrategy"
-    ],
-    "children": {}
-  },
-  "ChangeContractStrategy": {
-    "path": "service/contract/v2/changecontractstrategey",
+  "合同变更策略": {
+    "path": "changecontractstrategey",
     "components": [
       "changecontractstrategey/ChangeContractStrategyFactory.java::ChangeContractStrategyFactory",
       "changecontractstrategey/NormalChangeContractStrategy.java::NormalChangeContractStrategy",
@@ -67,13 +8,112 @@
     ],
     "children": {}
   },
-  "ContractService": {
-    "path": "service/contract/v2",
+  "合同PDF生成服务": {
+    "path": "合同PDF生成",
     "components": [
+      "TerminalContractPdfBuildService.java::TerminalContractPdfBuildService",
+      "createcontractpdfbyself/DrawingContractPdfBySelfStrategy.java::DrawingContractPdfBySelfStrategy",
+      "createcontractpdfbyself/GroupFormalContractPdfBySelfStrategy.java::GroupFormalContractPdfBySelfStrategy",
+      "createcontractpdfbyself/ReformAllFormalContractPdfBySelfStrategy.java::ReformAllFormalContractPdfBySelfStrategy"
+    ],
+    "children": {}
+  },
+  "合同上下文与切面处理": {
+    "path": "合同上下文",
+    "components": [
+      "ContractContextAspect.java::ContractContextAspect",
+      "ContractContextHandler.java::ContractContextHandler",
+      "ContractDetailAspect.java::ContractDetailAspect",
+      "ContractDetailContextHandler.java::ContractDetailContextHandler"
+    ],
+    "children": {}
+  },
+  "合同核心业务逻辑与服务": {
+    "path": "合同服务",
+    "components": [
+      "ContractDetailService.java::ContractDetailService",
+      "ContractSaveDraftService.java::ContractSaveDraftService",
       "ContractButtonConfigService.java::ContractButtonConfigService",
+      "ContractCompanySignService.java::ContractCompanySignService",
       "ContractEscrowService.java::ContractEscrowService",
       "ContractFieldCheckService.java::ContractFieldCheckService",
       "ContractHomeOrderNoChangeService.java::ContractHomeOrderNoChangeService",
+      "ContractScriptCreateService.java::ContractScriptCreateService"
+    ],
+    "children": {
+      "合同详情与页面交互": {
+        "components": [
+          "ContractDetailService.java::ContractDetailService",
+          "ContractButtonConfigService.java::ContractButtonConfigService"
+        ],
+        "children": {
+          "合同详情数据服务": {
+            "components": [
+              "ContractDetailService.java::ContractDetailService"
+            ],
+            "children": {}
+          },
+          "页面按钮配置服务": {
+            "components": [
+              "ContractButtonConfigService.java::ContractButtonConfigService"
+            ],
+            "children": {}
+          }
+        }
+      },
+      "合同签署与资金保障": {
+        "components": [
+          "ContractCompanySignService.java::ContractCompanySignService",
+          "ContractEscrowService.java::ContractEscrowService"
+        ],
+        "children": {}
+      },
+      "合同草稿保存与校验": {
+        "components": [
+          "ContractSaveDraftService.java::ContractSaveDraftService",
+          "ContractFieldCheckService.java::ContractFieldCheckService"
+        ],
+        "children": {}
+      },
+      "合同数据处理与生成": {
+        "components": [
+          "ContractHomeOrderNoChangeService.java::ContractHomeOrderNoChangeService",
+          "ContractScriptCreateService.java::ContractScriptCreateService"
+        ],
+        "children": {}
+      }
+    }
+  },
+  "合同签约来源与绑定": {
+    "path": "personal/bind",
+    "components": [
+      "personal/bind/ContractSigningSource.java::ContractSigningSource",
+      "personal/bind/strategy/BillSigningSourceStrategy.java::BillSigningSourceStrategy",
+      "personal/bind/strategy/ChangeOrderSigningSourceStrategy.java::ChangeOrderSigningSourceStrategy",
+      "personal/bind/strategy/SubOrderSigningSourceStrategy.java::SubOrderSigningSourceStrategy"
+    ],
+    "children": {}
+  },
+  "合同PDF差异与物料": {
+    "path": "combo/material/pdf",
+    "components": [
+      "combo/material/pdf/MaterialPdfDiffService.java::MaterialPdfDiffService",
+      "combo/material/pdf/MaterialPdfUtil.java::MaterialPdfUtil"
+    ],
+    "children": {}
+  },
+  "个人关系与绑定处理": {
+    "path": "personal",
+    "components": [
+      "personal/PersonalRelationHandler.java::PersonalRelationHandler",
+      "personal/PersonalRelationHandlerImpl.java::PersonalRelationHandlerImpl"
+    ],
+    "children": {}
+  },
+  "其他合同辅助服务": {
+    "path": "合同辅助",
+    "components": [
+      "ContractSelfSealService.java::ContractSelfSealService",
       "WorkerTypeCheckService.java::WorkerTypeCheckService"
     ],
     "children": {}
