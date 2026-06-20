@@ -532,6 +532,11 @@ def _generate_leaf_module_docs(
 
         response = completer(system_prompt, user_prompt)
 
+        # 检查 LLM 是否返回了内容
+        if not response or not response.strip():
+            logger.warning(f"    ⚠️ LLM 返回为空，跳过 {module_name}.md")
+            return
+
         # 验证 Mermaid 语法
         mermaid_result = validate_mermaid_in_markdown(response)
         if "errors" not in mermaid_result.lower():
@@ -584,6 +589,12 @@ def _generate_parent_module_docs(
             logger.info(f"    Retrying {module_name}.md (attempt {attempt + 1})...")
 
         response = completer(system_prompt, user_prompt)
+
+        # 检查 LLM 是否返回了内容
+        if not response or not response.strip():
+            logger.warning(f"    ⚠️ LLM 返回为空，跳过 {module_name}.md")
+            return
+
         content = _extract_overview(response)
 
         # 验证 Mermaid 语法
@@ -632,6 +643,12 @@ def _generate_repo_overview(
             logger.info(f"    Retrying overview.md (attempt {attempt + 1})...")
 
         response = completer(system_prompt, user_prompt)
+
+        # 检查 LLM 是否返回了内容
+        if not response or not response.strip():
+            logger.warning(f"    ⚠️ LLM 返回为空，跳过 overview.md")
+            return
+
         content = _extract_overview(response)
 
         mermaid_result = validate_mermaid_in_markdown(content)
@@ -670,6 +687,10 @@ def _generate_single_module_docs(
 
     logger.info(f"    Calling LLM for {repo_name}.md...")
     response = completer(system_prompt, user_prompt)
+
+    if not response or not response.strip():
+        logger.warning(f"    ⚠️ LLM 返回为空，跳过 {repo_name}.md")
+        return
 
     doc_path = os.path.join(docs_dir, f"{repo_name}.md")
     with open(doc_path, "w", encoding="utf-8") as f:

@@ -302,19 +302,12 @@ def create_claude_code_completer(  # 实际使用 claude_agent_sdk
     base_url: str = None,
     auth_token: str = None,
     model: str = None,
+    max_turns: int = 50,
 ) -> Callable[[str], str]:
     """
-    创建 Claude Agent SDK 补全函数。
+    创建 Claude Agent SDK 补全函数（聚类用，单 prompt）。
 
     配置优先级：参数 > 环境变量 > 默认值。
-
-    Args:
-        base_url: API 地址
-        auth_token: 认证 Token
-        model: 模型名
-
-    Returns:
-        completer: (prompt: str) -> str 的函数
     """
     import asyncio
     from claude_agent_sdk import query, ClaudeAgentOptions
@@ -336,7 +329,7 @@ def create_claude_code_completer(  # 实际使用 claude_agent_sdk
                         "ANTHROPIC_AUTH_TOKEN": _auth_token,
                     },
                     allowed_tools=[],
-                    max_turns=50,
+                    max_turns=max_turns,
                 ),
             ):
                 msg_type = type(message).__name__
@@ -356,11 +349,17 @@ def create_claude_code_completer(  # 实际使用 claude_agent_sdk
                     if message.result:
                         result_text = message.result
 
-                # SystemMessage / UserMessage 是 SDK 内部协议消息，跳过不打印
-
             return result_text
 
-        return asyncio.run(_query())
+        try:
+            return asyncio.run(_query())
+        except Exception as e:
+            error_msg = str(e)
+            if "maximum number of turns" in error_msg.lower():
+                logger.warning(f"      ⚠️ 达到 max_turns({max_turns}) 限制，任务未完成")
+            else:
+                logger.warning(f"      ⚠️ Claude Code SDK 调用失败: {error_msg}")
+            return ""  # 返回空字符串，调用方可以处理
 
     return completer
 
@@ -369,6 +368,7 @@ def create_claude_code_doc_completer(
     base_url: str = None,
     auth_token: str = None,
     model: str = None,
+    max_turns: int = 50,
 ) -> Callable[[str, str], str]:
     """
     创建 Claude Agent SDK 文档生成补全函数（system + user 双 prompt）。
@@ -397,7 +397,7 @@ def create_claude_code_doc_completer(
                         "ANTHROPIC_AUTH_TOKEN": _auth_token,
                     },
                     allowed_tools=[],
-                    max_turns=50,
+                    max_turns=max_turns,
                 ),
             ):
                 msg_type = type(message).__name__
@@ -419,7 +419,15 @@ def create_claude_code_doc_completer(
 
             return result_text
 
-        return asyncio.run(_query())
+        try:
+            return asyncio.run(_query())
+        except Exception as e:
+            error_msg = str(e)
+            if "maximum number of turns" in error_msg.lower():
+                logger.warning(f"      ⚠️ 达到 max_turns({max_turns}) 限制，任务未完成")
+            else:
+                logger.warning(f"      ⚠️ Claude Code SDK 调用失败: {error_msg}")
+            return ""  # 返回空字符串，调用方可以处理
 
     return completer
 
