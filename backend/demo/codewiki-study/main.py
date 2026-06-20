@@ -2,9 +2,10 @@
 """
 CodeWiki 源码解析 Demo — 可独立运行
 
-对应 CodeWiki 的两个步骤：
+对应 CodeWiki 的三个步骤：
   ① build_dependency_graph() — 源码解析 & 依赖图构建
   ② cluster_modules()        — LLM 驱动的递归模块聚类
+  ③ generate_documentation() — 按模块树生成文档
 
 用法:
     # 直接运行（使用默认路径）
@@ -34,8 +35,8 @@ from cluster_modules import (
     cluster_modules,
     print_module_tree,
     get_clustering_input_token_count,
-    create_openai_completer, create_claude_code_completer,
 )
+from doc_generator import generate_documentation
 
 logging.basicConfig(
     level=logging.INFO,
@@ -330,6 +331,18 @@ def main():
     save_dependency_graph(components, output_path)
 
     # ════════════════════════════════════════════════════════════
+    #  创建共享的 OpenAI 客户端（步骤②③共用）
+    # ════════════════════════════════════════════════════════════
+
+    from openai import OpenAI
+
+    _openai_base_url = "https://token-plan-cn.xiaomimimo.com/v1"
+    _openai_api_key = "tp-cxq9g672kqgmcpmgvzhktpk7vucswrn9atq4i4ehwyxc6ngl"
+    _openai_model = "mimo-v2.5-pro"
+    _openai_client = OpenAI(base_url=_openai_base_url, api_key=_openai_api_key)
+    logger.info(f"   OpenAI client: {_openai_base_url}, model={_openai_model}")
+
+    # ════════════════════════════════════════════════════════════
     #  步骤 ②  模块聚类
     # ════════════════════════════════════════════════════════════
 
@@ -342,9 +355,17 @@ def main():
     logger.info(f"   叶子节点: {len(leaf_nodes)}")
     logger.info(f"   Token 量: {clustering_tokens}")
 
-    # ── 选择 LLM 补全方式 ──
-    completer = create_openai_completer()
-    # completer = create_claude_code_completer()
+    # ── 聚类用的 completer（单 prompt）──
+    def cluster_completer(prompt: str) -> str:
+        response = _openai_client.chat.completions.create(
+            model=_openai_model,
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.0, max_tokens=8192,
+        )
+        result = response.choices[0].message.content
+        logger.info(f"      ✅ LLM response: {response.usage.total_tokens} tokens")
+        return result
+
     logger.info("   使用 OpenAI API (mimo-v2.5-pro)")
 
     # ── 执行聚类 ──
@@ -352,7 +373,7 @@ def main():
         leaf_nodes=leaf_nodes,
         components=components,
         max_token_per_module=36_369,
-        completer=completer,
+        completer=cluster_completer,
     )
 
     # ── 打印聚类结果 ──
@@ -371,6 +392,44 @@ def main():
     with open(tree_output_path, "w", encoding="utf-8") as f:
         json.dump(module_tree, f, indent=2, ensure_ascii=False)
     logger.info(f"✓ Module tree saved to {tree_output_path}")
+
+    # ════════════════════════════════════════════════════════════
+    #  步骤 ③  生成模块文档
+    # ════════════════════════════════════════════════════════════
+
+    logger.info("\n" + "=" * 70)
+    logger.info("  步骤 ③  生成模块文档 (generate_documentation)")
+    logger.info("=" * 70)
+
+    # ── 文档生成用的 completer（system + user 双 prompt，复用共享客户端）──
+    def doc_completer(system_prompt: str, user_prompt: str) -> str:
+        response = _openai_client.chat.completions.create(
+            model=_openai_model,
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt},
+            ],
+            temperature=0.0, max_tokens=8192,
+        )
+        result = response.choices[0].message.content
+        logger.info(f"      ✅ LLM response: {response.usage.total_tokens} tokens")
+        return result
+
+    # ── 配置 ──
+    docs_dir = os.path.join(os.path.dirname(__file__), "output_docs")
+    repo_name = os.path.basename(repo_path)
+
+    # ── 执行文档生成 ──
+    generate_documentation(
+        repo_path=repo_path,
+        repo_name=repo_name,
+        module_tree=module_tree,
+        components=components,
+        docs_dir=docs_dir,
+        completer=doc_completer,
+    )
+
+    logger.info(f"\n✅ 文档生成完成！输出目录: {docs_dir}")
 
 # 默认路径，方便 IDE 直接 debug 运行（无需命令行参数）
 # DEFAULT_REPO_PATH = "/Users/zqy/work/project/nrs-sales-project/utopia-nrs-sales-project-service/src/main/java/com/ke/utopia/nrs/salesproject/service/contract/v2/personal"

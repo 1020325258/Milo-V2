@@ -124,21 +124,25 @@ CLUSTER_REPO_PROMPT = """以下是仓库中所有潜在核心组件的列表：
 
 每个组件 ID 的格式为 `<文件路径>::<名称>`。请原样返回 ID，不要去掉 `<文件路径>::` 前缀，也不要将 ID 缩短为仅名称。
 
+要求：
+- 模块名必须使用英文，采用 PascalCase 命名（如 ContractCore、AuthModule）
+- 不要使用中文作为模块名
+
 请先分析组件之间的关系，然后进行分组，按以下格式返回结果：
 <GROUPED_COMPONENTS>
 {{
-    "模块名_1": {{
-        "path": "<模块路径>",
+    "ModuleName1": {{
+        "path": "<module_path>",
         "components": [
-            "<组件ID_1>",
-            "<组件ID_2>"
+            "<component_id_1>",
+            "<component_id_2>"
         ]
     }},
-    "模块名_2": {{
-        "path": "<模块路径>",
+    "ModuleName2": {{
+        "path": "<module_path>",
         "components": [
-            "<组件ID_1>",
-            "<组件ID_2>"
+            "<component_id_1>",
+            "<component_id_2>"
         ]
     }}
 }}
@@ -160,21 +164,25 @@ CLUSTER_MODULE_PROMPT = """以下是仓库的模块树：
 
 每个组件 ID 的格式为 `<文件路径>::<名称>`。请原样返回 ID，不要去掉 `<文件路径>::` 前缀，也不要将 ID 缩短为仅名称。
 
+要求：
+- 子模块名必须使用英文，采用 PascalCase 命名（如 DataValidation、PdfGenerator）
+- 不要使用中文作为模块名
+
 请先根据已有上下文分析组件之间的关系，然后进行分组，按以下格式返回结果：
 <GROUPED_COMPONENTS>
 {{
-    "模块名_1": {{
-        "path": "<模块路径>",
+    "SubModuleName1": {{
+        "path": "<module_path>",
         "components": [
-            "<组件ID_1>",
-            "<组件ID_2>"
+            "<component_id_1>",
+            "<component_id_2>"
         ]
     }},
-    "模块名_2": {{
-        "path": "<模块路径>",
+    "SubModuleName2": {{
+        "path": "<module_path>",
         "components": [
-            "<组件ID_1>",
-            "<组件ID_2>"
+            "<component_id_1>",
+            "<component_id_2>"
         ]
     }}
 }}
