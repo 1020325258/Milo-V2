@@ -330,7 +330,8 @@ async def _stream_sdk_messages(prompt, options):
                     else:
                         logger.info(f"         💬 {text}")
                 elif hasattr(block, "name"):
-                    logger.info(f"         🔧 tool_use: {block.name}")
+                    tool_input = json.dumps(block.input, ensure_ascii=False)[:500] if hasattr(block, "input") and block.input else ""
+                    logger.info(f"         🔧 tool_use: {block.name}({tool_input})")
                 elif hasattr(block, "thinking"):
                     logger.info(f"         💭 {block.thinking}")
                 else:
@@ -417,8 +418,8 @@ def create_claude_code_doc_completer(
         options = ClaudeAgentOptions(
             model=_model,
             env={"ANTHROPIC_BASE_URL": _base_url, "ANTHROPIC_AUTH_TOKEN": _auth_token},
-            tools=[],
-            allowed_tools=[],
+            allowed_tools=["Write", "Read"],
+            permission_mode="acceptEdits",
             mcp_servers=_mcp_servers,
             max_turns=max_turns,
         )

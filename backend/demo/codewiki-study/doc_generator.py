@@ -195,11 +195,10 @@ LEAF_USER_PROMPT = """请为 {module_name} 模块生成综合文档。
 </AVAILABLE_COMPONENTS>
 
 重要要求：
-1. 直接输出完整的 {module_name}.md 文档正文，从 # 标题开始
-2. 不要输出任何前缀说明（如"文档已生成"、"Now I have enough context"等）
-3. 不要输出文档目录或结构概览
-4. 不要描述你要写什么，直接写出来
-5. 文档应包含：模块概述、架构图、核心组件详解、依赖关系、数据流、关键设计模式等"""
+1. 使用 Write 工具将文档写入文件：{output_dir}/{module_name}.md
+2. 文档从 # 标题开始，包含完整的模块概述、架构图、核心组件详解、依赖关系、数据流、关键设计模式
+3. 不要输出任何前缀说明（如"文档已生成"、"Now I have enough context"等）
+4. 不要输出文档目录或结构概览，直接写文件"""
 
 # 用户 Prompt：父模块概览
 PARENT_USER_PROMPT = """请为 {module_name} 模块生成简要概览文档。
@@ -337,6 +336,7 @@ def format_leaf_prompt(
     components: Dict[str, Node],
     module_tree: dict,
     all_components: Dict[str, Node] = None,
+    output_dir: str = "",
 ) -> str:
     """格式化叶子模块的文档生成 Prompt"""
     tree_text = _format_module_tree_text(module_tree, target_module=module_name)
@@ -344,6 +344,7 @@ def format_leaf_prompt(
     available = _format_available_components(all_components or components)
     return LEAF_USER_PROMPT.format(
         module_name=module_name,
+        output_dir=output_dir,
         module_tree=tree_text,
         formatted_core_component_codes=codes,
         available_components=available,
@@ -546,47 +547,44 @@ def _generate_leaf_module_docs(
         return
 
     system_prompt = LEAF_SYSTEM_PROMPT.format(module_name=module_name, custom_instructions="")
-    user_prompt = format_leaf_prompt(module_name, component_ids, components, module_tree, all_components=components)
+    user_prompt = format_leaf_prompt(
+        module_name, component_ids, components, module_tree,
+        all_components=components, output_dir=docs_dir,
+    )
 
     for attempt in range(max_retries + 1):
-        # 调用 LLM
         if attempt == 0:
             logger.info(f"    Calling LLM for {module_name}.md...")
         else:
             logger.info(f"    Retrying {module_name}.md (attempt {attempt + 1}, fixing Mermaid errors)...")
 
-        response = completer(system_prompt, user_prompt)
+        completer(system_prompt, user_prompt)
 
-        # 检查 LLM 是否返回了内容
-        if not response or not response.strip():
-            logger.warning(f"    ⚠️ LLM 返回为空，跳过 {module_name}.md")
+        # LLM 用 Write 工具创建文件，检查文件是否已生成
+        if not os.path.exists(doc_path):
+            logger.warning(f"    ⚠️ LLM 未创建 {module_name}.md，跳过")
             return
 
-        # 验证 Mermaid 语法
-        mermaid_result = validate_mermaid_in_markdown(response)
+        # 读取 LLM 创建的文件，验证 Mermaid 语法
+        with open(doc_path, "r", encoding="utf-8") as f:
+            content = f.read()
+
+        mermaid_result = validate_mermaid_in_markdown(content)
         if "errors" not in mermaid_result.lower():
-            # 验证通过，保存文档
-            with open(doc_path, "w", encoding="utf-8") as f:
-                f.write(response)
-            logger.info(f"    ✓ Saved {module_name}.md ({len(response)} chars)")
+            logger.info(f"    ✓ {module_name}.md created ({len(content)} chars)")
             return
 
-        # 验证失败，记录错误并重试
-        logger.warning(f"    ⚠️ Mermaid validation failed for {module_name}.md: {mermaid_result}")
-
-        # 如果还有重试机会，构造修复 prompt
+        # Mermaid 有错误，重试
+        logger.warning(f"    ⚠️ Mermaid validation failed: {mermaid_result}")
         if attempt < max_retries:
             user_prompt = (
-                f"你上次生成的 {module_name}.md 中 Mermaid 图表有语法错误，请修复后重新生成完整文档。\n\n"
+                f"你上次生成的 {module_name}.md 中 Mermaid 图表有语法错误，请用 Write 工具重新写入完整文档。\n\n"
                 f"错误信息：\n{mermaid_result}\n\n"
-                f"请重新生成完整的 {module_name}.md 文档，确保所有 Mermaid 图表语法正确。"
+                f"文件路径：{doc_path}\n"
+                f"请重新生成完整的文档，确保所有 Mermaid 图表语法正确。"
             )
 
-    # 所有重试都失败，保存最后一次的结果
-    logger.warning(f"    ⚠️ Mermaid still has errors after {max_retries + 1} attempts, saving anyway")
-    with open(doc_path, "w", encoding="utf-8") as f:
-        f.write(response)
-    logger.info(f"    ✓ Saved {module_name}.md ({len(response)} chars, with Mermaid warnings)")
+    logger.warning(f"    ⚠️ Mermaid still has errors after {max_retries + 1} attempts")
 
 
 def _generate_parent_module_docs(
@@ -707,19 +705,20 @@ def _generate_single_module_docs(
 ):
     """当没有模块树时，整体作为一个模块生成文档"""
     system_prompt = LEAF_SYSTEM_PROMPT.format(module_name=repo_name, custom_instructions="")
-    user_prompt = format_leaf_prompt(repo_name, component_ids, components, module_tree, all_components=components)
+    user_prompt = format_leaf_prompt(
+        repo_name, component_ids, components, module_tree,
+        all_components=components, output_dir=docs_dir,
+    )
 
     logger.info(f"    Calling LLM for {repo_name}.md...")
-    response = completer(system_prompt, user_prompt)
-
-    if not response or not response.strip():
-        logger.warning(f"    ⚠️ LLM 返回为空，跳过 {repo_name}.md")
-        return
+    completer(system_prompt, user_prompt)
 
     doc_path = os.path.join(docs_dir, f"{repo_name}.md")
-    with open(doc_path, "w", encoding="utf-8") as f:
-        f.write(response)
-    logger.info(f"    ✓ Saved {repo_name}.md ({len(response)} chars)")
+    if os.path.exists(doc_path):
+        size = os.path.getsize(doc_path)
+        logger.info(f"    ✓ {repo_name}.md created ({size} bytes)")
+    else:
+        logger.warning(f"    ⚠️ LLM 未创建 {repo_name}.md")
 
 
 def _rename_to_overview(docs_dir: str, repo_name: str):
