@@ -1,106 +1,104 @@
 {
-  "ContractOperations": {
-    "path": "contract/service",
+  "ContractSigningSourceStrategy": {
     "components": [
-      "ContractDetailService.java::ContractDetailService",
-      "ContractCompanySignService.java::ContractCompanySignService",
-      "ContractSaveDraftService.java::ContractSaveDraftService",
-      "ContractEscrowService.java::ContractEscrowService",
-      "ContractButtonConfigService.java::ContractButtonConfigService",
-      "ContractHomeOrderNoChangeService.java::ContractHomeOrderNoChangeService",
-      "ContractScriptCreateService.java::ContractScriptCreateService",
-      "ContractSelfSealService.java::ContractSelfSealService"
-    ],
-    "children": {
-      "DetailView": {
-        "components": [
-          "ContractDetailService.java::ContractDetailService",
-          "ContractButtonConfigService.java::ContractButtonConfigService"
-        ],
-        "children": {}
-      },
-      "SigningOperations": {
-        "components": [
-          "ContractCompanySignService.java::ContractCompanySignService",
-          "ContractSelfSealService.java::ContractSelfSealService"
-        ],
-        "children": {}
-      },
-      "SubmissionOperations": {
-        "components": [
-          "ContractSaveDraftService.java::ContractSaveDraftService",
-          "ContractEscrowService.java::ContractEscrowService"
-        ],
-        "children": {}
-      },
-      "ScriptCreation": {
-        "components": [
-          "ContractScriptCreateService.java::ContractScriptCreateService"
-        ],
-        "children": {}
-      },
-      "OrderManagement": {
-        "components": [
-          "ContractHomeOrderNoChangeService.java::ContractHomeOrderNoChangeService"
-        ],
-        "children": {}
-      }
-    }
-  },
-  "ContractContextAop": {
-    "path": "contract/aop",
-    "components": [
-      "ContractContextAspect.java::ContractContextAspect",
-      "ContractContextHandler.java::ContractContextHandler",
-      "ContractDetailAspect.java::ContractDetailAspect",
-      "ContractDetailContextHandler.java::ContractDetailContextHandler"
-    ],
-    "children": {}
-  },
-  "ChangeContractStrategy": {
-    "path": "contract/changecontractstrategey",
-    "components": [
-      "changecontractstrategey/ChangeContractStrategyFactory.java::ChangeContractStrategyFactory",
-      "changecontractstrategey/NormalChangeContractStrategy.java::NormalChangeContractStrategy",
-      "changecontractstrategey/ZQChangeContractStrategy.java::ZQChangeContractStrategy"
-    ],
-    "children": {}
-  },
-  "SigningSourceBinding": {
-    "path": "contract/personal",
-    "components": [
-      "personal/bind/ContractSigningSource.java::ContractSigningSource",
-      "personal/bind/strategy/BillSigningSourceStrategy.java::BillSigningSourceStrategy",
-      "personal/bind/strategy/ChangeOrderSigningSourceStrategy.java::ChangeOrderSigningSourceStrategy",
-      "personal/bind/strategy/SubOrderSigningSourceStrategy.java::SubOrderSigningSourceStrategy",
-      "personal/PersonalRelationHandler.java::PersonalRelationHandler",
-      "personal/PersonalRelationHandlerImpl.java::PersonalRelationHandlerImpl"
+      "bind/ContractSigningSource.java::ContractSigningSource.bindType",
+      "bind/ContractSigningSource.java::ContractSigningSource.queryPersonalQuoteInfo",
+      "bind/ContractSigningSource.java::ContractSigningSource.hasInvalidStatusOrders",
+      "bind/ContractSigningSource.java::ContractSigningSource.buildGoodsInfo",
+      "bind/ContractSigningSource.java::ContractSigningSource.buildSignableOrderInfos",
+      "bind/ContractSigningSource.java::ContractSigningSource.checkPersonalCanCreate",
+      "bind/ContractSigningSource.java::ContractSigningSource.buildPersonalDrawingImgList",
+      "bind/ContractSigningSource.java::ContractSigningSource.buildPersonalDrawing",
+      "bind/ContractSigningSource.java::ContractSigningSource.hasCPart",
+      "bind/ContractSigningSource.java::ContractSigningSource.hasBPart",
+      "bind/AbstractContractSigningSource.java::AbstractContractSigningSource.queryPersonalQuoteInfo",
+      "bind/AbstractContractSigningSource.java::AbstractContractSigningSource.buildPersonalDrawingImgList",
+      "bind/AbstractContractSigningSource.java::AbstractContractSigningSource.buildPersonalDrawing",
+      "bind/AbstractContractSigningSource.java::AbstractContractSigningSource.buildDrawingQuery",
+      "bind/AbstractContractSigningSource.java::AbstractContractSigningSource.buildProductItemCodes",
+      "bind/AbstractContractSigningSource.java::AbstractContractSigningSource.buildParam",
+      "bind/AbstractContractSigningSource.java::AbstractContractSigningSource.filterByCompanyCode",
+      "bind/AbstractContractSigningSource.java::AbstractContractSigningSource.mergeCategoryNames",
+      "bind/AbstractContractSigningSource.java::AbstractContractSigningSource.getHasBoundOrderNos",
+      "bind/AbstractContractSigningSource.java::AbstractContractSigningSource.buildPackageCodeMap",
+      "bind/AbstractContractSigningSource.java::AbstractContractSigningSource.getPackageCodesByOrderNos",
+      "bind/AbstractContractSigningSource.java::AbstractContractSigningSource.isCPart",
+      "bind/AbstractContractSigningSource.java::AbstractContractSigningSource.isBPart",
+      "bind/strategy/BillSigningSourceStrategy.java::BillSigningSourceStrategy.bindType",
+      "bind/strategy/BillSigningSourceStrategy.java::BillSigningSourceStrategy.hasInvalidStatusOrders",
+      "bind/strategy/BillSigningSourceStrategy.java::BillSigningSourceStrategy.buildGoodsInfo",
+      "bind/strategy/BillSigningSourceStrategy.java::BillSigningSourceStrategy.getSkuProductsByBillCode",
+      "bind/strategy/BillSigningSourceStrategy.java::BillSigningSourceStrategy.buildSignableOrderInfos",
+      "bind/strategy/BillSigningSourceStrategy.java::BillSigningSourceStrategy.checkPersonalCanCreate",
+      "bind/strategy/BillSigningSourceStrategy.java::BillSigningSourceStrategy.hasCPart",
+      "bind/strategy/BillSigningSourceStrategy.java::BillSigningSourceStrategy.hasBPart",
+      "bind/strategy/BillSigningSourceStrategy.java::BillSigningSourceStrategy.buildDrawingQuery",
+      "bind/strategy/BillSigningSourceStrategy.java::BillSigningSourceStrategy.buildProductItemCodes",
+      "bind/strategy/BillSigningSourceStrategy.java::BillSigningSourceStrategy.buildParam",
+      "bind/strategy/BillSigningSourceStrategy.java::BillSigningSourceStrategy.filterByCompanyCode",
+      "bind/strategy/BillSigningSourceStrategy.java::BillSigningSourceStrategy.shouldProcessPersonalContractData",
+      "bind/strategy/ChangeOrderSigningSourceStrategy.java::ChangeOrderSigningSourceStrategy.bindType",
+      "bind/strategy/ChangeOrderSigningSourceStrategy.java::ChangeOrderSigningSourceStrategy.hasInvalidStatusOrders",
+      "bind/strategy/ChangeOrderSigningSourceStrategy.java::ChangeOrderSigningSourceStrategy.buildGoodsInfo",
+      "bind/strategy/ChangeOrderSigningSourceStrategy.java::ChangeOrderSigningSourceStrategy.buildSignableOrderInfos",
+      "bind/strategy/ChangeOrderSigningSourceStrategy.java::ChangeOrderSigningSourceStrategy.checkPersonalCanCreate",
+      "bind/strategy/ChangeOrderSigningSourceStrategy.java::ChangeOrderSigningSourceStrategy.hasCPart",
+      "bind/strategy/ChangeOrderSigningSourceStrategy.java::ChangeOrderSigningSourceStrategy.hasBPart",
+      "bind/strategy/ChangeOrderSigningSourceStrategy.java::ChangeOrderSigningSourceStrategy.buildDrawingQuery",
+      "bind/strategy/ChangeOrderSigningSourceStrategy.java::ChangeOrderSigningSourceStrategy.buildProductItemCodes",
+      "bind/strategy/ChangeOrderSigningSourceStrategy.java::ChangeOrderSigningSourceStrategy.buildParam",
+      "bind/strategy/ChangeOrderSigningSourceStrategy.java::ChangeOrderSigningSourceStrategy.filterByCompanyCode",
+      "bind/strategy/ChangeOrderSigningSourceStrategy.java::ChangeOrderSigningSourceStrategy.getSkuProductsByChangeOrderId",
+      "bind/strategy/SubOrderSigningSourceStrategy.java::SubOrderSigningSourceStrategy.bindType",
+      "bind/strategy/SubOrderSigningSourceStrategy.java::SubOrderSigningSourceStrategy.hasInvalidStatusOrders",
+      "bind/strategy/SubOrderSigningSourceStrategy.java::SubOrderSigningSourceStrategy.buildGoodsInfo",
+      "bind/strategy/SubOrderSigningSourceStrategy.java::SubOrderSigningSourceStrategy.buildSignableOrderInfos",
+      "bind/strategy/SubOrderSigningSourceStrategy.java::SubOrderSigningSourceStrategy.checkPersonalCanCreate",
+      "bind/strategy/SubOrderSigningSourceStrategy.java::SubOrderSigningSourceStrategy.hasCPart",
+      "bind/strategy/SubOrderSigningSourceStrategy.java::SubOrderSigningSourceStrategy.hasBPart",
+      "bind/strategy/SubOrderSigningSourceStrategy.java::SubOrderSigningSourceStrategy.buildDrawingQuery",
+      "bind/strategy/SubOrderSigningSourceStrategy.java::SubOrderSigningSourceStrategy.buildProductItemCodes",
+      "bind/strategy/SubOrderSigningSourceStrategy.java::SubOrderSigningSourceStrategy.buildParam",
+      "bind/strategy/SubOrderSigningSourceStrategy.java::SubOrderSigningSourceStrategy.filterByCompanyCode",
+      "bind/strategy/SubOrderSigningSourceStrategy.java::SubOrderSigningSourceStrategy.getSignableSubOrderNos",
+      "bind/strategy/SubOrderSigningSourceStrategy.java::SubOrderSigningSourceStrategy.getPackageSignedSubOrderNos",
+      "bind/strategy/SubOrderSigningSourceStrategy.java::SubOrderSigningSourceStrategy.buildSignableOrderInfoPreData",
+      "bind/strategy/SubOrderSigningSourceStrategy.java::SubOrderSigningSourceStrategy.getPackageNameByOrderNo"
     ],
     "children": {}
   },
-  "ContractPdfGeneration": {
-    "path": "contract/pdf",
+  "ContractSigningOrchestration": {
     "components": [
-      "TerminalContractPdfBuildService.java::TerminalContractPdfBuildService",
-      "createcontractpdfbyself/DrawingContractPdfBySelfStrategy.java::DrawingContractPdfBySelfStrategy",
-      "createcontractpdfbyself/GroupFormalContractPdfBySelfStrategy.java::GroupFormalContractPdfBySelfStrategy",
-      "createcontractpdfbyself/ReformAllFormalContractPdfBySelfStrategy.java::ReformAllFormalContractPdfBySelfStrategy"
+      "bind/ContractSigningSourceRouter.java::ContractSigningSourceRouter.route",
+      "FormalMultipleCompanyService.java::FormalMultipleCompanyService.getFormalQuotationList",
+      "FormalMultipleCompanyService.java::FormalMultipleCompanyService.getFormalQuotationListV2",
+      "FormalMultipleCompanyService.java::FormalMultipleCompanyService.getFormalQuotationInfoList",
+      "FormalMultipleCompanyService.java::FormalMultipleCompanyService.getCooperQuoteInfoList",
+      "FormalMultipleCompanyService.java::FormalMultipleCompanyService.getNotSupportSignBillCodeList"
     ],
     "children": {}
   },
-  "MaterialPdfUtils": {
-    "path": "contract/combo/material/pdf",
+  "ProductQuery": {
     "components": [
-      "combo/material/pdf/MaterialPdfDiffService.java::MaterialPdfDiffService",
-      "combo/material/pdf/MaterialPdfUtil.java::MaterialPdfUtil"
+      "quotation/ProductQueryService.java::ProductQueryService.getChangeQuotationProductDTOS",
+      "quotation/ProductQueryService.java::ProductQueryService.getQuotationProductDTOS"
     ],
     "children": {}
   },
-  "ContractFieldValidation": {
-    "path": "contract/validation",
+  "ContractRevocation": {
     "components": [
-      "ContractFieldCheckService.java::ContractFieldCheckService",
-      "WorkerTypeCheckService.java::WorkerTypeCheckService"
+      "PersonalRelationHandler.java::PersonalRelationHandler.revokeCooperQuotation",
+      "PersonalRelationHandlerImpl.java::PersonalRelationHandlerImpl.revokeCooperQuotation",
+      "PersonalRelationHandlerImpl.java::PersonalRelationHandlerImpl.getSubOrderNosByBillCode",
+      "PersonalRelationHandlerImpl.java::PersonalRelationHandlerImpl.unbindCooperQuotationFromContract",
+      "PersonalRelationHandlerImpl.java::PersonalRelationHandlerImpl.unbindSubOrderFromContract",
+      "PersonalRelationHandlerImpl.java::PersonalRelationHandlerImpl.determineRevocationActionForDirectBound",
+      "PersonalRelationHandlerImpl.java::PersonalRelationHandlerImpl.determineRevocationActionForSubOrder",
+      "PersonalRelationHandlerImpl.java::PersonalRelationHandlerImpl.executeRevocationAction",
+      "PersonalRelationHandlerImpl.java::PersonalRelationHandlerImpl.isContractInInvalidOrFinalStatus",
+      "PersonalRelationHandlerImpl.java::PersonalRelationHandlerImpl.undoContractIfNeeded",
+      "PersonalRelationHandlerImpl.java::PersonalRelationHandlerImpl.canUndoContract",
+      "PersonalRelationHandlerImpl.java::PersonalRelationHandlerImpl.cleanFormalContractDraftFields"
     ],
     "children": {}
   }

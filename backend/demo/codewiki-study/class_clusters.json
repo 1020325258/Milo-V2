@@ -1,0 +1,21 @@
+{
+  "ContractSigningSourceStrategy": [
+    "ContractSigningSource",
+    "AbstractContractSigningSource",
+    "BillSigningSourceStrategy",
+    "ChangeOrderSigningSourceStrategy",
+    "SubOrderSigningSourceStrategy"
+  ],
+  "ContractSigningOrchestration": [
+    "ContractSigningSourceRouter",
+    "FormalMultipleCompanyService"
+  ],
+  "ProductQuery": [
+    "ProductQueryService"
+  ],
+  "ContractRevocation": [
+    "PersonalRelationHandler",
+    "PersonalRelationHandlerImpl",
+    "ContractRevocationAction"
+  ]
+}

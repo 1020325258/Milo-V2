@@ -1,0 +1,107 @@
+{
+  "FormalMultipleCompanyService": {
+    "domain": "正签管理",
+    "concepts": [
+      "正签报价",
+      "协同报价单",
+      "多公司签约",
+      "C报价",
+      "组合单"
+    ]
+  },
+  "PersonalRelationHandler": {
+    "domain": "协同报价撤回",
+    "concepts": [
+      "协同报价单撤回",
+      "合同绑定关系",
+      "S单",
+      "报价单解绑"
+    ]
+  },
+  "PersonalRelationHandlerImpl": {
+    "domain": "协同报价撤回",
+    "concepts": [
+      "协同报价单撤回",
+      "合同作废",
+      "S单解绑",
+      "合同关联解除",
+      "分布式锁"
+    ]
+  },
+  "ContractRevocationAction": {
+    "domain": "合同撤回",
+    "concepts": [
+      "合同作废",
+      "解除关联",
+      "合同撤回"
+    ]
+  },
+  "ProductQueryService": {
+    "domain": "报价商品查询",
+    "concepts": [
+      "报价商品",
+      "变更单商品",
+      "SKU商品",
+      "套餐商品",
+      "单品"
+    ]
+  },
+  "AbstractContractSigningSource": {
+    "domain": "签约数据构建",
+    "concepts": [
+      "个性化报价",
+      "个性化图纸",
+      "签约数据源",
+      "商品信息",
+      "公司主体过滤"
+    ]
+  },
+  "ContractSigningSource": {
+    "domain": "签约数据源",
+    "concepts": [
+      "签约数据源",
+      "个性化报价",
+      "商品信息",
+      "签约校验",
+      "可签约单据"
+    ]
+  },
+  "ContractSigningSourceRouter": {
+    "domain": "签约路由",
+    "concepts": [
+      "签约策略路由",
+      "绑定类型",
+      "策略分发"
+    ]
+  },
+  "BillSigningSourceStrategy": {
+    "domain": "报价单签约",
+    "concepts": [
+      "报价单签约",
+      "SKU商品",
+      "商品内控类目",
+      "报价单状态校验",
+      "可签约单据"
+    ]
+  },
+  "ChangeOrderSigningSourceStrategy": {
+    "domain": "变更单签约",
+    "concepts": [
+      "变更单签约",
+      "变更流程状态",
+      "SKU商品",
+      "商品内控类目",
+      "签约校验"
+    ]
+  },
+  "SubOrderSigningSourceStrategy": {
+    "domain": "合同签约",
+    "concepts": [
+      "子订单绑定",
+      "签约状态校验",
+      "商品品类信息",
+      "订单签约来源",
+      "合同报价关系"
+    ]
+  }
+}

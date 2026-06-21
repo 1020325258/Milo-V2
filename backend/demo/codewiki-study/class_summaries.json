@@ -1,0 +1,291 @@
+{
+  "FormalMultipleCompanyService.java::FormalMultipleCompanyService": {
+    "class_name": "FormalMultipleCompanyService",
+    "file_path": "/Users/zqy/work/project/nrs-sales-project/utopia-nrs-sales-project-service/src/main/java/com/ke/utopia/nrs/salesproject/service/contract/v2/personal/FormalMultipleCompanyService.java",
+    "relative_path": "FormalMultipleCompanyService.java",
+    "methods": [
+      "getFormalQuotationList",
+      "getFormalQuotationListV2",
+      "getFormalQuotationInfoList",
+      "getCooperQuoteInfoList",
+      "getNotSupportSignBillCodeList"
+    ],
+    "total_lines": 246,
+    "depends_on": [
+      "ContractSigningSourceRouter",
+      "FormalMultipleCompanyService"
+    ],
+    "best_doc": "正签发起多主体合同类\n@author cuiyubao\n@date 2025/6/13 14:34",
+    "source_code_head": "@Service\n@Slf4j\npublic class FormalMultipleCompanyService {\n\n    @Resource\n\tprivate HomeOrderDataConversionService homeOrderDataConversionService;\n\t@Resource\n\tprivate ContractOrderCenterRpc contractOrderCenterRpc;\n\t@Resource\n\tprivate QuotationRelationCommonService quotationRelationCommonService;\n\t@Resource\n\tprivate MdmRpc mdmRpc;\n\t@Resource\n\tprivate AtomBudgetRpc atomBudgetRpc;\n\t@Resource\n\tprivate CommonBusinessService commonBusinessService;\n\n\t@Resource\n\tprivate ContractApolloConfig contractApolloConfig;\n\t@Resource\n\tprivate ContractServiceImpl contractService;\n\n\t@Resource\n\tprivate ContractRelationService contractRelationService;\n\t@Resource\n\tprivate ContractQuotationRelationService contractQuotationRelationService;\n\t@Resource\n\tprivate ContractDependentDataService contractDependentDataService;\n\t@Resource\n\tprivate ContractSigningSourceRouter contractSigningSourceRouter;\n\n\t/**\n\t * 获取正签发起时可以选择的C报价信息\n\t * 包含设计师正签时做的C报价以及家居顾问做的协同C报价\n\t * @param projectOrderId\n\t * @return\n\t */\n\t@Deprecated\n\tpublic List<ContractFormalQuotationDTO.FormalSealInfo> getFormalQuotationList(String projectOrderId){\n\t\t//开关处理\n\t\tBoolean openFormalMultiple = contractApolloConfig.getOpenFormalMultiple();\n\t\tif (!openFormalMultiple) {\n\t\t\tLOGGER.info(\"开关关闭，返回空列表 projectOrderId:{}\", projectOrderId);\n\t\t\treturn new ArrayList<>();\n\t\t}\n\n\t\tif (!commonBusinessService.isProcessV25New(projectOrderId)) {\n\t\t\treturn new ArrayList<>();\n\t\t}\n\t\t//获取正签报价\n\t\tContractSourceDataBO contractSourceDataBO = homeOrderDataConversionService.contractSourceDateNoThrow(projectOrderId,null);\n\t\tPlanAllDTO planAllDTO = contractSourceDataBO.getPlanAllDTO();\n\t\tif (planAllDTO == null) {\n\t\t\treturn new ArrayList<>();\n\t\t}\n\t\tByte businessType = commonBusinessService.getBusinessType(projectOrderId);\n\n\t\t//根据协同报价单查询组合单信息\n\t\tList<CompositInfoWithBillCode> compositInfoWithBillCodes = contractOrderCenterRpc.queryOrderByHomeOrderNo(projectOrderId);\n\t\t//过滤出非取消的\n\t\tcompositInfoWithBillCodes = compositInfoWithBillCodes.stream().filter(item -> !CompositOrderSta",
+    "key_methods": [
+      "getFormalQuotationList",
+      "getFormalQuotationListV2",
+      "getFormalQuotationInfoList",
+      "getCooperQuoteInfoList",
+      "getNotSupportSignBillCodeList"
+    ],
+    "method_count": 5
+  },
+  "PersonalRelationHandler.java::PersonalRelationHandler": {
+    "class_name": "PersonalRelationHandler",
+    "file_path": "/Users/zqy/work/project/nrs-sales-project/utopia-nrs-sales-project-service/src/main/java/com/ke/utopia/nrs/salesproject/service/contract/v2/personal/PersonalRelationHandler.java",
+    "relative_path": "PersonalRelationHandler.java",
+    "methods": [
+      "revokeCooperQuotation"
+    ],
+    "total_lines": 1,
+    "depends_on": [],
+    "best_doc": "个性化合同关联关系处理器\n处理销售合同与报价单/S单的绑定关系相关操作\n@author claude",
+    "source_code_head": "public interface PersonalRelationHandler {\n\n\t/**\n\t * 撤回协同报价单\n\t * 处理合同与报价单/S单的绑定关系：若报价单直接绑定合同则直接处理，否则通过S单处理\n\t *\n\t * @param projectOrderId 项目订单ID\n\t * @param billCode       协同报价单号\n\t * @param operatorUcid   操作人UCID\n\t */\n\tvoid revokeCooperQuotation(String projectOrderId, String billCode, Long operatorUcid);\n\n}",
+    "key_methods": [
+      "revokeCooperQuotation"
+    ],
+    "method_count": 1
+  },
+  "PersonalRelationHandlerImpl.java::PersonalRelationHandlerImpl": {
+    "class_name": "PersonalRelationHandlerImpl",
+    "file_path": "/Users/zqy/work/project/nrs-sales-project/utopia-nrs-sales-project-service/src/main/java/com/ke/utopia/nrs/salesproject/service/contract/v2/personal/PersonalRelationHandlerImpl.java",
+    "relative_path": "PersonalRelationHandlerImpl.java",
+    "methods": [
+      "revokeCooperQuotation",
+      "getSubOrderNosByBillCode",
+      "unbindCooperQuotationFromContract",
+      "unbindSubOrderFromContract",
+      "determineRevocationActionForDirectBound",
+      "determineRevocationActionForSubOrder",
+      "executeRevocationAction",
+      "isContractInInvalidOrFinalStatus",
+      "undoContractIfNeeded",
+      "canUndoContract",
+      "cleanFormalContractDraftFields"
+    ],
+    "total_lines": 175,
+    "depends_on": [
+      "PersonalRelationHandlerImpl"
+    ],
+    "best_doc": "个性化合同关联关系处理器实现\n@author claude",
+    "source_code_head": "@Slf4j\n@Service\npublic class PersonalRelationHandlerImpl implements PersonalRelationHandler {\n\n\tprivate static final Long DEFAULT_OPERATOR_UCID = 100000000000000L;\n\n\t/**\n\t * 合同撤回操作类型\n\t */\n\tprivate enum ContractRevocationAction {\n\t\t/** 作废合同 */\n\t\tCANCEL_CONTRACT,\n\t\t/** 解除关联并撤回合同 */\n\t\tUNBIND_AND_UNDO,\n\t\t/** 跳过处理 */\n\t\tSKIP\n\t}\n\n\t@Resource\n\tprivate ContractService contractService;\n\n\t@Resource\n\tprivate CommonContractService commonContractService;\n\n\t@Resource\n\tprivate QuotationRelationCommonService quotationRelationCommonService;\n\n\t@Resource\n\tprivate ContractQuotationRelationService contractQuotationRelationService;\n\n\t@Resource\n\tprivate HomeAndPcCommonService homeAndPcCommonService;\n\n\t@Resource\n\tprivate ContractRelationService contractRelationService;\n\n\t@Resource\n\tprivate ContractFieldHandler contractFieldHandler;\n\n\t@Resource\n\tprivate SubOrderFeignService subOrderFeignService;\n\n\t@Resource\n\tprivate LockService lockService;\n\n\t@Resource\n\tprivate ContractBindLogService contractBindLogService;\n\n\t@Override\n\tpublic void revokeCooperQuotation(String projectOrderId, String cooperBillCode, Long operatorUcid) {\n\t\t// 撤回协同报价与协同报价换绑至 S 加锁互斥\n\t\ttry {\n\t\t\tlockService.lockElseThrow(LockService.CONTRACT_RELATION_BILL_CODE + cooperBillCode, () -> {\n\t\t\t\t// 获取直接绑定该报价单的合同\n\t\t\t\tList<Contract> relatedContracts = quotationRelationCommonService.getContractByBillCode(cooperBillCode);\n\n\t\t\t\tif (CollectionUtil.isNotEmpty(relatedContracts)) {\n\t\t\t\t\t// 协同报价单与合同绑定，直接处理\n\t\t\t\t\tfor (Contract contract : relatedContracts) {\n\t\t\t\t\t\tunbindCooperQuotationFromContract(contract, cooperBillCode, projectOrderId, operatorUcid);\n\t\t\t\t\t}\n\t\t\t\t} else {\n\t\t\t\t\t// 协同报价单未绑定合同，则S单与合同绑定，通过S单处理\n\t\t\t\t\tunbindSubOrderFromContract(projectOrderId, cooperBillCode, operatorUcid);\n\t\t\t\t}\n\t\t\t\treturn null;\n\t\t\t}, 10000);\n\t\t} catch (Exception e) {\n\t\t\tthrow new NrsBusinessException(String.format(\"协同报价单撤回失败, projectOrderId: %s, cooperBillCode: %s\", projectOrderId, cooperBillCode));\n\t\t}\n\n\t}\n\n\n\t/**\n\t * 获取协同报价单对应的所有 S 单号\n\t */\n\tprivate List<String> getSubOr",
+    "key_methods": [
+      "revokeCooperQuotation",
+      "getSubOrderNosByBillCode",
+      "unbindCooperQuotationFromContract",
+      "unbindSubOrderFromContract",
+      "determineRevocationActionForDirectBound"
+    ],
+    "method_count": 11
+  },
+  "PersonalRelationHandlerImpl.java::ContractRevocationAction": {
+    "class_name": "ContractRevocationAction",
+    "file_path": "/Users/zqy/work/project/nrs-sales-project/utopia-nrs-sales-project-service/src/main/java/com/ke/utopia/nrs/salesproject/service/contract/v2/personal/PersonalRelationHandlerImpl.java",
+    "relative_path": "PersonalRelationHandlerImpl.java",
+    "methods": [],
+    "total_lines": 0,
+    "depends_on": [],
+    "best_doc": "个性化合同关联关系处理器实现\n@author claude",
+    "source_code_head": "\tprivate enum ContractRevocationAction {\n\t\t/** 作废合同 */\n\t\tCANCEL_CONTRACT,\n\t\t/** 解除关联并撤回合同 */\n\t\tUNBIND_AND_UNDO,\n\t\t/** 跳过处理 */\n\t\tSKIP\n\t}",
+    "key_methods": [],
+    "method_count": 0
+  },
+  "quotation/ProductQueryService.java::ProductQueryService": {
+    "class_name": "ProductQueryService",
+    "file_path": "/Users/zqy/work/project/nrs-sales-project/utopia-nrs-sales-project-service/src/main/java/com/ke/utopia/nrs/salesproject/service/contract/v2/personal/quotation/ProductQueryService.java",
+    "relative_path": "quotation/ProductQueryService.java",
+    "methods": [
+      "getChangeQuotationProductDTOS",
+      "getQuotationProductDTOS"
+    ],
+    "total_lines": 47,
+    "depends_on": [],
+    "best_doc": "",
+    "source_code_head": "@Service\n@Slf4j\npublic class ProductQueryService {\n\n\t@Resource\n\tprivate OrderStandardQueryRpc orderStandardQueryRpc;\n\n\t/**\n\t * 根据变更单号获取报价商品集合\n\t */\n\tpublic List<ChangeQuotationProductDTO> getChangeQuotationProductDTOS(String projectOrderId, String changeOrderId) {\n\t\t// 1. 通过变更单查询商品信息\n\t\tHomeProject homeProject = orderStandardQueryRpc.queryHomeProjectAndChangeQuotationSkuList(projectOrderId, changeOrderId);\n\t\tChangeComboQuotationListDTO personalQuotation = Optional.ofNullable(homeProject)\n\t\t\t.map(HomeProject::getMainOrder)\n\t\t\t.map(MainOrder::getCostControl)\n\t\t\t.map(MainOrderModel.CostControl::getChangeQuotationModule)\n\t\t\t.map(ChangeQuotationModule::getPersonalQuotation)\n\t\t\t.orElseThrow(() -> new NrsBusinessException(\"通过主订单查询商品信息失败\"));\n\n\t\t// 2. 获取变更套餐和单品对应的所有的商品\n\t\tStream<ChangeQuotationProductDTO> fromCombos = personalQuotation.getComboList().stream()\n\t\t\t.flatMap(\n\t\t\t\tcombo -> Optional.ofNullable(combo.getQuotationProductList()).orElse(Collections.emptyList()).stream()\n\t\t\t);\n\t\tStream<ChangeQuotationProductDTO> fromQuotationList = personalQuotation.getQuotationList().stream();\n\n\t\treturn Stream.concat(fromCombos, fromQuotationList)\n\t\t\t.filter(Objects::nonNull).collect(Collectors.toList());\n\t}\n\n\t/**\n\t * 根据主单号 + 报价单号获取报价商品集合\n\t */\n\tpublic List<QuotationProductDTO> getQuotationProductDTOS(String projectOrderId, List<String> billCodeList) {\n\t\tList<QuotationProductDTO> res = new ArrayList<>();\n\t\tif (CollectionUtils.isEmpty(billCodeList)) {\n\t\t\treturn res;\n\t\t}\n\t\tfor (String billCode : billCodeList) {\n\t\t\t// 1. 通过报价单查询商品信息\n\t\t\tHomeProject homeProject = orderStandardQueryRpc.queryHomeProjectAndQuotationSkuList(projectOrderId, billCode);\n\t\t\tComboQuotationListDTO personalQuotation = Optional.ofNullable(homeProject)\n\t\t\t\t.map(HomeProject::getMainOrder)\n\t\t\t\t.map(MainOrder::getCostControl)\n\t\t\t\t.map(MainOrderModel.CostControl::getQuotationModule)\n\t\t\t\t.map(QuotationModule::getPersonalQuotation)\n\t\t\t\t.orElseThrow(() -> new NrsBusinessException(\"通过主订单查询商品信息失败\"));\n\n\t\t\t// 2. 获取套餐和单品对应的所有的商品\n\t\t\tSt",
+    "key_methods": [
+      "getChangeQuotationProductDTOS",
+      "getQuotationProductDTOS"
+    ],
+    "method_count": 2
+  },
+  "bind/AbstractContractSigningSource.java::AbstractContractSigningSource": {
+    "class_name": "AbstractContractSigningSource",
+    "file_path": "/Users/zqy/work/project/nrs-sales-project/utopia-nrs-sales-project-service/src/main/java/com/ke/utopia/nrs/salesproject/service/contract/v2/personal/bind/AbstractContractSigningSource.java",
+    "relative_path": "bind/AbstractContractSigningSource.java",
+    "methods": [
+      "queryPersonalQuoteInfo",
+      "buildPersonalDrawingImgList",
+      "buildPersonalDrawing",
+      "buildDrawingQuery",
+      "buildProductItemCodes",
+      "buildParam",
+      "filterByCompanyCode",
+      "mergeCategoryNames",
+      "getHasBoundOrderNos",
+      "buildPackageCodeMap",
+      "getPackageCodesByOrderNos",
+      "isCPart",
+      "isBPart"
+    ],
+    "total_lines": 130,
+    "depends_on": [
+      "AbstractContractSigningSource"
+    ],
+    "best_doc": "",
+    "source_code_head": "@Slf4j\npublic abstract class AbstractContractSigningSource implements ContractSigningSource{\n\n\t@Resource\n\t@Lazy\n\tprivate HomeOrderDataConversionService homeOrderDataConversionService;\n\n\t@Resource\n\tprivate ContractQuotationRelationService contractQuotationRelationService;\n\n\t@Resource\n\tprivate AtomDrawingRpc atomDrawingRpc;\n\n\t@Resource\n\tprivate ContractService contractService;\n\n\t@Resource\n\tprivate SubOrderFeignService subOrderFeignService;\n\n\t@Override\n\tpublic List<ContractSourceDataBO.PersonalContractData> queryPersonalQuoteInfo(BindOrderInfo bindOrderInfo) {\n\t\t// 1. 构建参数\n\t\tPersonalContractDataParam personalContractDataParam = buildParam(bindOrderInfo);\n\t\t// 2. 执行查询\n\t\tContractSourceDataBO contractSourceDataBO = QueryHelper.unwrap(p -> homeOrderDataConversionService.contractPersonalDataV2(p), personalContractDataParam, \"contractPersonalDataV2\");\n\t\tList<ContractSourceDataBO.PersonalContractData> personalContractDataList = contractSourceDataBO.getPersonalContractDataList();\n\t\tif (CollectionUtils.isEmpty(personalContractDataList)) {\n\t\t\tthrow new NrsBusinessException(ResultCodeEnum.ERROR_BUSINESS.getCode(), \"个性化合同报价信息为空\");\n\t\t}\n\t\t// 3. 过滤出所需主体的个性化报价数据\n\t\tpersonalContractDataList = filterByCompanyCode(bindOrderInfo, personalContractDataList);\n\t\tLOGGER.info(\"contractPersonalDataV2, homeOrderNo: {}, personalContractDataList: {}\", bindOrderInfo.getProjectOrderId(), personalContractDataList);\n\t\treturn personalContractDataList;\n\t}\n\n\t@Override\n\tpublic List<String> buildPersonalDrawingImgList(BindOrderInfo bindOrderInfo) {\n\t\tLOGGER.info(\"buildPersonalDrawingImgList 入参: {}\", JSON.toJSONString(bindOrderInfo));\n\t\t// 1. 获取个性化图纸\n\t\tDrawingDTO.DeliverDrawingDTO deliverDrawingDTO = buildPersonalDrawing(bindOrderInfo, null, Boolean.FALSE);\n\n\t\t// 2. 筛选个性化图纸返回\n\t\treturn Optional.ofNullable(deliverDrawingDTO).map(DrawingDTO.DeliverDrawingDTO::getDrawingDetailDTOList)\n\t\t\t.orElse(Collections.emptyList())\n\t\t\t.stream()\n\t\t\t.flatMap(drawingDetail -> drawingDetail.previewPathList().stream())\n\t\t\t.collec",
+    "key_methods": [
+      "queryPersonalQuoteInfo",
+      "buildPersonalDrawingImgList",
+      "buildPersonalDrawing",
+      "buildDrawingQuery",
+      "buildProductItemCodes"
+    ],
+    "method_count": 13
+  },
+  "bind/ContractSigningSource.java::ContractSigningSource": {
+    "class_name": "ContractSigningSource",
+    "file_path": "/Users/zqy/work/project/nrs-sales-project/utopia-nrs-sales-project-service/src/main/java/com/ke/utopia/nrs/salesproject/service/contract/v2/personal/bind/ContractSigningSource.java",
+    "relative_path": "bind/ContractSigningSource.java",
+    "methods": [
+      "bindType",
+      "queryPersonalQuoteInfo",
+      "hasInvalidStatusOrders",
+      "buildGoodsInfo",
+      "buildSignableOrderInfos",
+      "checkPersonalCanCreate",
+      "buildPersonalDrawingImgList",
+      "buildPersonalDrawing",
+      "hasCPart",
+      "hasBPart"
+    ],
+    "total_lines": 10,
+    "depends_on": [],
+    "best_doc": "",
+    "source_code_head": "public interface ContractSigningSource {\n\n\tInteger bindType();\n\n\t/**\n\t * 从主订单获取个性化报价\n\t */\n\tList<ContractSourceDataBO.PersonalContractData> queryPersonalQuoteInfo(BindOrderInfo bindOrderInfo);\n\n\t/**\n\t * 判断是否包含无效状态的单据\n\t */\n\tboolean hasInvalidStatusOrders(BindOrderInfo bindOrderInfo);\n\n\t/**\n\t * 构造商品信息\n\t */\n\tMap<String, String> buildGoodsInfo(BindOrderInfo bindOrderInfo);\n\n\t/**\n\t * 单独发起销售合同弹窗：构造可签约单据（仅供选择基础报价单+S单）\n\t */\n\tList<SignableOrderInfo> buildSignableOrderInfos(String projectOrderId);\n\n\t/**\n\t * 销售合同发起前校验：创建/编辑销售合同时，会校验是否存在可签约的 S 单。\n\t */\n\tboolean checkPersonalCanCreate(String projectOrderId);\n\n\t/**\n\t * 构建个性化图纸 List\n\t * 原逻辑：com.ke.utopia.nrs.salesproject.rpc.atom.AtomDrawingRpc#getPersonalDrawingImgList\n\t */\n\tList<String> buildPersonalDrawingImgList(BindOrderInfo bindOrderInfo);\n\n\t/**\n\t * 构建个性化图纸\n\t * 原逻辑：com.ke.utopia.nrs.salesproject.rpc.atom.AtomDrawingRpc#getPersonalDrawing(java.lang.String, java.lang.String, java.util.List)\n\t */\n\tDrawingDTO.DeliverDrawingDTO buildPersonalDrawing(BindOrderInfo bindOrderInfo, Boolean softConfigList, Boolean needMergePdf);\n\n\t/**\n\t * 是否包含 C 部分的品\n\t */\n\tboolean hasCPart(BindOrderInfo bindOrderInfo);\n\n\t/**\n\t * 是否包含 B 部分的品\n\t */\n\tboolean hasBPart(BindOrderInfo bindOrderInfo);\n}",
+    "key_methods": [
+      "bindType",
+      "queryPersonalQuoteInfo",
+      "hasInvalidStatusOrders",
+      "buildGoodsInfo",
+      "buildSignableOrderInfos"
+    ],
+    "method_count": 10
+  },
+  "bind/ContractSigningSourceRouter.java::ContractSigningSourceRouter": {
+    "class_name": "ContractSigningSourceRouter",
+    "file_path": "/Users/zqy/work/project/nrs-sales-project/utopia-nrs-sales-project-service/src/main/java/com/ke/utopia/nrs/salesproject/service/contract/v2/personal/bind/ContractSigningSourceRouter.java",
+    "relative_path": "bind/ContractSigningSourceRouter.java",
+    "methods": [
+      "route"
+    ],
+    "total_lines": 10,
+    "depends_on": [],
+    "best_doc": "",
+    "source_code_head": "@Component\npublic class ContractSigningSourceRouter {\n\tprivate final Map<Integer, ContractSigningSource> sourceMap;\n\n\tpublic ContractSigningSourceRouter(List<ContractSigningSource> sources) {\n\t\tthis.sourceMap = sources.stream().collect(\n\t\t\tCollectors.toMap(ContractSigningSource::bindType, Function.identity())\n\t\t);\n\t}\n\n\tpublic ContractSigningSource route(Integer bindType) {\n\t\tif (bindType == null) {\n\t\t\tthrow new NrsBusinessException(\"bindType 不能为空\");\n\t\t}\n\t\tContractSigningSource source = sourceMap.get(bindType);\n\t\tif (source == null) {\n\t\t\tthrow new NrsBusinessException(\"未找到实现策略: \" + bindType);\n\t\t}\n\t\treturn source;\n\t}\n}",
+    "key_methods": [
+      "route"
+    ],
+    "method_count": 1
+  },
+  "bind/strategy/BillSigningSourceStrategy.java::BillSigningSourceStrategy": {
+    "class_name": "BillSigningSourceStrategy",
+    "file_path": "/Users/zqy/work/project/nrs-sales-project/utopia-nrs-sales-project-service/src/main/java/com/ke/utopia/nrs/salesproject/service/contract/v2/personal/bind/strategy/BillSigningSourceStrategy.java",
+    "relative_path": "bind/strategy/BillSigningSourceStrategy.java",
+    "methods": [
+      "bindType",
+      "hasInvalidStatusOrders",
+      "buildGoodsInfo",
+      "getSkuProductsByBillCode",
+      "buildSignableOrderInfos",
+      "checkPersonalCanCreate",
+      "hasCPart",
+      "hasBPart",
+      "buildDrawingQuery",
+      "buildProductItemCodes",
+      "buildParam",
+      "filterByCompanyCode",
+      "shouldProcessPersonalContractData"
+    ],
+    "total_lines": 144,
+    "depends_on": [
+      "BillSigningSourceStrategy",
+      "ProductQueryService"
+    ],
+    "best_doc": "",
+    "source_code_head": "@Service\n@Slf4j\npublic class BillSigningSourceStrategy extends AbstractContractSigningSource {\n\n\n\t@Resource\n\tprivate OrderStandardQueryRpc orderStandardQueryRpc;\n\n\t@Resource\n\tprivate HomeOrderDataConversionService homeOrderDataConversionService;\n\n\t@Resource\n\tprivate CommonBusinessService commonBusinessService;\n\n\t@Resource\n\tprivate ContractDependentDataService contractDependentDataService;\n\n\t@Resource\n\tprivate AtomBudgetRpc atomBudgetRpc;\n\n\t@Resource\n\tprivate ProductQueryService productQueryService;\n\n\t@Override\n\tpublic Integer bindType() {\n\t\treturn BindTypeEnum.BILL_CODE.getCode();\n\t}\n\n\t@Override\n\tpublic boolean hasInvalidStatusOrders(BindOrderInfo bindOrderInfo) {\n\t\t//校验报价单是否存在\n\t\tBudgetParams.QueryBillsCondition budgetParams = BudgetParams.QueryBillsCondition.builder()\n\t\t\t.projectOrderId(bindOrderInfo.getProjectOrderId())\n\t\t\t.billCodes(bindOrderInfo.getBindOrderNoList())\n\t\t\t.build();\n\t\tList<com.ke.utopia.atom.api.budget.dto.BudgetBillDTO.BillDTO> billDTOS = atomBudgetRpc.queryBillsByCondition(budgetParams);\n\t\tif (CollectionUtil.isEmpty(billDTOS)) {\n\t\t\treturn true;\n\t\t}\n\t\tfor (com.ke.utopia.atom.api.budget.dto.BudgetBillDTO.BillDTO billDTO : billDTOS) {\n\t\t\t//所选组合单关联报价单状态无法发起签约，请重新选择\n\t\t\tif (GeneralBillStatusEnum.IN_ADJUST.getCode().equals(billDTO.getStatus())\n\t\t\t\t|| GeneralBillStatusEnum.DELETED.getCode().equals(billDTO.getStatus())\n\t\t\t\t|| GeneralBillStatusEnum.CANCELED.getCode().equals(billDTO.getStatus())) {\n\t\t\t\treturn true;\n\t\t\t}\n\t\t}\n\t\treturn false;\n\t}\n\n\t@Override\n\tpublic Map<String, String> buildGoodsInfo(BindOrderInfo bindOrderInfo) {\n\n\t\t/**\n\t\t * 构建报价单的 goodsInfo\n\t\t * billCode -> goodsInfo\n\t\t */\n\t\tList<String> billCodeList = bindOrderInfo.getBindOrderNoList();\n\t\tString projectOrderId = bindOrderInfo.getProjectOrderId();\n\n\t\tMap<String, String> result = new HashMap<>();\n\t\tbillCodeList.forEach(\n\t\t\tbillCode -> {\n\t\t\t\tSet<SkuProductDTO> skuProducts = getSkuProductsByBillCode(projectOrderId, Collections.singletonList(billCode));\n\t\t\t\t// 遍历商品，将内控类目合并生成 goodsInfo 合并后统一提取类目名\n",
+    "key_methods": [
+      "bindType",
+      "hasInvalidStatusOrders",
+      "buildGoodsInfo",
+      "getSkuProductsByBillCode",
+      "buildSignableOrderInfos"
+    ],
+    "method_count": 13
+  },
+  "bind/strategy/ChangeOrderSigningSourceStrategy.java::ChangeOrderSigningSourceStrategy": {
+    "class_name": "ChangeOrderSigningSourceStrategy",
+    "file_path": "/Users/zqy/work/project/nrs-sales-project/utopia-nrs-sales-project-service/src/main/java/com/ke/utopia/nrs/salesproject/service/contract/v2/personal/bind/strategy/ChangeOrderSigningSourceStrategy.java",
+    "relative_path": "bind/strategy/ChangeOrderSigningSourceStrategy.java",
+    "methods": [
+      "bindType",
+      "hasInvalidStatusOrders",
+      "buildGoodsInfo",
+      "buildSignableOrderInfos",
+      "checkPersonalCanCreate",
+      "hasCPart",
+      "hasBPart",
+      "buildDrawingQuery",
+      "buildProductItemCodes",
+      "buildParam",
+      "filterByCompanyCode",
+      "getSkuProductsByChangeOrderId"
+    ],
+    "total_lines": 94,
+    "depends_on": [
+      "ChangeOrderSigningSourceStrategy",
+      "ProductQueryService"
+    ],
+    "best_doc": "",
+    "source_code_head": "@Service\n@Slf4j\npublic class ChangeOrderSigningSourceStrategy extends AbstractContractSigningSource {\n\n\t@Resource\n\tprivate OrderStandardQueryRpc orderStandardQueryRpc;\n\n\t@Resource\n\tprivate AtomBudgetRpc atomBudgetRpc;\n\n\t@Resource\n\tprivate ProductQueryService productQueryService;\n\n\t@Override\n\tpublic Integer bindType() {\n\t\treturn BindTypeEnum.CHANGE_ORDER.getCode();\n\t}\n\n\t@Override\n\tpublic boolean hasInvalidStatusOrders(BindOrderInfo bindOrderInfo) {\n\t\t// 参考 com.ke.utopia.nrs.salesproject.service.contract.v2.personal.FormalMultipleCompanyService.getNotSupportSignBillCodeList\n\t\t// 变更单状态不是[待签约]/[已完成]，则不允许签约\n\t\tChangeApplyDetailsDTO changeApplyDetails = atomBudgetRpc.getChangeApplyDetails(bindOrderInfo.getChangeOrderId());\n\n\t\tList<Integer> signableChangeOrderStatus = Arrays.asList(ChangeBusinessStatusEnum.WAIT_SIGN.getCode(), ChangeBusinessStatusEnum.FINISHED.getCode());\n\n\t\tif (!signableChangeOrderStatus.contains(changeApplyDetails.getChangeApplyStatus())) {\n\t\t\tLOGGER.info(\"变更流程状态不允许签约 changeOrderId:{},changeApplyStatus:{}\", bindOrderInfo.getChangeOrderId(), changeApplyDetails.getChangeApplyStatus());\n\t\t\treturn true;  // 有无效状态\n\t\t}\n\t\treturn false;  // 没有无效状态\n\t}\n\n\t@Override\n\tpublic Map<String, String> buildGoodsInfo(BindOrderInfo bindOrderInfo) {\n\t\t/**\n\t\t * 构建变更单的 goodsInfo\n\t\t * billCode -> goodsInfo\n\t\t */\n\t\tString projectOrderId = bindOrderInfo.getProjectOrderId();\n\t\tMap<String, String> result = new HashMap<>();\n\n\t\tSet<SkuProductDTO> skuProducts = getSkuProductsByChangeOrderId(projectOrderId, bindOrderInfo.getChangeOrderId());\n\n\t\t// 遍历商品，将内控类目合并生成 goodsInfo合并后统一提取类目名\n\t\tSet<String> categoryNames = skuProducts.stream()\n\t\t\t.map(SkuProductDTO::getSkuCategoryName)\n\t\t\t.collect(Collectors.toSet());\n\t\tresult.put(bindOrderInfo.getChangeOrderId(), mergeCategoryNames(categoryNames));\n\t\treturn result;\n\t}\n\n\t@Override\n\tpublic List<SignableOrderInfo> buildSignableOrderInfos(String projectOrderId) {\n\t\treturn Collections.emptyList();\n\t}\n\n\t@Override\n\tpublic boolean checkPersonalCanCreate(Str",
+    "key_methods": [
+      "bindType",
+      "hasInvalidStatusOrders",
+      "buildGoodsInfo",
+      "buildSignableOrderInfos",
+      "checkPersonalCanCreate"
+    ],
+    "method_count": 12
+  },
+  "bind/strategy/SubOrderSigningSourceStrategy.java::SubOrderSigningSourceStrategy": {
+    "class_name": "SubOrderSigningSourceStrategy",
+    "file_path": "/Users/zqy/work/project/nrs-sales-project/utopia-nrs-sales-project-service/src/main/java/com/ke/utopia/nrs/salesproject/service/contract/v2/personal/bind/strategy/SubOrderSigningSourceStrategy.java",
+    "relative_path": "bind/strategy/SubOrderSigningSourceStrategy.java",
+    "methods": [
+      "bindType",
+      "hasInvalidStatusOrders",
+      "buildGoodsInfo",
+      "buildSignableOrderInfos",
+      "checkPersonalCanCreate",
+      "hasCPart",
+      "hasBPart",
+      "buildDrawingQuery",
+      "buildProductItemCodes",
+      "buildParam",
+      "filterByCompanyCode",
+      "getSignableSubOrderNos",
+      "getPackageSignedSubOrderNos",
+      "buildSignableOrderInfoPreData",
+      "getPackageNameByOrderNo"
+    ],
+    "total_lines": 208,
+    "depends_on": [
+      "SubOrderSigningSourceStrategy"
+    ],
+    "best_doc": "",
+    "source_code_head": "@Service\n@Slf4j\npublic class SubOrderSigningSourceStrategy extends AbstractContractSigningSource {\n\n\t@Resource\n\tprivate OrderQueryApi orderQueryApi;\n\n\t@Resource\n\tprivate SubOrderFeignService subOrderFeignService;\n\n\t@Resource\n\tprivate ContractQuotationRelationService contractQuotationRelationService;\n\n\t@Resource\n\tprivate MdmRpc mdmRpc;\n    @Resource\n    private PackageQueryFeignService packageQueryFeignService;\n\n\t@Resource\n\tprivate CommonBusinessService commonBusinessService;\n\n\t@Override\n\tpublic Integer bindType() {\n\t\treturn BindTypeEnum.SUB_ORDER.getCode();\n\t}\n\n\t@Override\n\tpublic boolean hasInvalidStatusOrders(BindOrderInfo bindOrderInfo) {\n\t\tList<String> subOrderNos = bindOrderInfo.getBindOrderNoList().stream().distinct().collect(Collectors.toList());\n\t\tList<SubOrderDto> subOrders = subOrderFeignService.batchQuerySubOrderByNo(subOrderNos);\n\n\t\t// 校验个数\n\t\tif (subOrderNos.size() != subOrders.size()) {\n\t\t\treturn true;\n\t\t}\n\n\t\t// 校验状态\n\t\tOptional<SubOrderDto> invalidSubOrder = subOrders.stream().filter(subOrder -> SubOrderFeignService.invalidStatus.contains(subOrder.getStatus())).findFirst();\n\n\t\treturn invalidSubOrder.isPresent();\n\t}\n\n\t@Override\n\tpublic Map<String, String> buildGoodsInfo(BindOrderInfo bindOrderInfo) {\n\t\tList<String> subOrderNos = bindOrderInfo.getBindOrderNoList();\n\t\tMap<String, String> goodsInfoMapByOrderNo = new HashMap<>();\n\t\tif (CollectionUtils.isEmpty(subOrderNos)) {\n\t\t\treturn goodsInfoMapByOrderNo;\n\t\t}\n\t\tList<SubOrderDto> subOrders = subOrderFeignService.batchQuerySubOrderByNo(subOrderNos);\n\t\tsubOrders.forEach(subOrderDto -> {\n\t\t\tSet<String> categoryNames = new HashSet<>();\n\t\t\tList<SubOrderItemDto> subOrderItems = subOrderDto.getSubOrderItems();\n\t\t\tsubOrderItems.forEach(\n\t\t\t\titem -> {\n\t\t\t\t\tString categoryName = StringUtils.isEmpty(item.getFrontCategoryName()) ? item.getBackCategoryName() : item.getFrontCategoryName();\n\t\t\t\t\tif (!StringUtils.isEmpty(categoryName) && categoryName.length() > 50) {\n\t\t\t\t\t\t// db总长 128，最多展示三个的拼接\n\t\t\t\t\t\tcategoryName = category",
+    "key_methods": [
+      "bindType",
+      "hasInvalidStatusOrders",
+      "buildGoodsInfo",
+      "buildSignableOrderInfos",
+      "checkPersonalCanCreate"
+    ],
+    "method_count": 15
+  }
+}
