@@ -1,162 +1,530 @@
-# V2 合同服务仓库概览
+# Personal 模块文档
 
-## 1. 仓库目的
+## 1. 模块概述
 
-V2 合同服务（`service/contract/v2`）是家装销售合同的**全生命周期管理引擎**，覆盖从合同创建、草稿保存、字段校验、提交、企业签章/个人签署，到合同详情查询、变更管理、解约处理的完整业务链路。
+`personal` 模块位于 `com.ke.utopia.nrs.salesproject.service.contract.v2.personal` 包下，是销售合同系统中**个性化合同**的核心业务模块。该模块负责处理个性化合同的签约单据来源管理、正签多主体合同的报价获取、以及合同与报价单/S单的关联关系撤回等关键业务场景。
 
-核心设计目标：
-- **关注点分离**：通过 AOP 切面将数据预加载与业务逻辑解耦
-- **策略驱动**：合同类型（正签/变更/设计/个人/解约等）通过策略模式路由到不同处理实现
-- **可扩展性**：新增合同类型或绑定类型只需添加策略实现，不影响既有代码
+### 核心职责
+
+| 职责 | 说明 |
+|------|------|
+| **签约单据路由** | 根据绑定类型（报价单/变更单/S单）路由到不同的签约来源策略 |
+| **正签报价聚合** | 获取正签发起时可选择的C报价信息，支持多主体分公司场景 |
+| **关联关系撤回** | 处理协同报价单撤回时，解绑合同与报价单/S单的关联关系 |
+| **商品信息构建** | 统一处理报价单、变更单、S单的商品信息和图纸查询 |
 
 ---
 
-## 2. 端到端架构
+## 2. 架构总览
 
 ```mermaid
 graph TD
-    subgraph Client[客户端层]
-        Home[Home APP]
-        PC[PC Web]
+    subgraph PersonalModule[personal 模块]
+        A[FormalMultipleCompanyService]
+        B[PersonalRelationHandler]
+        C[ContractSigningSourceRouter]
+        D[ContractSigningSource 接口]
+        E[AbstractContractSigningSource]
+        F[ProductQueryService]
+        G[BillSigningSourceStrategy]
+        H[ChangeOrderSigningSourceStrategy]
+        I[SubOrderSigningSourceStrategy]
     end
 
-    subgraph Controller[Controller 层]
-        HC[Home Controller]
-        PCC[PC Controller]
-    end
+    A -->|依赖| C
+    A -->|依赖| F
+    A -->|委托| J[HomeOrderDataConversionService]
+    A -->|委托| K[ContractOrderCenterRpc]
+    A -->|委托| L[AtomBudgetRpc]
 
-    subgraph AspectModule[ContractAspect — 横切关注点]
-        CCA[ContractContextAspect<br/>保存/提交上下文预加载]
-        CDA[ContractDetailAspect<br/>详情查询上下文预加载]
-        CCH[ContractContextHandler<br/>ThreadLocal 上下文]
-        CDCH[ContractDetailContextHandler<br/>ThreadLocal 上下文]
-    end
+    B -->|实现| M[PersonalRelationHandlerImpl]
 
-    subgraph CoreModule[ContractCore — 核心业务]
-        direction TB
-        Detail[ContractDetail<br/>详情查询 · 按钮配置]
-        Validation[ContractValidation<br/>字段校验 · 工种校验]
-        Submission[ContractSubmission<br/>草稿保存 · 存管提交]
-        Signing[ContractSigning<br/>企业签章 · 个人盖章]
-        Creation[ContractCreation<br/>脚本创建合同]
-    end
+    C -->|路由| D
+    D -->|继承| E
+    E -->|实现| G
+    E -->|实现| H
+    E -->|实现| I
 
-    subgraph PersonalModule[PersonalBinding — 个性化绑定]
-        BSS[BillSigningSourceStrategy]
-        COSS[ChangeOrderSigningSourceStrategy]
-        SOS[SubOrderSigningSourceStrategy]
-        PRH[PersonalRelationHandler]
-    end
+    G -->|依赖| F
+    H -->|依赖| F
+    I -->|依赖| N[SubOrderFeignService]
 
-    subgraph ChangeModule[ChangeContract — 合同变更]
-        Factory[ChangeContractStrategyFactory]
-        Normal[NormalChangeContractStrategy<br/>设计变更]
-        ZQ[ZQChangeContractStrategy<br/>套餐变更]
-    end
-
-    subgraph PdfModule[PDF 生成]
-        PdfSelf[ContractPdfSelfCreate<br/>图纸/团装/全翻新 PDF 策略]
-        TerminalPdf[TerminalContractPdf<br/>解约协议 PDF]
-        MatPdf[MaterialPdfDiff<br/>材料清单差异检查与 PDF 生成]
-    end
-
-    subgraph Infra[基础设施层]
-        DB[(MySQL)]
-        Redis[(Redis)]
-        S3[S3 文件存储]
-        PDFSvc[PDF 渲染服务]
-    end
-
-    subgraph External[外部系统]
-        AtomBudget[Atom 预算服务]
-        AtomChange[Atom 变更服务]
-        AtomDrawing[Atom 图纸服务]
-        Project[项目服务]
-        Quotation[报价服务]
-        Escrow[存管服务]
-        Fund[款项服务]
-        Audit[风控审核]
-        SCM[SCM 材料选品]
-        SubOrder[子单服务]
-    end
-
-    Home --> HC
-    PC --> PCC
-    HC --> CCA
-    HC --> CDA
-    PCC --> CCA
-    PCC --> CDA
-
-    CCA --> Submission
-    CCA --> Signing
-    CCA --> Validation
-    CCA --> Creation
-    CDA --> Detail
-
-    CCA --> BSS
-    CCA --> COSS
-    CCA --> SOS
-
-    Factory --> Normal
-    Factory --> ZQ
-    Normal --> CCA
-    Normal --> CoreModule
-    ZQ --> CoreModule
-
-    PdfSelf --> MatPdf
-    PdfSelf --> SCM
-
-    CCA --> External
-    CDA --> External
-    PersonalModule --> External
-    ChangeModule --> External
-    MatPdf --> External
-
-    CoreModule --> DB
-    PdfModule --> S3
-    PdfModule --> PDFSvc
+    M -->|依赖| O[QuotationRelationCommonService]
+    M -->|依赖| P[CommonContractService]
+    M -->|依赖| Q[ContractFieldHandler]
 ```
 
 ---
 
-## 3. 模块总览
+## 3. 核心组件详解
 
-| 模块 | 路径 | 职责 | 关键设计模式 |
-|------|------|------|-------------|
-| **ContractCore** | `service/contract/v2` | 合同核心业务：详情查询、字段校验、草稿保存、存管提交、企业签章、个人盖章、脚本创建 | 组件化服务拆分 |
-| **ContractAspect** | `service/contract/v2` | AOP 切面，在业务方法执行前并行加载项目/报价/图纸等数据到 ThreadLocal 上下文 | AOP + ThreadLocal 上下文模式 |
-| **PersonalBinding** | `service/contract/v2/personal` | 个性化合同绑定：按绑定类型（报价单/变更单/S单）提供签约源数据，管理撤回解绑 | 策略模式 + 模板方法 |
-| **ChangeContract** | `service/contract/v2/changecontractstrategey` | 合同变更：设计变更与套餐变更的差异计算、提交、确认流程 | 策略工厂 + 模板方法 |
-| **ContractPdfSelfCreate** | `service/contract/v2/createcontractpdfbyself` | 合同 PDF 自生成策略：图纸合同、团装正签、全翻新正签的 PDF 构建 | 策略模式 |
-| **TerminalContractPdf** | `service/contract/v2` | 解约协议 PDF 数据构建：乙方信息、房屋地址、款项明细等 | 数据构建服务 |
-| **MaterialPdfDiff** | `service/contract/v2/combo/material/pdf` | 材料清单 PDF：远程数据与数据库快照的差异比对，HTML→PDF→S3 完整流程 | 统一中间模型 + 聚合比较 |
+### 3.1 ContractSigningSourceRouter — 签约来源路由器
 
----
+**设计模式**：策略模式 + 路由注册
 
-## 4. 核心模块文档索引
-
-| 模块 | 文档路径 | 内容要点 |
-|------|----------|---------|
-| ContractCore | `ContractCore.md` | 5 个子模块（Detail / Validation / Submission / Signing / Creation）、10 个组件、合同生命周期数据流 |
-| ContractAspect | `ContractAspect.md` | 双切面架构（保存流 + 详情流）、并行数据加载策略、首屏优化、13 个外部 RPC 依赖 |
-| PersonalBinding | `PersonalBinding.md` | 3 种签约源策略（报价单/变更单/S单）、协同报价单撤回解绑流程、分布式锁保护 |
-| ChangeContract | `ChangeContract.md` | 2 种变更策略（设计变更/套餐变更）、V1/V2 提交版本、异步确认 + 轮询、差异计算引擎 |
-| MaterialPdfDiff | `MaterialPdfDiff.md` | 差异检查三段式（转换→聚合→比较）、PDF 生成链路（HTML→PDF→S3）、内外网地址自适应 |
-
----
-
-## 5. 模块间依赖关系
+`ContractSigningSourceRouter` 是整个签约来源体系的入口路由器。它在构造时通过 Spring 的依赖注入收集所有 `ContractSigningSource` 实现，并以 `bindType` 为键构建映射表。
 
 ```mermaid
 graph LR
-    Aspect[ContractAspect] -->|预加载数据| Core[ContractCore]
-    Aspect -->|路由调用| Personal[PersonalBinding]
-    Change[ChangeContract] -->|AOP 注解| Aspect
-    Change -->|基础合同操作| Core
-    Personal -->|合同作废/回退| Core
-    PdfSelf[ContractPdfSelfCreate] -->|材料 PDF| MatPdf[MaterialPdfDiff]
-    MatPdf -->|差异检查| External[外部 SCM 服务]
-    Terminal[TerminalContractPdf] -->|款项查询| External
+    R[ContractSigningSourceRouter] -->|route bindType=1| B[BillSigningSourceStrategy]
+    R -->|route bindType=2| S[SubOrderSigningSourceStrategy]
+    R -->|route bindType=3| C[ChangeOrderSigningSourceStrategy]
 ```
 
-**依赖方向**：所有模块单向依赖 ContractCore 和 ContractAspect，无循环依赖。外部系统通过 RPC 层统一接入。
+**路由逻辑**：调用方传入 `bindType`（绑定类型枚举），路由器返回对应的策略实现。若 `bindType` 为空或无匹配实现，则抛出 `NrsBusinessException`。
+
+**相关枚举**（`BindTypeEnum`）：
+
+| 枚举值 | 说明 |
+|--------|------|
+| `BILL_CODE` | 报价单绑定 |
+| `SUB_ORDER` | S单绑定 |
+| `CHANGE_ORDER` | 变更单绑定 |
+
+---
+
+### 3.2 ContractSigningSource — 签约来源抽象接口
+
+定义了个性化合同签约来源的统一契约，所有策略实现均需遵守此接口。
+
+| 方法 | 返回类型 | 说明 |
+|------|----------|------|
+| `bindType()` | `Integer` | 返回该策略对应的绑定类型枚举值 |
+| `queryPersonalQuoteInfo(BindOrderInfo)` | `List<PersonalContractData>` | 查询个性化报价信息 |
+| `hasInvalidStatusOrders(BindOrderInfo)` | `boolean` | 校验是否存在无效状态的单据 |
+| `buildGoodsInfo(BindOrderInfo)` | `Map<String, String>` | 构建商品信息（单据号→商品描述） |
+| `buildSignableOrderInfos(String)` | `List<SignableOrderInfo>` | 构建可签约单据列表（弹窗使用） |
+| `checkPersonalCanCreate(String)` | `boolean` | 校验是否存在可签约单据 |
+| `buildPersonalDrawingImgList(BindOrderInfo)` | `List<String>` | 获取个性化图纸预览图URL列表 |
+| `buildPersonalDrawing(...)` | `DeliverDrawingDTO` | 获取完整的个性化图纸数据 |
+| `hasCPart(BindOrderInfo)` | `boolean` | 是否包含C部分（客户承担）商品 |
+| `hasBPart(BindOrderInfo)` | `boolean` | 是否包含B部分（开发商承担）商品 |
+
+---
+
+### 3.3 AbstractContractSigningSource — 抽象基类
+
+实现了 `ContractSigningSource` 接口中的通用逻辑，子类只需实现模板方法。
+
+**模板方法**（由子类实现）：
+
+| 方法 | 说明 |
+|------|------|
+| `buildDrawingQuery(...)` | 构造图纸查询参数（不同单据类型参数不同） |
+| `buildProductItemCodes(BindOrderInfo)` | 获取商品唯一键列表 |
+| `buildParam(BindOrderInfo)` | 构建个性化报价查询参数 |
+| `filterByCompanyCode(...)` | 按公司主体过滤个性化报价数据 |
+
+**通用工具方法**：
+
+| 方法 | 说明 |
+|------|------|
+| `mergeCategoryNames(Set<String>)` | 聚合类目名称，最多取3个，超出用"等"省略 |
+| `getHasBoundOrderNos(...)` | 查询已绑定合同的单据号列表 |
+| `buildPackageCodeMap(List<String>)` | 构建S单号→套餐实例编码映射 |
+| `getPackageCodesByOrderNos(Set<String>)` | 根据S单号集合获取套餐编码集合 |
+| `isCPart(Integer)` / `isBPart(Integer)` | 根据 `purchaseType` 判断是否为C部分/B部分商品 |
+
+---
+
+### 3.4 三大策略实现
+
+#### 3.4.1 BillSigningSourceStrategy — 报价单策略
+
+绑定类型：`BindTypeEnum.BILL_CODE`
+
+**核心逻辑**：
+
+- **报价单有效性校验**：通过 `AtomBudgetRpc` 查询报价单状态，若报价单处于"调整中/已删除/已取消"状态则返回无效
+- **可签约单据构建**：获取正签报价中的个性化数据，仅处理整装全包（`REFORM_ALL`）和房产证（`HOUSE_CERTIFICATE`）业务类型
+- **商品信息构建**：通过 `ProductQueryService` 查询报价单下的SKU商品，聚合内控类目生成 `goodsInfo`
+- **主体过滤**：根据 `单据号+公司编码` 精确过滤个性化报价数据
+
+```mermaid
+flowchart TD
+    A[buildSignableOrderInfos] --> B[获取正签报价数据]
+    B --> C{shouldProcessPersonalContractData?}
+    C -->|否| D[返回空列表]
+    C -->|是| E[获取个性化数据列表]
+    E --> F[遍历个性化数据]
+    F --> G[构建 BindOrderInfo]
+    G --> H[buildGoodsInfo 查询商品类目]
+    H --> I[构建 SignableOrderInfo]
+    I --> J[返回可签约报价单据]
+```
+
+#### 3.4.2 ChangeOrderSigningSourceStrategy — 变更单策略
+
+绑定类型：`BindTypeEnum.CHANGE_ORDER`
+
+**核心逻辑**：
+
+- **变更单有效性校验**：通过 `AtomBudgetRpc.getChangeApplyDetails` 查询变更流程状态，仅"待签约/已完成"状态允许签约
+- **商品信息构建**：通过 `ProductQueryService.getChangeQuotationProductDTOS` 查询变更单下的SKU商品
+- **图纸查询**：构造图纸查询参数时额外传入 `projectChangeNo`（变更单号）和 `drawingStatus=TEMP`（临时状态）
+- **可签约单据**：变更单策略不构建可签约单据（`buildSignableOrderInfos` 返回空），变更单只通过绑定流程直接关联
+
+#### 3.4.3 SubOrderSigningSourceStrategy — S单策略
+
+绑定类型：`BindTypeEnum.SUB_ORDER`
+
+**核心逻辑**：
+
+- **S单有效性校验**：通过 `SubOrderFeignService` 批量查询S单，校验数量一致性和状态有效性
+- **可签约S单筛选**：通过三重过滤获取可签约S单
+  1. 排除变更中的S单
+  2. 排除已绑定合同的S单
+  3. 排除套餐已签约的S单（同套餐下的其他S单已绑定合同）
+- **团装2.5特殊逻辑**：团装2.5场景下，正签弹窗默认勾选所有S单（`mustSelect=true`）
+- **套餐名称映射**：通过S单的商品行获取 `packageInstanceCode`，再批量查询套餐名称
+
+```mermaid
+flowchart TD
+    A[buildSignableOrderInfos] --> B[queryValidBaseInfoByHomeOrderNo]
+    B --> C[getSignableSubOrderNos]
+    C --> D[获取变更中的S单]
+    C --> E[获取已绑定合同的S单]
+    C --> F[getPackageSignedSubOrderNos]
+    D --> G[三重过滤]
+    E --> G
+    F --> G
+    G --> H[buildSignableOrderInfoPreData]
+    H --> I[获取公司主体名称]
+    H --> J[获取商品信息]
+    H --> K[获取套餐名称]
+    H --> L[判断团装2.5]
+    I --> M[构建 SignableOrderInfo]
+    J --> M
+    K --> M
+    L --> M
+```
+
+---
+
+### 3.5 FormalMultipleCompanyService — 正签多主体服务
+
+负责正签发起时获取可选择的C报价信息，支持设计师正签C报价和家居顾问协同C报价的聚合。
+
+**核心方法**：
+
+| 方法 | 说明 | 状态 |
+|------|------|------|
+| `getFormalQuotationList` | 获取正签可选C报价（旧版，按分公司分组） | `@Deprecated` |
+| `getFormalQuotationListV2` | 获取正签可选C报价（新版，通过路由策略获取） | 当前使用 |
+| `getFormalQuotationInfoList` | 获取基础报价内的C报价信息 | `@Deprecated` |
+| `getCooperQuoteInfoList` | 获取协同报价单信息列表 | 内部使用 |
+| `getNotSupportSignBillCodeList` | 获取不支持签约的协同报价单列表 | 内部使用 |
+
+**V2 升级变化**：
+
+```mermaid
+graph LR
+    subgraph V1[旧版 getFormalQuotationList]
+        A1[直接查询报价数据] --> A2[手动组装 FormaSealInfo]
+        A2 --> A3[按公司分组返回]
+    end
+
+    subgraph V2[新版 getFormalQuotationListV2]
+        B1[ContractSigningSourceRouter] --> B2[route BILL_CODE]
+        B1 --> B3[route SUB_ORDER]
+        B2 --> B4[构建 SignableOrderInfo]
+        B3 --> B4
+        B4 --> B5[SignableOrderInfoGroup.buildGroup]
+    end
+```
+
+V2 版本将单据获取逻辑委托给路由策略，实现了**报价单与S单的统一构建**，并通过 `SignableOrderInfoGroup` 按主体分组。
+
+**协同报价单过滤规则**（`getCooperQuoteInfoList`）：
+
+```mermaid
+flowchart TD
+    A[遍历组合单] --> B{是否已取消?}
+    B -->|是| Z[跳过]
+    B -->|否| C{在不支持签约列表中?}
+    C -->|是| Z
+    C -->|否| D{已关联其他合同且非正签合并?}
+    D -->|是| Z
+    D -->|否| E[构建 SignOrderInfo]
+```
+
+**不支持签约的变更单状态判定**（`getNotSupportSignBillCodeList`）：
+
+查询类型为 `BUDGET_COOPER`（预算协同）和 `CHANGE_COOPER`（变更协同）的报价单，对变更协同报价单查询变更流程状态，仅"待签约/已完成"状态的变更单允许签约。
+
+---
+
+### 3.6 PersonalRelationHandler — 关联关系撤回处理器
+
+**接口定义**：仅一个方法 `revokeCooperQuotation(projectOrderId, billCode, operatorUcid)`。
+
+**实现核心逻辑**（`PersonalRelationHandlerImpl`）：
+
+```mermaid
+flowchart TD
+    A[revokeCooperQuotation] --> B[加锁: CONTRACT_RELATION_BILL_CODE]
+    B --> C{报价单是否直接关联合同?}
+    C -->|是| D[unbindCooperQuotationFromContract]
+    C -->|否| E[unbindSubOrderFromContract]
+
+    D --> F{合同仅绑定该报价单?}
+    F -->|是| G[作废合同 CANCEL_CONTRACT]
+    F -->|否| H[解除关联并撤回 UNBIND_AND_UNDO]
+
+    E --> I[通过S单查询关联合同]
+    I --> J[按合同分组处理]
+    J --> K{判断撤回动作}
+    K -->|绑定报价单/变更单| H
+    K -->|S单被完全包含| G
+    K -->|还有其他S单| H
+
+    G --> L[执行撤回动作]
+    H --> L
+    L --> M[清理正签草稿字段]
+```
+
+**ContractRevocationAction 枚举**：
+
+| 枚举值 | 说明 |
+|--------|------|
+| `CANCEL_CONTRACT` | 作废合同——当合同仅绑定当前需要撤回的单据时 |
+| `UNBIND_AND_UNDO` | 解除关联并撤回——当合同还绑定了其他单据时，只解除当前单据的关联 |
+| `SKIP` | 跳过处理 |
+
+**并发控制**：使用分布式锁 `LockService.CONTRACT_RELATION_BILL_CODE + cooperBillCode` 防止同一协同报价单的撤回与换绑操作并发冲突。
+
+**正签草稿字段清理**：撤回完成后，通过 `ContractFieldHandler` 从关联的正签合同草稿中移除协同报价单号和S单号。
+
+---
+
+### 3.7 ProductQueryService — 商品查询服务
+
+封装了报价单和变更单的商品查询逻辑，供各策略复用。
+
+| 方法 | 输入 | 输出 | 说明 |
+|------|------|------|------|
+| `getQuotationProductDTOS` | projectOrderId + billCodeList | `List<QuotationProductDTO>` | 查询报价单商品（含套餐和单品） |
+| `getChangeQuotationProductDTOS` | projectOrderId + changeOrderId | `List<ChangeQuotationProductDTO>` | 查询变更单商品（含套餐和单品） |
+
+两者均通过 `OrderStandardQueryRpc` 查询主订单协议数据，从 `HomeProject → MainOrder → CostControl` 链路中提取个性化报价的商品列表。
+
+---
+
+## 4. 依赖关系图
+
+```mermaid
+graph TD
+    subgraph PersonalModule[personal 模块]
+        FMCS[FormalMultipleCompanyService]
+        PRH[PersonalRelationHandlerImpl]
+        CSRR[ContractSigningSourceRouter]
+        BSSS[BillSigningSourceStrategy]
+        COSS[ChangeOrderSigningSourceStrategy]
+        SOSSS[SubOrderSigningSourceStrategy]
+        PQS[ProductQueryService]
+    end
+
+    subgraph InternalDeps[内部依赖 - v2 层]
+        CDDS[ContractDependentDataService]
+        QRCS[QuotationRelationCommonService]
+        CFH[ContractFieldHandler]
+        CBLS[ContractBindLogService]
+    end
+
+    subgraph CommonDeps[通用服务]
+        CBS[CommonBusinessService]
+        HODCS[HomeOrderDataConversionService]
+        CCMS[CommonContractService]
+        HPCMS[HomeAndPcCommonService]
+        LS[LockService]
+    end
+
+    subgraph DAO[数据访问层]
+        CS[ContractServiceImpl]
+        CRS[ContractRelationService]
+        CQRS[ContractQuotationRelationService]
+    end
+
+    subgraph RPC[远程调用层]
+        CORPC[ContractOrderCenterRpc]
+        MDM[MdmRpc]
+        ABRPC[AtomBudgetRpc]
+        ADRPC[AtomDrawingRpc]
+        SFS[SubOrderFeignService]
+        OSQR[OrderStandardQueryRpc]
+        PQFS[PackageQueryFeignService]
+    end
+
+    FMCS --> CSRR
+    FMCS --> HODCS
+    FMCS --> CORPC
+    FMCS --> MDM
+    FMCS --> ABRPC
+    FMCS --> CBS
+    FMCS --> CDDS
+
+    PRH --> QRCS
+    PRH --> CCMS
+    PRH --> CFH
+    PRH --> CQRS
+    PRH --> HPCMS
+    PRH --> LS
+    PRH --> CBLS
+    PRH --> SFS
+
+    CSRR --> BSSS
+    CSRR --> COSS
+    CSRR --> SOSSS
+
+    BSSS --> PQS
+    BSSS --> ABRPC
+    BSSS --> CDDS
+    BSSS --> CBS
+
+    COSS --> PQS
+    COSS --> ABRPC
+
+    SOSSS --> SFS
+    SOSSS --> MDM
+    SOSSS --> CBS
+
+    PQS --> OSQR
+    BSSS --> SFS
+    BSSS --> ADRPC
+    COSS --> ADRPC
+    SOSSS --> ADRPC
+```
+
+---
+
+## 5. 数据流
+
+### 5.1 正签发起 — 获取可签约单据
+
+```mermaid
+sequenceDiagram
+    participant Caller as 调用方
+    participant FMCS as FormalMultipleCompanyService
+    participant Router as ContractSigningSourceRouter
+    participant Bill as BillSigningSourceStrategy
+    participant SubOrder as SubOrderSigningSourceStrategy
+    participant PQS as ProductQueryService
+    participant RPC as 远程服务
+
+    Caller->>FMCS: getFormalQuotationListV2(projectOrderId)
+    FMCS->>FMCS: isProcessV25New 校验
+
+    FMCS->>Router: route(BILL_CODE)
+    Router-->>FMCS: BillSigningSourceStrategy
+
+    FMCS->>Bill: buildSignableOrderInfos(projectOrderId)
+    Bill->>RPC: contractSourceDateNoThrow
+    RPC-->>Bill: ContractSourceDataBO
+    Bill->>Bill: shouldProcessPersonalContractData 判断
+    Bill->>PQS: getQuotationProductDTOS
+    PQS->>RPC: queryHomeProjectAndQuotationSkuList
+    RPC-->>PQs: 商品列表
+    PQS-->>Bill: QuotationProductDTO 列表
+    Bill-->>FMCS: List of SignableOrderInfo
+
+    FMCS->>Router: route(SUB_ORDER)
+    Router-->>FMCS: SubOrderSigningSourceStrategy
+
+    FMCS->>SubOrder: buildSignableOrderInfos(projectOrderId)
+    SubOrder->>RPC: queryValidBaseInfoByHomeOrderNo
+    RPC-->>SubOrder: 有效S单列表
+    SubOrder->>SubOrder: 三重过滤（变更中/已绑定/套餐已签约）
+    SubOrder-->>FMCS: List of SignableOrderInfo
+
+    FMCS->>FMCS: SignableOrderInfoGroup.buildGroup 合并分组
+    FMCS-->>Caller: List of SignableOrderInfoGroup
+```
+
+### 5.2 协同报价单撤回
+
+```mermaid
+sequenceDiagram
+    participant Caller as 调用方
+    participant PRH as PersonalRelationHandlerImpl
+    participant Lock as LockService
+    participant QRCS as QuotationRelationCommonService
+    participant CQRS as ContractQuotationRelationService
+    participant CCS as CommonContractService
+    participant CFH as ContractFieldHandler
+
+    Caller->>PRH: revokeCooperQuotation(projectOrderId, billCode, operatorUcid)
+    PRH->>Lock: lock(CONTRACT_RELATION_BILL_CODE + billCode)
+    Lock-->>PRH: 获取锁
+
+    PRH->>QRCS: getContractByBillCode(billCode)
+
+    alt 报价单直接关联合同
+        PRH->>CQRS: 查询合同所有关联关系
+        PRH->>PRH: determineRevocationActionForDirectBound
+        alt 仅绑定该报价单
+            PRH->>CCS: cancelCurrentContract 作废合同
+        else 还绑定其他单据
+            PRH->>CQRS: cancelRelationsByBillCodes 解除关联
+            PRH->>PRH: undoContractIfNeeded 回退状态
+        end
+    else 报价单通过S单关联合同
+        PRH->>PRH: getSubOrderNosByBillCode
+        PRH->>CQRS: 查询S单关联的合同
+        loop 按合同分组
+            PRH->>PRH: determineRevocationActionForSubOrder
+            PRH->>PRH: executeRevocationAction
+        end
+    end
+
+    PRH->>CFH: removeBillCodeFromContractField 清理草稿
+    PRH->>CFH: removeSubOrderNoFromContractField 清理草稿
+    PRH->>Lock: 释放锁
+```
+
+---
+
+## 6. 关键设计模式
+
+### 6.1 策略模式（Strategy Pattern）
+
+模块中最核心的设计模式。`ContractSigningSource` 接口定义统一契约，三种策略实现各自处理不同绑定类型的业务逻辑。`ContractSigningSourceRouter` 充当策略的上下文，根据 `bindType` 动态选择策略。
+
+**优势**：新增绑定类型时，只需添加新的策略实现类，无需修改路由和已有策略代码，符合开闭原则。
+
+### 6.2 模板方法模式（Template Method Pattern）
+
+`AbstractContractSigningSource` 提供了通用查询流程的骨架（`queryPersonalQuoteInfo`、`buildPersonalDrawing`），将差异化的步骤（`buildParam`、`filterByCompanyCode`、`buildProductItemCodes`）定义为抽象方法，由子类实现。
+
+### 6.3 路由注册模式（Router/Registry Pattern）
+
+`ContractSigningSourceRouter` 在构造时自动收集所有 `ContractSigningSource` 的 Spring Bean，以 `bindType` 为键建立映射。这种模式消除了手动的 `if-else` 或 `switch-case` 分支，新增策略时自动注册。
+
+---
+
+## 7. 模块间引用关系
+
+本模块作为合同子系统的一部分，与其他模块存在以下关系：
+
+| 相关模块 | 关系 | 说明 |
+|----------|------|------|
+| [common](common.md) | 依赖 | 使用 `CommonBusinessService` 判断业务类型、流程版本等 |
+| [contract/v2](../contract/v2/contract.md) | 被依赖 | 被合同创建/编辑流程调用，提供可签约单据和报价信息 |
+| [quotation](quotation.md) | 内部子包 | `ProductQueryService` 提供商品查询能力 |
+| [bind](bind.md) | 内部子包 | 签约来源策略体系所在子包 |
+
+---
+
+## 8. 注意事项
+
+1. **废弃方法**：`getFormalQuotationList`、`getFormalQuotationInfoList` 已标记 `@Deprecated`，应使用 `getFormalQuotationListV2` 替代。V2 版本通过路由策略统一管理单据来源，架构更清晰。
+
+2. **并发安全**：`PersonalRelationHandlerImpl.revokeCooperQuotation` 使用分布式锁保证协同报价单撤回操作的原子性，锁粒度为单个报价单号。
+
+3. **数据一致性**：撤回操作涉及多表联动（合同表、关联关系表、正签草稿字段），执行顺序为：解绑关系 → 回退合同状态 → 清理草稿字段。任何步骤失败都会抛出异常，由锁超时机制保证数据不处于不一致状态。
+
+4. **业务类型差异**：
+   - 整装全包（`REFORM_ALL`）和房产证（`HOUSE_CERTIFICATE`）：需要处理个性化报价数据
+   - 团装（`GROUP_DECORATE`）：需要额外的 `groupPersonalForFormal` 判断
+   - 团装2.5：正签弹窗默认勾选所有S单
+
+5. **套餐关联逻辑**：S单的签约筛选中，同套餐下的S单视为一个整体——若某套餐下任一S单已绑定合同，则该套餐下所有其他S单也不可再签约。

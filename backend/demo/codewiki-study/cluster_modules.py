@@ -115,10 +115,7 @@ def get_clustering_input_token_count(
 # Prompt 模板（对应 CodeWiki 的 prompt_template.py）
 # ─────────────────────────────────────────────────────────────
 
-CLUSTER_REPO_PROMPT = """源码仓库路径：{repo_path}
-如果需要查看源码文件以理解组件之间的关系，请直接读取。
-
-以下是仓库中所有潜在核心组件的列表：
+CLUSTER_REPO_PROMPT = """以下是仓库中所有潜在核心组件的列表：
 <POTENTIAL_CORE_COMPONENTS>
 {potential_core_components}
 </POTENTIAL_CORE_COMPONENTS>
@@ -152,10 +149,7 @@ CLUSTER_REPO_PROMPT = """源码仓库路径：{repo_path}
 </GROUPED_COMPONENTS>"""
 
 
-CLUSTER_MODULE_PROMPT = """源码仓库路径：{repo_path}
-如果需要查看源码文件以理解组件之间的关系，请直接读取。
-
-以下是仓库的模块树：
+CLUSTER_MODULE_PROMPT = """以下是仓库的模块树：
 
 <MODULE_TREE>
 {module_tree}
@@ -199,7 +193,6 @@ def format_cluster_prompt(
     potential_core_components: str,
     module_tree: dict = None,
     module_name: str = None,
-    repo_path: str = "",
 ) -> str:
     """格式化聚类 Prompt。
 
@@ -211,7 +204,6 @@ def format_cluster_prompt(
     if not module_tree:
         # 首次聚类：没有已有模块树，只传组件列表
         return CLUSTER_REPO_PROMPT.format(
-            repo_path=repo_path,
             potential_core_components=potential_core_components,
         )
     else:
@@ -246,7 +238,6 @@ def format_cluster_prompt(
         formatted_tree = "\n".join(lines)
 
         return CLUSTER_MODULE_PROMPT.format(
-            repo_path=repo_path,
             potential_core_components=potential_core_components,
             module_tree=formatted_tree,
             module_name=module_name,
@@ -298,79 +289,98 @@ def create_openai_completer(
     return completer
 
 
+# ─────────────────────────────────────────────────────────────
+# Claude Code SDK 公共逻辑
+# ─────────────────────────────────────────────────────────────
+
+def _get_sdk_config():
+    """获取 Claude Code SDK 的公共配置"""
+    from claude_agent_sdk import query, ClaudeAgentOptions, AssistantMessage, ResultMessage
+    base_url = os.getenv("ANTHROPIC_BASE_URL", "https://token-plan-cn.xiaomimimo.com/anthropic")
+    auth_token = os.getenv("ANTHROPIC_AUTH_TOKEN", "tp-cxq9g672kqgmcpmgvzhktpk7vucswrn9atq4i4ehwyxc6ngl")
+    model = os.getenv("ANTHROPIC_MODEL", "mimo-v2.5-pro")
+    return query, ClaudeAgentOptions, AssistantMessage, ResultMessage, base_url, auth_token, model
+
+
+async def _stream_sdk_messages(prompt, options):
+    """
+    公共的消息流处理：打印 prompt → 流式处理消息 → 返回最终文本。
+
+    所有 Claude Code SDK 调用都通过此函数，统一日志格式。
+    """
+    from claude_agent_sdk import query, AssistantMessage, ResultMessage
+
+    # 打印 prompt
+    logger.info(f"      📤 Prompt ({len(prompt)} chars):")
+    for line in prompt.split("\n"):
+        logger.info(f"         {line}")
+
+    result_text = ""
+    turn = 0
+
+    async for message in query(prompt=prompt, options=options):
+        if isinstance(message, AssistantMessage):
+            turn += 1
+            logger.info(f"      🤖 [Turn {turn}] model={message.model}")
+            for block in message.content:
+                if hasattr(block, "text") and block.text:
+                    text = block.text
+                    if len(text) > 500:
+                        logger.info(f"         💬 {text[:500]}...")
+                    else:
+                        logger.info(f"         💬 {text}")
+                elif hasattr(block, "name"):
+                    logger.info(f"         🔧 tool_use: {block.name}")
+                elif hasattr(block, "thinking"):
+                    logger.info(f"         💭 {block.thinking}")
+                else:
+                    block_type = type(block).__name__
+                    logger.info(f"         ❓ {block_type}")
+
+        elif isinstance(message, ResultMessage):
+            logger.info(f"      ✅ ResultMessage (stop_reason={message.stop_reason})")
+            if message.total_cost_usd:
+                logger.info(f"         💰 cost: ${message.total_cost_usd:.4f}")
+            if message.result:
+                result_text = message.result
+                preview = result_text[:500] if len(result_text) > 500 else result_text
+                logger.info(f"         📝 result: {preview}")
+
+    return result_text
+
+
 def create_claude_code_completer(  # 实际使用 claude_agent_sdk
     base_url: str = None,
     auth_token: str = None,
     model: str = None,
     max_turns: int = 50,
 ) -> Callable[[str], str]:
-    """
-    创建 Claude Agent SDK 补全函数（聚类用，单 prompt）。
-
-    配置优先级：参数 > 环境变量 > 默认值。
-    """
+    """创建 Claude Agent SDK 补全函数（聚类用，单 prompt）"""
     import asyncio
-    from claude_agent_sdk import query, ClaudeAgentOptions
+    from claude_agent_sdk import ClaudeAgentOptions
 
-    _base_url = base_url or os.getenv("ANTHROPIC_BASE_URL", "https://token-plan-cn.xiaomimimo.com/anthropic")
-    _auth_token = auth_token or os.getenv("ANTHROPIC_AUTH_TOKEN", "tp-cxq9g672kqgmcpmgvzhktpk7vucswrn9atq4i4ehwyxc6ngl")
-    _model = model or os.getenv("ANTHROPIC_MODEL", "mimo-v2.5-pro")
+    _, _, _, _, _def_base, _def_auth, _def_model = _get_sdk_config()
+    _base_url = base_url or _def_base
+    _auth_token = auth_token or _def_auth
+    _model = model or _def_model
 
     def completer(prompt: str) -> str:
-        async def _query():
-            result_text = ""
-            turn = 0
-            async for message in query(
-                prompt=prompt,
-                options=ClaudeAgentOptions(
-                    model=_model,
-                    env={
-                        "ANTHROPIC_BASE_URL": _base_url,
-                        "ANTHROPIC_AUTH_TOKEN": _auth_token,
-                    },
-                    allowed_tools=[],
-                    max_turns=max_turns,
-                ),
-            ):
-                msg_type = type(message).__name__
-
-                if msg_type == "AssistantMessage":
-                    turn += 1
-                    logger.info(f"      🤖 [Turn {turn}] model={message.model}")
-                    for block in message.content:
-                        block_type = type(block).__name__
-                        if hasattr(block, "text") and block.text:
-                            text = block.text
-                            if len(text) > 500:
-                                logger.info(f"         💬 {text[:500]}...")
-                            else:
-                                logger.info(f"         💬 {text}")
-                        elif block_type == "ToolUseBlock":
-                            logger.info(f"         🔧 tool_use: {block.name}({json.dumps(block.input, ensure_ascii=False)[:200]})")
-                        elif block_type == "ToolResultBlock":
-                            content = str(block.content)[:300] if block.content else ""
-                            logger.info(f"         📋 tool_result: {content}")
-
-                elif msg_type == "ResultMessage":
-                    logger.info(f"      ✅ ResultMessage (stop_reason={message.stop_reason})")
-                    if message.total_cost_usd:
-                        logger.info(f"         💰 cost: ${message.total_cost_usd:.4f}")
-                    if message.result:
-                        result_text = message.result
-                        preview = result_text[:500] if len(result_text) > 500 else result_text
-                        logger.info(f"         📝 result: {preview}")
-
-            return result_text
-
+        options = ClaudeAgentOptions(
+            model=_model,
+            env={"ANTHROPIC_BASE_URL": _base_url, "ANTHROPIC_AUTH_TOKEN": _auth_token},
+            tools=[],
+            allowed_tools=[],
+            max_turns=max_turns,
+        )
         try:
-            return asyncio.run(_query())
+            return asyncio.run(_stream_sdk_messages(prompt, options))
         except Exception as e:
             error_msg = str(e)
             if "maximum number of turns" in error_msg.lower():
                 logger.warning(f"      ⚠️ 达到 max_turns({max_turns}) 限制，任务未完成")
             else:
                 logger.warning(f"      ⚠️ Claude Code SDK 调用失败: {error_msg}")
-            return ""  # 返回空字符串，调用方可以处理
+            return ""
 
     return completer
 
@@ -380,76 +390,47 @@ def create_claude_code_doc_completer(
     auth_token: str = None,
     model: str = None,
     max_turns: int = 50,
+    mcp_server_name: str = None,
+    mcp_server_command: str = None,
+    mcp_server_args: list = None,
 ) -> Callable[[str, str], str]:
-    """
-    创建 Claude Agent SDK 文档生成补全函数（system + user 双 prompt）。
-
-    用于步骤③文档生成，支持多轮交互，LLM 可以主动读取源码文件。
-    """
+    """创建 Claude Agent SDK 文档生成补全函数（system + user 双 prompt，支持 MCP）"""
     import asyncio
-    from claude_agent_sdk import query, ClaudeAgentOptions
+    from claude_agent_sdk import ClaudeAgentOptions
 
-    _base_url = base_url or os.getenv("ANTHROPIC_BASE_URL", "https://token-plan-cn.xiaomimimo.com/anthropic")
-    _auth_token = auth_token or os.getenv("ANTHROPIC_AUTH_TOKEN", "tp-cxq9g672kqgmcpmgvzhktpk7vucswrn9atq4i4ehwyxc6ngl")
-    _model = model or os.getenv("ANTHROPIC_MODEL", "mimo-v2.5-pro")
+    _, _, _, _, _def_base, _def_auth, _def_model = _get_sdk_config()
+    _base_url = base_url or _def_base
+    _auth_token = auth_token or _def_auth
+    _model = model or _def_model
+
+    # 构建 MCP 服务器配置
+    _mcp_servers = {}
+    if mcp_server_name and mcp_server_command:
+        _mcp_servers[mcp_server_name] = {
+            "command": mcp_server_command,
+            "args": mcp_server_args or [],
+        }
+        logger.info(f"   MCP server configured: {mcp_server_name} -> {mcp_server_command}")
 
     def completer(system_prompt: str, user_prompt: str) -> str:
         full_prompt = f"{system_prompt}\n\n---\n\n{user_prompt}"
-
-        async def _query():
-            result_text = ""
-            turn = 0
-            async for message in query(
-                prompt=full_prompt,
-                options=ClaudeAgentOptions(
-                    model=_model,
-                    env={
-                        "ANTHROPIC_BASE_URL": _base_url,
-                        "ANTHROPIC_AUTH_TOKEN": _auth_token,
-                    },
-                    allowed_tools=[],
-                    max_turns=max_turns,
-                ),
-            ):
-                msg_type = type(message).__name__
-
-                if msg_type == "AssistantMessage":
-                    turn += 1
-                    logger.info(f"      🤖 [Turn {turn}] model={message.model}")
-                    for block in message.content:
-                        block_type = type(block).__name__
-                        if hasattr(block, "text") and block.text:
-                            text = block.text
-                            if len(text) > 500:
-                                logger.info(f"         💬 {text[:500]}...")
-                            else:
-                                logger.info(f"         💬 {text}")
-                        elif block_type == "ToolUseBlock":
-                            logger.info(f"         🔧 tool_use: {block.name}({json.dumps(block.input, ensure_ascii=False)[:200]})")
-                        elif block_type == "ToolResultBlock":
-                            content = str(block.content)[:300] if block.content else ""
-                            logger.info(f"         📋 tool_result: {content}")
-
-                elif msg_type == "ResultMessage":
-                    logger.info(f"      ✅ ResultMessage (stop_reason={message.stop_reason})")
-                    if message.total_cost_usd:
-                        logger.info(f"         💰 cost: ${message.total_cost_usd:.4f}")
-                    if message.result:
-                        result_text = message.result
-                        preview = result_text[:500] if len(result_text) > 500 else result_text
-                        logger.info(f"         📝 result: {preview}")
-
-            return result_text
-
+        options = ClaudeAgentOptions(
+            model=_model,
+            env={"ANTHROPIC_BASE_URL": _base_url, "ANTHROPIC_AUTH_TOKEN": _auth_token},
+            tools=[],
+            allowed_tools=[],
+            mcp_servers=_mcp_servers,
+            max_turns=max_turns,
+        )
         try:
-            return asyncio.run(_query())
+            return asyncio.run(_stream_sdk_messages(full_prompt, options))
         except Exception as e:
             error_msg = str(e)
             if "maximum number of turns" in error_msg.lower():
                 logger.warning(f"      ⚠️ 达到 max_turns({max_turns}) 限制，任务未完成")
             else:
                 logger.warning(f"      ⚠️ Claude Code SDK 调用失败: {error_msg}")
-            return ""  # 返回空字符串，调用方可以处理
+            return ""
 
     return completer
 
@@ -500,7 +481,6 @@ def cluster_modules(
     current_module_name: str = None,
     current_module_path: List[str] = None,
     completer: Callable[[str], str] = None,
-    repo_path: str = "",
 ) -> Dict[str, Any]:
     """
     递归聚类：将组件分组为层级模块树。
@@ -567,7 +547,7 @@ def cluster_modules(
     # ── 4. 调用 LLM 聚类 ──
     # 使用带摘要的版本，让 LLM 看到依赖/行数/Javadoc，更好地理解组件职责
     prompt = format_cluster_prompt(
-        potential_core_components_with_summary, current_module_tree, current_module_name, repo_path
+        potential_core_components_with_summary, current_module_tree, current_module_name
     )
 
     logger.info("Requesting LLM clustering for %s...", module_label)
@@ -622,7 +602,6 @@ def cluster_modules(
             module_name,
             current_module_path,
             completer,
-            repo_path,
         )
         current_module_path.pop()
 

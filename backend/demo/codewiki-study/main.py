@@ -280,6 +280,21 @@ def save_dependency_graph(components: Dict[str, Node], output_path: str):
     logger.info(f"✓ Dependency graph saved to {output_path}")
 
 
+def _export_components_for_mcp(components: Dict[str, Node], output_path: str):
+    """导出组件数据为 JSON，供 MCP 服务器读取"""
+    result = {}
+    for comp_id, comp in components.items():
+        result[comp_id] = {
+            "name": comp.name,
+            "component_type": comp.component_type,
+            "relative_path": comp.relative_path,
+            "source_code": comp.source_code or "",
+        }
+    with open(output_path, "w", encoding="utf-8") as f:
+        json.dump(result, f, ensure_ascii=False)
+    logger.info(f"✓ Exported {len(result)} components for MCP")
+
+
 # ─────────────────────────────────────────────────────────────
 # 5. 主入口
 # ─────────────────────────────────────────────────────────────
@@ -341,8 +356,20 @@ def main():
 
     if LLM_BACKEND == "claude_code":
         cluster_completer = create_claude_code_completer()
-        doc_completer = create_claude_code_doc_completer()
-        logger.info(f"   LLM Backend: Claude Code SDK (mimo-v2.5-pro)")
+
+        # 导出组件数据供 MCP 服务器使用
+        script_dir = os.path.dirname(__file__)
+        mcp_components_path = os.path.join(script_dir, "components_for_mcp.json")
+        _export_components_for_mcp(components, mcp_components_path)
+        mcp_server_path = os.path.join(script_dir, "mcp_component_server.py")
+        logger.info(f"   MCP components: {mcp_components_path}")
+
+        doc_completer = create_claude_code_doc_completer(
+            mcp_server_name="code-components",
+            mcp_server_command="python",
+            mcp_server_args=[mcp_server_path, mcp_components_path],
+        )
+        logger.info(f"   LLM Backend: Claude Code SDK (mimo-v2.5-pro) + MCP read_code_components")
     else:
         cluster_completer = create_openai_completer()
         # OpenAI 的 doc_completer 需要 system + user 双 prompt
@@ -384,7 +411,6 @@ def main():
         components=components,
         max_token_per_module=36_369,
         completer=cluster_completer,
-        repo_path=repo_path,
     )
 
     # ── 打印聚类结果 ──
@@ -418,7 +444,6 @@ def main():
 
     # ── 执行文档生成 ──
     generate_documentation(
-        repo_path=repo_path,
         repo_name=repo_name,
         module_tree=module_tree,
         components=components,
