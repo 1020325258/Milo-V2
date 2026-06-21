@@ -411,11 +411,13 @@ def main():
     logger.info(f"   Token 量: {clustering_tokens}")
 
     # ── 执行聚类 ──
+    cluster_output_dir = os.path.dirname(__file__)  # 中间结果保存到项目目录
     module_tree = cluster_modules(
         leaf_nodes=leaf_nodes,
         components=components,
         max_token_per_module=36_369,
         completer=cluster_completer,
+        output_dir=cluster_output_dir,
     )
 
     # ── 打印聚类结果 ──
@@ -460,8 +462,8 @@ def main():
     logger.info(f"\n✅ 文档生成完成！输出目录: {docs_dir}")
 
 # 默认路径，方便 IDE 直接 debug 运行（无需命令行参数）
-# DEFAULT_REPO_PATH = "/Users/zqy/work/project/nrs-sales-project/utopia-nrs-sales-project-service/src/main/java/com/ke/utopia/nrs/salesproject/service/contract/v2/personal"
-DEFAULT_REPO_PATH = "/Users/zqy/work/project/nrs-sales-project/utopia-nrs-sales-project-service/src/main/java/com/ke/utopia/nrs/salesproject/service/contract/v2"
+DEFAULT_REPO_PATH = "/Users/zqy/work/project/nrs-sales-project/utopia-nrs-sales-project-service/src/main/java/com/ke/utopia/nrs/salesproject/service/contract/v2/personal"
+# DEFAULT_REPO_PATH = "/Users/zqy/work/project/nrs-sales-project/utopia-nrs-sales-project-service/src/main/java/com/ke/utopia/nrs/salesproject/service/contract/v2"
 # DEFAULT_REPO_PATH = "/Users/zqy/work/project/nrs-sales-project/utopia-nrs-sales-project-service/src/main/java/com/ke/utopia/nrs/salesproject/service/contract/v2/createcontractpdfbyself"
 # ════════════════════════════════════════════════════════════
 #  LLM 后端配置：切换此处即可在 OpenAI / Claude Code SDK 之间切换
