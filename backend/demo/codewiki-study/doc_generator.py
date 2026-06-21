@@ -62,25 +62,51 @@ def validate_mermaid_diagram(diagram_content: str, diagram_num: int, line_start:
     """
     验证单个 Mermaid 图表的语法。
 
-    对应 CodeWiki 的 validate_single_diagram()。
-    使用 mermaid-py 库进行语法检查。
+    使用 mmdc (Mermaid CLI) 做真正的渲染验证，比 mermaid-py 更准确。
 
     Returns:
         错误信息（空字符串表示语法正确）
     """
+    import subprocess
+    import tempfile
+
+    # 写入临时文件
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".mmd", delete=False, encoding="utf-8") as f:
+        f.write(diagram_content)
+        tmp_input = f.name
+
+    tmp_output = tmp_input.replace(".mmd", ".svg")
+
     try:
-        import mermaid as md
-        md.Mermaid(diagram_content)
+        result = subprocess.run(
+            ["mmdc", "-i", tmp_input, "-o", tmp_output, "-e", "svg"],
+            capture_output=True, text=True, timeout=15,
+        )
+        if result.returncode != 0:
+            error_msg = result.stderr.strip() or result.stdout.strip()
+            # 提取行号
+            line_match = re.search(r"line (\d+)", error_msg)
+            if line_match:
+                error_line = int(line_match.group(1))
+                actual_line = line_start + error_line
+                return f"Diagram {diagram_num}: Parse error on line {actual_line}:\n{error_msg}"
+            return f"Diagram {diagram_num}: {error_msg}"
         return ""
-    except Exception as e:
-        error_str = str(e)
-        # 提取行号信息
-        line_match = re.search(r"line (\d+)", error_str)
-        if line_match:
-            error_line = int(line_match.group(1))
-            actual_line = line_start + error_line
-            return f"Diagram {diagram_num}: Parse error on line {actual_line}:\n{error_str}"
-        return f"Diagram {diagram_num}: {error_str}"
+    except subprocess.TimeoutExpired:
+        return f"Diagram {diagram_num}: Validation timeout"
+    except FileNotFoundError:
+        # mmdc 未安装，降级到 mermaid-py
+        try:
+            import mermaid as md
+            md.Mermaid(diagram_content)
+            return ""
+        except Exception as e:
+            return f"Diagram {diagram_num}: {str(e)}"
+    finally:
+        # 清理临时文件
+        for f in [tmp_input, tmp_output]:
+            if os.path.exists(f):
+                os.remove(f)
 
 
 def validate_mermaid_in_markdown(content: str) -> str:
@@ -314,19 +340,23 @@ def _format_component_codes(component_ids: List[str], components: Dict[str, Node
 
 def _format_available_components(components: Dict[str, Node]) -> str:
     """
-    格式化所有可用组件的列表（按文件分组，只列 ID 和类型，不包含源码）。
-    让 LLM 知道有哪些组件可以读取。
+    格式化所有可用组件的列表（按文件分组，含 ID、类型、AI 注解摘要）。
+    让 LLM 知道有哪些组件可以读取，以及它们的业务职责。
     """
     by_file = defaultdict(list)
     for comp_id, comp in components.items():
-        by_file[comp.relative_path].append((comp_id, comp.component_type))
+        by_file[comp.relative_path].append(comp)
 
     lines = []
     for path, comps in sorted(by_file.items()):
         lines.append(f"# {path}")
-        for comp_id, comp_type in comps:
-            short = comp_id.split("::")[-1] if "::" in comp_id else comp_id
-            lines.append(f"\t{short} ({comp_type})")
+        for comp in comps:
+            short = comp.id.split("::")[-1] if "::" in comp.id else comp.id
+            # 如果有 @AiDoc 注解摘要，显示出来
+            if comp.docstring and comp.docstring.startswith("[AI]"):
+                lines.append(f"\t{short} ({comp.component_type})  -- {comp.docstring}")
+            else:
+                lines.append(f"\t{short} ({comp.component_type})")
     return "\n".join(lines)
 
 

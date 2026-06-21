@@ -234,6 +234,12 @@ class TreeSitterJavaAnalyzer:
         if node_type and node_name:
             component_id = self._get_component_id(node_name)
             relative_path = self._get_relative_path()
+
+            # 提取 @AiDoc 注解和 Javadoc
+            ai_doc = self._extract_ai_doc(node, lines)
+            javadoc = self._extract_javadoc(node, lines)
+            docstring = ai_doc if ai_doc else javadoc
+
             node_obj = Node(
                 id=component_id,
                 name=node_name,
@@ -243,8 +249,8 @@ class TreeSitterJavaAnalyzer:
                 source_code="\n".join(lines[node.start_point[0]:node.end_point[0]+1]),
                 start_line=node.start_point[0] + 1,
                 end_line=node.end_point[0] + 1,
-                has_docstring=False,
-                docstring="",
+                has_docstring=bool(docstring),
+                docstring=docstring or "",
                 parameters=None,
                 node_type=node_type,
                 base_classes=None,
@@ -266,6 +272,45 @@ class TreeSitterJavaAnalyzer:
         # 递归处理子节点
         for child in node.children:
             self._extract_nodes(child, top_level_nodes, lines)
+
+    def _extract_ai_doc(self, node, lines) -> Optional[str]:
+        """
+        提取 @AiDoc 注解的 summary 和 description。
+        在 AST 中查找 class_declaration 前的 annotation 节点。
+        """
+        # @AiDoc 注解在 class_declaration 的前一行或几行
+        # 通过正则从源码中提取更可靠
+        start = max(0, node.start_point[0] - 10)  # 往上看 10 行
+        context = "\n".join(lines[start:node.start_point[0] + 5])
+
+        match = re.search(
+            r'@AiDoc\s*\(\s*summary\s*=\s*"([^"]+)"(?:\s*,\s*description\s*=\s*"([^"]*)")?\s*\)',
+            context
+        )
+        if match:
+            summary = match.group(1)
+            description = match.group(2) or ""
+            if description:
+                return f"[AI] {summary}\n{description}"
+            return f"[AI] {summary}"
+        return None
+
+    def _extract_javadoc(self, node, lines) -> Optional[str]:
+        """提取类/方法上方的 Javadoc 注释"""
+        start = max(0, node.start_point[0] - 20)
+        context_lines = lines[start:node.start_point[0]]
+        context = "\n".join(context_lines)
+
+        # 匹配 /** ... */ 格式的 Javadoc
+        match = re.search(r'/\*\*(.*?)\*/', context, re.DOTALL)
+        if match:
+            doc = match.group(1)
+            # 清理 * 前缀
+            doc = re.sub(r'^\s*\*\s?', '', doc, flags=re.MULTILINE)
+            doc = doc.strip()
+            if doc:
+                return doc
+        return None
 
     def _extract_relationships(self, node, top_level_nodes):
         """

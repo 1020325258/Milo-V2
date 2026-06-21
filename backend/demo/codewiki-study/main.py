@@ -456,6 +456,7 @@ def main():
 # 默认路径，方便 IDE 直接 debug 运行（无需命令行参数）
 # DEFAULT_REPO_PATH = "/Users/zqy/work/project/nrs-sales-project/utopia-nrs-sales-project-service/src/main/java/com/ke/utopia/nrs/salesproject/service/contract/v2/personal"
 DEFAULT_REPO_PATH = "/Users/zqy/work/project/nrs-sales-project/utopia-nrs-sales-project-service/src/main/java/com/ke/utopia/nrs/salesproject/service/contract/v2"
+# DEFAULT_REPO_PATH = "/Users/zqy/work/project/nrs-sales-project/utopia-nrs-sales-project-service/src/main/java/com/ke/utopia/nrs/salesproject/service/contract/v2/createcontractpdfbyself"
 # ════════════════════════════════════════════════════════════
 #  LLM 后端配置：切换此处即可在 OpenAI / Claude Code SDK 之间切换
 # ════════════════════════════════════════════════════════════

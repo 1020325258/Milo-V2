@@ -419,7 +419,7 @@ def create_claude_code_doc_completer(
             model=_model,
             env={"ANTHROPIC_BASE_URL": _base_url, "ANTHROPIC_AUTH_TOKEN": _auth_token},
             allowed_tools=["Write", "Read"],
-            permission_mode="acceptEdits",
+            permission_mode="bypassPermissions",
             mcp_servers=_mcp_servers,
             max_turns=max_turns,
         )
