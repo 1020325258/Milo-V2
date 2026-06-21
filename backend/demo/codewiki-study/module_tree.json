@@ -1,1 +1,107 @@
-{}
+{
+  "ContractOperations": {
+    "path": "contract/service",
+    "components": [
+      "ContractDetailService.java::ContractDetailService",
+      "ContractCompanySignService.java::ContractCompanySignService",
+      "ContractSaveDraftService.java::ContractSaveDraftService",
+      "ContractEscrowService.java::ContractEscrowService",
+      "ContractButtonConfigService.java::ContractButtonConfigService",
+      "ContractHomeOrderNoChangeService.java::ContractHomeOrderNoChangeService",
+      "ContractScriptCreateService.java::ContractScriptCreateService",
+      "ContractSelfSealService.java::ContractSelfSealService"
+    ],
+    "children": {
+      "DetailView": {
+        "components": [
+          "ContractDetailService.java::ContractDetailService",
+          "ContractButtonConfigService.java::ContractButtonConfigService"
+        ],
+        "children": {}
+      },
+      "SigningOperations": {
+        "components": [
+          "ContractCompanySignService.java::ContractCompanySignService",
+          "ContractSelfSealService.java::ContractSelfSealService"
+        ],
+        "children": {}
+      },
+      "SubmissionOperations": {
+        "components": [
+          "ContractSaveDraftService.java::ContractSaveDraftService",
+          "ContractEscrowService.java::ContractEscrowService"
+        ],
+        "children": {}
+      },
+      "ScriptCreation": {
+        "components": [
+          "ContractScriptCreateService.java::ContractScriptCreateService"
+        ],
+        "children": {}
+      },
+      "OrderManagement": {
+        "components": [
+          "ContractHomeOrderNoChangeService.java::ContractHomeOrderNoChangeService"
+        ],
+        "children": {}
+      }
+    }
+  },
+  "ContractContextAop": {
+    "path": "contract/aop",
+    "components": [
+      "ContractContextAspect.java::ContractContextAspect",
+      "ContractContextHandler.java::ContractContextHandler",
+      "ContractDetailAspect.java::ContractDetailAspect",
+      "ContractDetailContextHandler.java::ContractDetailContextHandler"
+    ],
+    "children": {}
+  },
+  "ChangeContractStrategy": {
+    "path": "contract/changecontractstrategey",
+    "components": [
+      "changecontractstrategey/ChangeContractStrategyFactory.java::ChangeContractStrategyFactory",
+      "changecontractstrategey/NormalChangeContractStrategy.java::NormalChangeContractStrategy",
+      "changecontractstrategey/ZQChangeContractStrategy.java::ZQChangeContractStrategy"
+    ],
+    "children": {}
+  },
+  "SigningSourceBinding": {
+    "path": "contract/personal",
+    "components": [
+      "personal/bind/ContractSigningSource.java::ContractSigningSource",
+      "personal/bind/strategy/BillSigningSourceStrategy.java::BillSigningSourceStrategy",
+      "personal/bind/strategy/ChangeOrderSigningSourceStrategy.java::ChangeOrderSigningSourceStrategy",
+      "personal/bind/strategy/SubOrderSigningSourceStrategy.java::SubOrderSigningSourceStrategy",
+      "personal/PersonalRelationHandler.java::PersonalRelationHandler",
+      "personal/PersonalRelationHandlerImpl.java::PersonalRelationHandlerImpl"
+    ],
+    "children": {}
+  },
+  "ContractPdfGeneration": {
+    "path": "contract/pdf",
+    "components": [
+      "TerminalContractPdfBuildService.java::TerminalContractPdfBuildService",
+      "createcontractpdfbyself/DrawingContractPdfBySelfStrategy.java::DrawingContractPdfBySelfStrategy",
+      "createcontractpdfbyself/GroupFormalContractPdfBySelfStrategy.java::GroupFormalContractPdfBySelfStrategy",
+      "createcontractpdfbyself/ReformAllFormalContractPdfBySelfStrategy.java::ReformAllFormalContractPdfBySelfStrategy"
+    ],
+    "children": {}
+  },
+  "MaterialPdfUtils": {
+    "path": "contract/combo/material/pdf",
+    "components": [
+      "combo/material/pdf/MaterialPdfDiffService.java::MaterialPdfDiffService",
+      "combo/material/pdf/MaterialPdfUtil.java::MaterialPdfUtil"
+    ],
+    "children": {}
+  },
+  "ContractFieldValidation": {
+    "path": "contract/validation",
+    "components": [
+      "ContractFieldCheckService.java::ContractFieldCheckService",
+      "WorkerTypeCheckService.java::WorkerTypeCheckService"
+    ],
+    "children": {}
+  }
+}
