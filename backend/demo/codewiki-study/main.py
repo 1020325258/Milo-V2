@@ -38,6 +38,7 @@ from cluster_modules import (
     create_openai_completer,
     create_claude_code_completer,
     create_claude_code_doc_completer,
+    create_claude_code_overview_completer,
 )
 from doc_generator import generate_documentation
 
@@ -369,6 +370,8 @@ def main():
             mcp_server_command="python",
             mcp_server_args=[mcp_server_path, mcp_components_path],
         )
+        # 概览用无工具的纯补全，与 CodeWiki 的 backend.complete() 对齐
+        overview_completer = create_claude_code_overview_completer()
         logger.info(f"   LLM Backend: Claude Code SDK (mimo-v2.5-pro) + MCP read_code_components")
     else:
         cluster_completer = create_openai_completer()
@@ -390,6 +393,8 @@ def main():
             result = response.choices[0].message.content
             logger.info(f"      ✅ LLM response: {response.usage.total_tokens} tokens")
             return result
+        # OpenAI 路径下概览和叶子模块用同一个 completer（本身就没有工具）
+        overview_completer = doc_completer
         logger.info(f"   LLM Backend: OpenAI API (mimo-v2.5-pro)")
 
     # ════════════════════════════════════════════════════════════
@@ -449,6 +454,7 @@ def main():
         components=components,
         docs_dir=docs_dir,
         completer=doc_completer,
+        overview_completer=overview_completer,
     )
 
     logger.info(f"\n✅ 文档生成完成！输出目录: {docs_dir}")

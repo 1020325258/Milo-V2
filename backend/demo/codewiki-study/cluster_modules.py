@@ -436,6 +436,43 @@ def create_claude_code_doc_completer(
     return completer
 
 
+def create_claude_code_overview_completer(
+    base_url: str = None,
+    auth_token: str = None,
+    model: str = None,
+    max_turns: int = 3,
+) -> Callable[[str, str], str]:
+    """
+    创建概览文档生成用的补全函数（无工具，纯补全）。
+
+    对应 CodeWiki 的 backend.complete()：概览只需汇总已有文档，不需要探索文件系统。
+    不给 Agent 任何工具，避免它自发去 Read/Write/Bash 探索。
+    """
+    import asyncio
+    from claude_agent_sdk import ClaudeAgentOptions
+
+    _, _, _, _, _def_base, _def_auth, _def_model = _get_sdk_config()
+    _base_url = base_url or _def_base
+    _auth_token = auth_token or _def_auth
+    _model = model or _def_model
+
+    def completer(system_prompt: str, user_prompt: str) -> str:
+        full_prompt = f"{system_prompt}\n\n---\n\n{user_prompt}"
+        options = ClaudeAgentOptions(
+            model=_model,
+            env={"ANTHROPIC_BASE_URL": _base_url, "ANTHROPIC_AUTH_TOKEN": _auth_token},
+            allowed_tools=[],   # 不给任何工具，与 CodeWiki 的 complete() 一致
+            max_turns=max_turns,
+        )
+        try:
+            return asyncio.run(_stream_sdk_messages(full_prompt, options))
+        except Exception as e:
+            logger.warning(f"      ⚠️ 概览生成失败: {str(e)}")
+            return ""
+
+    return completer
+
+
 # ─────────────────────────────────────────────────────────────
 # 聚类响应解析
 # ─────────────────────────────────────────────────────────────

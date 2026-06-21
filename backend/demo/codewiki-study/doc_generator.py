@@ -497,6 +497,7 @@ def generate_documentation(
     components: Dict[str, Node],
     docs_dir: str,
     completer: Callable[[str, str], str],
+    overview_completer: Callable[[str, str], str] = None,
 ) -> str:
     """
     生成所有模块的文档。
@@ -508,11 +509,18 @@ def generate_documentation(
         module_tree: 模块树（来自聚类步骤）
         components: 所有组件字典
         docs_dir: 文档输出目录
-        completer: LLM 调用函数 (system_prompt, user_prompt) -> str
+        completer: 叶子模块的 LLM 调用函数 (system_prompt, user_prompt) -> str
+        overview_completer: 概览/父模块的 LLM 调用函数，无工具纯补全。
+            与 CodeWiki 的 backend.complete() 对齐，避免 Agent 自发探索文件系统。
+            默认为 completer（向后兼容）。
 
     Returns:
         docs_dir: 文档输出目录
     """
+    # 概览默认用 completer（向后兼容），但推荐传入无工具的 overview_completer
+    if overview_completer is None:
+        overview_completer = completer
+
     os.makedirs(docs_dir, exist_ok=True)
 
     if not module_tree:
@@ -546,12 +554,12 @@ def generate_documentation(
         else:
             logger.info(f"  📁 Processing parent module: {module_key}")
             _generate_parent_module_docs(
-                module_name, module_path, module_tree, docs_dir, completer
+                module_name, module_path, module_tree, docs_dir, overview_completer
             )
 
     # 生成仓库总览
     logger.info(f"  📚 Generating repository overview")
-    _generate_repo_overview(repo_name, module_tree, docs_dir, completer)
+    _generate_repo_overview(repo_name, module_tree, docs_dir, overview_completer)
 
     return docs_dir
 
