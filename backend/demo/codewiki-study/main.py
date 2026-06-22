@@ -398,27 +398,40 @@ def main():
         logger.info(f"   LLM Backend: OpenAI API (mimo-v2.5-pro)")
 
     # ════════════════════════════════════════════════════════════
-    #  步骤 ②  模块聚类
+    #  步骤 ②  模块聚类（如果 module_tree.json 已存在则跳过）
     # ════════════════════════════════════════════════════════════
 
-    logger.info("\n" + "=" * 70)
-    logger.info("  步骤 ②  模块聚类 (cluster_modules)")
-    logger.info("=" * 70)
+    tree_output_path = os.path.join(os.path.dirname(__file__), "module_tree.json")
 
-    # ── 检查 token 量 ──
-    clustering_tokens = get_clustering_input_token_count(leaf_nodes, components)
-    logger.info(f"   叶子节点: {len(leaf_nodes)}")
-    logger.info(f"   Token 量: {clustering_tokens}")
+    if os.path.exists(tree_output_path):
+        logger.info(f"   ✓ 发现已有 module_tree.json，跳过聚类，直接使用")
+        with open(tree_output_path, "r", encoding="utf-8") as f:
+            module_tree = json.load(f)
+        logger.info(f"   加载了 {len(module_tree)} 个模块")
+    else:
+        logger.info("\n" + "=" * 70)
+        logger.info("  步骤 ②  模块聚类 (cluster_modules)")
+        logger.info("=" * 70)
 
-    # ── 执行聚类 ──
-    cluster_output_dir = os.path.dirname(__file__)  # 中间结果保存到项目目录
-    module_tree = cluster_modules(
-        leaf_nodes=leaf_nodes,
-        components=components,
-        max_token_per_module=36_369,
-        completer=cluster_completer,
-        output_dir=cluster_output_dir,
-    )
+        # ── 检查 token 量 ──
+        clustering_tokens = get_clustering_input_token_count(leaf_nodes, components)
+        logger.info(f"   叶子节点: {len(leaf_nodes)}")
+        logger.info(f"   Token 量: {clustering_tokens}")
+
+        # ── 执行聚类 ──
+        cluster_output_dir = os.path.dirname(__file__)  # 中间结果保存到项目目录
+        module_tree = cluster_modules(
+            leaf_nodes=leaf_nodes,
+            components=components,
+            max_token_per_module=36_369,
+            completer=cluster_completer,
+            output_dir=cluster_output_dir,
+        )
+
+        # ── 保存模块树 JSON ──
+        with open(tree_output_path, "w", encoding="utf-8") as f:
+            json.dump(module_tree, f, indent=2, ensure_ascii=False)
+        logger.info(f"✓ Module tree saved to {tree_output_path}")
 
     # ── 打印聚类结果 ──
     if module_tree:
@@ -430,12 +443,6 @@ def main():
         print()
     else:
         logger.info("   聚类结果: 不需要聚类（token 在阈值内，整体作为一个模块处理）")
-
-    # ── 保存模块树 JSON ──
-    tree_output_path = os.path.join(os.path.dirname(__file__), "module_tree.json")
-    with open(tree_output_path, "w", encoding="utf-8") as f:
-        json.dump(module_tree, f, indent=2, ensure_ascii=False)
-    logger.info(f"✓ Module tree saved to {tree_output_path}")
 
     # ════════════════════════════════════════════════════════════
     #  步骤 ③  生成模块文档
