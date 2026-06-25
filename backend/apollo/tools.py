@@ -35,6 +35,8 @@ class ApolloQueryTool(ToolBase):
         "【重要】配置可能分布在不同 namespace 中，常见 namespace 包括："
         "application（默认）、contract、bootstrap 等。"
         "如果在默认 namespace 中找不到配置，请尝试其他 namespace。"
+        "【关键】Apollo 配置的 key 都是英文格式，如 'attach.config.ocrOpenCity'、'contract.trade.enabled' 等。"
+        "不要使用中文作为 key 搜索，必须从用户输入或知识库中提取精确的英文 key。"
     )
     input_schema = {
         "type": "object",
@@ -238,8 +240,19 @@ class ApolloQueryTool(ToolBase):
         ]
 
         if not matched:
+            # 检测是否使用了中文搜索
+            has_chinese = any('一' <= char <= '鿿' for char in keyword)
+            hint = ""
+            if has_chinese:
+                hint = (
+                    "\n\n【提示】Apollo 配置的 key 都是英文格式，中文搜索通常无法匹配。"
+                    "\n请从用户输入或知识库中提取精确的英文 key，如："
+                    "\n- attach.config.ocrOpenCity"
+                    "\n- contract.trade.enabled"
+                    "\n- spring.datasource.url"
+                )
             return self._info_response(
-                f"在 namespace={namespace} 中未找到匹配 '{keyword}' 的配置项"
+                f"在 namespace={namespace} 中未找到匹配 '{keyword}' 的配置项{hint}"
             )
 
         lines = [

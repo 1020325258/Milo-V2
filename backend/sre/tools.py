@@ -13,6 +13,7 @@ from agentscope.message import TextBlock
 from agentscope.tool._response import ToolChunk
 
 from .client import SreQueryClient
+from .enums import ENUM_REGISTRY
 
 logger = logging.getLogger(__name__)
 
@@ -254,6 +255,36 @@ class SreQueryTool(ToolBase):
             self._FIELD_MEANINGS.get(f"{action}.{field_name}")
             or self._FIELD_MEANINGS.get(field_name)
         )
+
+    def _translate_enum(self, enum_name: str, value: Any) -> str:
+        """翻译枚举值，返回 '值=含义' 格式。
+
+        Args:
+            enum_name: 枚举类型名，如 "ContractTypeEnum"。
+            value: 枚举值。
+
+        Returns:
+            翻译后的字符串，如 "6=整装首期款合同"。
+            如果无法翻译，返回原值字符串。
+        """
+        if not enum_name or value is None:
+            return str(value)
+
+        mapping = ENUM_REGISTRY.get(enum_name)
+        if mapping:
+            # 尝试 int 转换（大部分枚举是 int 类型）
+            try:
+                int_value = int(value)
+                translated = mapping.get(int_value)
+                if translated:
+                    return f"{int_value}={translated}"
+            except (ValueError, TypeError):
+                # 非数字类型的枚举（如 FreeFormRoleTypeEnum）
+                translated = mapping.get(str(value))
+                if translated:
+                    return f"{value}={translated}"
+
+        return str(value)
 
     def __init__(self, client: SreQueryClient):
         """初始化 SRE 查询工具。
@@ -776,17 +807,21 @@ class SreQueryTool(ToolBase):
         lines.append("| 字段 | 值 | 含义 |")
         lines.append("|------|-----|------|")
         for key, value in obj.items():
-            # 截断过长的值
-            str_value = str(value)
-            if len(str_value) > 200:
-                str_value = str_value[:200] + "..."
             # 查字段含义
             meaning = self._get_meaning(action, key)
             if meaning:
                 desc, enum_name = meaning
-                col3 = f"{desc} (见 {enum_name})" if enum_name else desc
+                # 自动翻译枚举值
+                str_value = self._translate_enum(enum_name, value) if enum_name else str(value)
+                col3 = desc
             else:
+                str_value = str(value)
                 col3 = "-"
+
+            # 截断过长的值
+            if len(str_value) > 200:
+                str_value = str_value[:200] + "..."
+
             lines.append(f"| {key} | {str_value} | {col3} |")
 
         return ToolChunk(
@@ -810,7 +845,7 @@ class SreQueryTool(ToolBase):
                 meaning = self._get_meaning(action, key)
                 if meaning:
                     desc, enum_name = meaning
-                    cell = f"{desc}(见 {enum_name})" if enum_name else desc
+                    cell = desc
                 else:
                     cell = ""
                 meanings.append(cell)
@@ -819,7 +854,14 @@ class SreQueryTool(ToolBase):
             for item in items:
                 values = []
                 for key in keys:
-                    str_value = str(item.get(key, ""))
+                    meaning = self._get_meaning(action, key)
+                    if meaning:
+                        desc, enum_name = meaning
+                        # 自动翻译枚举值
+                        str_value = self._translate_enum(enum_name, item.get(key)) if enum_name else str(item.get(key, ""))
+                    else:
+                        str_value = str(item.get(key, ""))
+
                     if len(str_value) > 100:
                         str_value = str_value[:100] + "..."
                     values.append(str_value)

@@ -52,6 +52,23 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
+def _setup_log_file(logs_dir: str) -> str:
+    """创建带时间戳的日志文件，同时输出到控制台和文件"""
+    from datetime import datetime
+    os.makedirs(logs_dir, exist_ok=True)
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    log_path = os.path.join(logs_dir, f"{timestamp}.log")
+
+    file_handler = logging.FileHandler(log_path, encoding="utf-8")
+    file_handler.setLevel(logging.DEBUG)
+    file_handler.setFormatter(logging.Formatter(
+        "%(asctime)s [%(levelname)s] %(message)s", datefmt="%H:%M:%S"
+    ))
+    logging.getLogger().addHandler(file_handler)
+
+    return log_path
+
+
 # ─────────────────────────────────────────────────────────────
 # 1. 扫描目录，收集所有 Java 文件
 # ─────────────────────────────────────────────────────────────
@@ -304,6 +321,10 @@ def _export_components_for_mcp(components: Dict[str, Node], output_path: str):
 
 
 def main():
+    # ── 初始化日志文件 ──
+    logs_dir = os.path.join(os.path.dirname(__file__), "logs")
+    log_path = _setup_log_file(logs_dir)
+
     if len(sys.argv) >= 2:
         repo_path = os.path.abspath(sys.argv[1])
     else:
@@ -319,6 +340,7 @@ def main():
     print(f"\n🔍 CodeWiki 依赖图构建 Demo")
     print(f"   仓库路径: {repo_path}")
     print(f"   仓库名称: {repo_name}")
+    print(f"   日志文件: {log_path}")
     print()
 
     # ── 步骤 1: 扫描 Java 文件 ──

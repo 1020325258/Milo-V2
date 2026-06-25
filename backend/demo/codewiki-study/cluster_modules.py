@@ -310,9 +310,26 @@ async def _stream_sdk_messages(prompt, options):
     """
     from claude_agent_sdk import query, AssistantMessage, ResultMessage
 
-    # 打印 prompt
+    # 打印 prompt（日志中截断 AVAILABLE_COMPONENTS 部分，避免日志膨胀）
     logger.info(f"      📤 Prompt ({len(prompt)} chars):")
+    in_available = False
+    line_count = 0
+    MAX_LOG_LINES = 500
     for line in prompt.split("\n"):
+        if "<AVAILABLE_COMPONENTS>" in line:
+            in_available = True
+        if in_available and "</AVAILABLE_COMPONENTS>" in line:
+            in_available = False
+            logger.info(f"         ... (AVAILABLE_COMPONENTS 已省略)")
+            logger.info(f"         {line}")
+            continue
+        if in_available:
+            line_count += 1
+            if line_count <= 20:
+                logger.info(f"         {line}")
+            elif line_count == 21:
+                logger.info(f"         ... (省略剩余行)")
+            continue
         logger.info(f"         {line}")
 
     result_text = ""
