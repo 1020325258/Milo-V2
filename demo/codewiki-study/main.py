@@ -2,33 +2,16 @@
 """
 CodeWiki 源码解析 Demo — 可独立运行
 
-对应 CodeWiki 的三个步骤：
-  ① build_dependency_graph() — 源码解析 & 依赖图构建
-  ② cluster_modules()        — LLM 驱动的递归模块聚类
-  ③ generate_documentation() — 按模块树生成文档
+三个核心步骤：
+  ① 解析源码 & 构建依赖图
+  ② LLM 驱动的递归模块聚类
+  ③ 按模块树生成文档
 
 支持语言: Java (.java) / Python (.py)
 
-项目结构：
-  main.py                    # 入口文件
-  core/                      # 核心逻辑
-    models.py                # 数据模型
-    graph_builder.py         # 依赖图构建
-    cluster_modules.py       # 模块聚类
-    doc_generator.py         # 文档生成
-  analyzers/                 # 语言分析器
-    java_analyzer.py         # Java tree-sitter 分析
-    python_analyzer.py       # Python ast 分析
-  mcp/                       # MCP 服务
-    mcp_component_server.py  # 组件 MCP 服务器
-  output/                    # 所有输出产物（自动创建）
-
 用法:
-    # 直接运行（使用默认路径）
-    python main.py
-
-    # 指定路径（自动检测语言）
-    python main.py /path/to/your/project
+    python main.py                        # 使用默认路径
+    python main.py /path/to/your/project  # 指定路径
 """
 
 import os
@@ -42,418 +25,127 @@ from collections import defaultdict
 from core.models import Node, CallRelationship
 from analyzers.java_analyzer import analyze_java_file
 from analyzers.python_analyzer import analyze_python_file
-from core.graph_builder import (
-    build_graph_from_components,
-    get_leaf_nodes,
-    topological_sort,
-    detect_cycles,
-)
-from core.cluster_modules import (
-    cluster_modules,
-    print_module_tree,
-    get_clustering_input_token_count,
-)
+from core.graph_builder import build_graph_from_components, get_leaf_nodes
+from core.cluster_modules import cluster_modules, print_module_tree, get_clustering_input_token_count
 from core.doc_generator import generate_documentation
 from core.llm_backends import create_backends
-
-
-# ─────────────────────────────────────────────────────────────
-# 输出目录（所有产物统一存放）
-# ─────────────────────────────────────────────────────────────
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 OUTPUT_DIR = os.path.join(SCRIPT_DIR, "output")
 
-
-def _ensure_output_dir() -> str:
-    """确保 output 目录存在，返回路径"""
-    os.makedirs(OUTPUT_DIR, exist_ok=True)
-    return OUTPUT_DIR
-
-
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(message)s",
-    datefmt="%H:%M:%S",
-)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s", datefmt="%H:%M:%S")
 logger = logging.getLogger(__name__)
 
 
-def _setup_log_file() -> str:
-    """创建带时间戳的日志文件，输出到 output/logs/"""
-    from datetime import datetime
-    logs_dir = os.path.join(OUTPUT_DIR, "logs")
-    os.makedirs(logs_dir, exist_ok=True)
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    log_path = os.path.join(logs_dir, f"{timestamp}.log")
-
-    file_handler = logging.FileHandler(log_path, encoding="utf-8")
-    file_handler.setLevel(logging.DEBUG)
-    file_handler.setFormatter(logging.Formatter(
-        "%(asctime)s [%(levelname)s] %(message)s", datefmt="%H:%M:%S"
-    ))
-    logging.getLogger().addHandler(file_handler)
-
-    return log_path
-
-
-# ─────────────────────────────────────────────────────────────
-# 1. 扫描目录，收集源码文件（支持 Java / Python）
-# ─────────────────────────────────────────────────────────────
-
-LANGUAGE_EXTENSIONS = {
-    ".java": "java",
-    ".py": "python",
-}
-
-SKIP_DIRS = {
-    "__pycache__", "node_modules", "target", "build",
-    ".git", ".idea", ".venv", "venv", ".mypy_cache", ".pytest_cache",
-    "dist", ".tox", "egg-info",
-}
-
-
-def scan_code_files(repo_path: str) -> List[Dict[str, str]]:
-    """
-    递归扫描目录，收集所有支持的源码文件（.java / .py）。
-    返回的每个 dict 包含 path, relative_path, name, language。
-    """
-    code_files = []
-    repo_path = os.path.abspath(repo_path)
-
-    for root, dirs, files in os.walk(repo_path):
-        dirs[:] = [
-            d for d in dirs
-            if not d.startswith(".") and d not in SKIP_DIRS
-        ]
-
-        for filename in sorted(files):
-            ext = os.path.splitext(filename)[1]
-            language = LANGUAGE_EXTENSIONS.get(ext)
-            if language:
-                full_path = os.path.join(root, filename)
-                rel_path = os.path.relpath(full_path, repo_path)
-                code_files.append({
-                    "path": full_path,
-                    "relative_path": rel_path,
-                    "name": filename,
-                    "language": language,
-                })
-
-    return code_files
-
-
-# ─────────────────────────────────────────────────────────────
-# 2. 解析所有文件，提取组件和调用关系
-# ─────────────────────────────────────────────────────────────
-
-def parse_all_files(
-    code_files: List[Dict[str, str]], repo_path: str
-) -> Dict[str, Node]:
-    """逐文件调用对应语言的 Analyzer，汇总所有组件。"""
-    analyzers = {
-        "java": analyze_java_file,
-        "python": analyze_python_file,
-    }
-
-    components: Dict[str, Node] = {}
-    all_relationships: List[CallRelationship] = []
-    start_time = time.time()
-
-    for idx, file_info in enumerate(code_files, 1):
-        file_path = file_info["path"]
-        rel_path = file_info["relative_path"]
-        language = file_info["language"]
-
-        analyzer = analyzers.get(language)
-        if not analyzer:
-            logger.warning(f"  [{idx}/{len(code_files)}] Unsupported language '{language}': {rel_path}")
-            continue
-
-        try:
-            with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
-                content = f.read()
-
-            nodes, relationships = analyzer(file_path, content, repo_path)
-
-            for node in nodes:
-                components[node.id] = node
-            all_relationships.extend(relationships)
-
-            logger.info(
-                f"  [{idx}/{len(code_files)}] [{language}] {rel_path} → "
-                f"{len(nodes)} components, {len(relationships)} relationships"
-            )
-        except Exception as e:
-            logger.warning(f"  [{idx}/{len(code_files)}] Failed: {rel_path}: {e}")
-
-    elapsed = time.time() - start_time
-    lang_counts = defaultdict(int)
-    for f in code_files:
-        lang_counts[f["language"]] += 1
-    lang_summary = ", ".join(f"{lang}: {count}" for lang, count in sorted(lang_counts.items()))
-
-    logger.info(
-        f"\n✓ Parsing complete: {len(code_files)} files ({lang_summary}), "
-        f"{len(components)} components, {len(all_relationships)} relationships "
-        f"({elapsed:.1f}s)"
-    )
-
-    resolve_call_relationships(components, all_relationships)
-    return components
-
-
-# ─────────────────────────────────────────────────────────────
-# 3. 调用关系解析
-# ─────────────────────────────────────────────────────────────
-
-def resolve_call_relationships(
-    components: Dict[str, Node], relationships: List[CallRelationship]
-):
-    """将 callee 名称解析为实际的组件 ID，写入 depends_on。"""
-    exact_index: Dict[str, List[str]] = defaultdict(list)
-    simple_index: Dict[str, List[str]] = defaultdict(list)
-
-    for comp_id, comp in components.items():
-        exact_index[comp_id].append(comp_id)
-        if comp.qualified_name:
-            exact_index[comp.qualified_name].append(comp_id)
-        exact_index[comp.name].append(comp_id)
-
-        simple_index[comp.name].append(comp_id)
-        if comp.qualified_name:
-            simple_index[comp.qualified_name.split(".")[-1]].append(comp_id)
-        if "::" in comp_id:
-            short = comp_id.split("::")[-1]
-            simple_index[short].append(comp_id)
-
-    resolved_count = 0
-    for rel in relationships:
-        if rel.is_resolved and rel.callee in components:
-            if rel.caller in components:
-                components[rel.caller].depends_on.add(rel.callee)
-            resolved_count += 1
-            continue
-
-        callee_name = rel.callee
-        resolved_id = None
-
-        if callee_name in exact_index and len(exact_index[callee_name]) == 1:
-            resolved_id = exact_index[callee_name][0]
-
-        if not resolved_id:
-            simple_name = callee_name.split(".")[-1] if "." in callee_name else callee_name
-            if simple_name in simple_index and len(simple_index[simple_name]) == 1:
-                resolved_id = simple_index[simple_name][0]
-
-        if resolved_id and resolved_id in components:
-            rel.callee = resolved_id
-            rel.is_resolved = True
-            if rel.caller in components:
-                components[rel.caller].depends_on.add(resolved_id)
-            resolved_count += 1
-
-    logger.info(f"✓ Resolved {resolved_count}/{len(relationships)} call relationships")
-
-
-# ─────────────────────────────────────────────────────────────
-# 4. 打印结果
-# ─────────────────────────────────────────────────────────────
-
-def print_summary(components: Dict[str, Node], leaf_nodes: List[str], graph: Dict):
-    """打印依赖图摘要"""
-    print("\n" + "=" * 70)
-    print("  依赖图构建结果")
-    print("=" * 70)
-
-    type_counts = defaultdict(int)
-    for comp in components.values():
-        type_counts[comp.component_type] += 1
-
-    print(f"\n📦 组件总数: {len(components)}")
-    for comp_type, count in sorted(type_counts.items(), key=lambda x: -x[1]):
-        print(f"   {comp_type}: {count}")
-
-    total_deps = sum(len(comp.depends_on) for comp in components.values())
-    print(f"\n🔗 依赖关系总数: {total_deps}")
-
-    print(f"\n📊 有向依赖图 (A → B 表示 A 依赖 B):")
-    for comp_id in sorted(components.keys()):
-        comp = components[comp_id]
-        if comp.depends_on:
-            short_id = comp_id.split("::")[-1] if "::" in comp_id else comp_id
-            for dep_id in sorted(comp.depends_on):
-                short_dep = dep_id.split("::")[-1] if "::" in dep_id else dep_id
-                print(f"   {short_id} → {short_dep}")
-
-    print(f"\n🍃 叶子节点 (不被任何组件依赖): {len(leaf_nodes)}")
-    for leaf in leaf_nodes:
-        comp = components[leaf]
-        print(f"   • {comp.name} ({comp.component_type}) @ {comp.relative_path}")
-
-    topo_order = topological_sort(graph)
-    print(f"\n📐 拓扑排序 (依赖在前，被依赖在后):")
-    for i, node_id in enumerate(topo_order, 1):
-        comp = components.get(node_id)
-        if comp:
-            print(f"   {i}. {comp.name} ({comp.component_type})")
-
-    cycles = detect_cycles(graph)
-    if cycles:
-        print(f"\n⚠️  检测到 {len(cycles)} 个循环依赖:")
-        for i, cycle in enumerate(cycles, 1):
-            names = []
-            for node_id in cycle:
-                comp = components.get(node_id)
-                names.append(comp.name if comp else node_id.split("::")[-1])
-            print(f"   环 {i}: {' → '.join(names)} → {names[0]}")
-    else:
-        print(f"\n✅ 无循环依赖")
-
-    print("\n" + "=" * 70)
-
-
-# ─────────────────────────────────────────────────────────────
-# 5. JSON 产物保存
-# ─────────────────────────────────────────────────────────────
-
-def save_dependency_graph(components: Dict[str, Node], output_path: str):
-    """保存依赖图到 JSON 文件"""
-    result = {}
-    for comp_id, comp in components.items():
-        comp_dict = comp.model_dump()
-        if "depends_on" in comp_dict and isinstance(comp_dict["depends_on"], set):
-            comp_dict["depends_on"] = list(comp_dict["depends_on"])
-        result[comp_id] = comp_dict
-
-    os.makedirs(os.path.dirname(output_path) or ".", exist_ok=True)
-    with open(output_path, "w", encoding="utf-8") as f:
-        json.dump(result, f, indent=2, ensure_ascii=False)
-
-    logger.info(f"✓ Dependency graph saved to {output_path}")
-
-
-# ─────────────────────────────────────────────────────────────
-# 6. 主入口
-# ─────────────────────────────────────────────────────────────
+# ═══════════════════════════════════════════════════════════════
+#  主流程
+# ═══════════════════════════════════════════════════════════════
 
 def main():
-    _ensure_output_dir()
+    # ── 初始化 ──
+    repo_path = _resolve_repo_path()
+    os.makedirs(OUTPUT_DIR, exist_ok=True)
     log_path = _setup_log_file()
 
-    if len(sys.argv) >= 2:
-        repo_path = os.path.abspath(sys.argv[1])
-    else:
-        repo_path = DEFAULT_REPO_PATH
-        print(f"(未指定路径，使用默认: {repo_path})")
+    print(f"\n🔍 CodeWiki 源码解析")
+    print(f"   仓库: {repo_path}")
+    print(f"   输出: {OUTPUT_DIR}")
+    print(f"   日志: {log_path}\n")
 
-    if not os.path.isdir(repo_path):
-        print(f"错误: 路径不存在或不是目录: {repo_path}")
-        sys.exit(1)
+    # ── ① 解析源码 & 构建依赖图 ──
+    components, leaf_nodes = step1_build_dependency_graph(repo_path)
 
-    repo_name = os.path.basename(repo_path)
+    # ── ② 模块聚类 ──
+    module_tree = step2_cluster_modules(leaf_nodes, components)
 
-    print(f"\n🔍 CodeWiki 依赖图构建 Demo")
-    print(f"   仓库路径: {repo_path}")
-    print(f"   仓库名称: {repo_name}")
-    print(f"   日志文件: {log_path}")
-    print(f"   输出目录: {OUTPUT_DIR}")
-    print()
+    # ── ③ 生成文档 ──
+    step3_generate_docs(repo_path, module_tree, components)
 
-    # ── 步骤 1: 扫描源码文件 ──
-    logger.info("📂 Scanning source files...")
-    code_files = scan_code_files(repo_path)
 
-    lang_counts = defaultdict(int)
-    for f in code_files:
-        lang_counts[f["language"]] += 1
-    for lang, count in sorted(lang_counts.items()):
-        logger.info(f"   {lang}: {count} files")
+# ═══════════════════════════════════════════════════════════════
+#  步骤实现
+# ═══════════════════════════════════════════════════════════════
 
+def step1_build_dependency_graph(repo_path: str):
+    """① 扫描源码 → 解析组件 → 构建依赖图 → 找叶子节点"""
+    logger.info("=" * 50)
+    logger.info("  步骤 ①  解析源码 & 构建依赖图")
+    logger.info("=" * 50)
+
+    # 扫描文件
+    code_files = _scan_code_files(repo_path)
     if not code_files:
         print("未找到支持的源码文件（.java / .py），退出。")
         sys.exit(0)
 
-    # ── 步骤 2: 解析所有文件，提取组件 ──
-    logger.info("\n🔬 Parsing source files...")
-    components = parse_all_files(code_files, repo_path)
+    # 解析组件
+    components = _parse_all_files(code_files, repo_path)
 
-    # ── 步骤 3: 构建依赖图 ──
-    logger.info("\n📊 Building dependency graph...")
+    # 构建依赖图
     graph = build_graph_from_components(components)
-    logger.info(f"   Graph: {len(graph)} nodes, {sum(len(d) for d in graph.values())} edges")
+    logger.info(f"   依赖图: {len(graph)} nodes, {sum(len(d) for d in graph.values())} edges")
 
-    # ── 步骤 4: 找叶子节点 ──
-    logger.info("\n🍃 Finding leaf nodes...")
+    # 找叶子节点
     leaf_nodes = get_leaf_nodes(graph, components)
-    logger.info(f"   Found {len(leaf_nodes)} leaf nodes")
+    logger.info(f"   叶子节点: {len(leaf_nodes)}")
 
-    print_summary(components, leaf_nodes, graph)
-
-    # ── 保存依赖图 JSON（输出到 output/）──
+    # 保存依赖图
     dep_graph_path = os.path.join(OUTPUT_DIR, "dependency_graph.json")
-    save_dependency_graph(components, dep_graph_path)
+    _save_json(components, dep_graph_path, serialize_sets=True)
 
-    # ════════════════════════════════════════════════════════════
-    #  创建 LLM completer（聚类 / 文档生成 / 概览）
-    # ════════════════════════════════════════════════════════════
+    return components, leaf_nodes
 
-    cluster_completer, doc_completer, overview_completer = create_backends(
-        backend=LLM_BACKEND,
-        output_dir=OUTPUT_DIR,
-        script_dir=SCRIPT_DIR,
+
+def step2_cluster_modules(leaf_nodes: List[str], components: Dict[str, Node]) -> dict:
+    """② LLM 驱动的递归模块聚类"""
+    logger.info("\n" + "=" * 50)
+    logger.info("  步骤 ②  模块聚类")
+    logger.info("=" * 50)
+
+    tree_path = os.path.join(OUTPUT_DIR, "module_tree.json")
+
+    # 缓存命中
+    if os.path.exists(tree_path):
+        with open(tree_path, "r", encoding="utf-8") as f:
+            module_tree = json.load(f)
+        logger.info(f"   ✓ 使用缓存: {len(module_tree)} 个模块")
+        return module_tree
+
+    # 创建聚类用 completer
+    cluster_completer, _, _ = create_backends(LLM_BACKEND, OUTPUT_DIR, SCRIPT_DIR, components)
+
+    # 检查 token 量
+    tokens = get_clustering_input_token_count(leaf_nodes, components)
+    logger.info(f"   叶子节点: {len(leaf_nodes)}, Token: {tokens}")
+
+    # 聚类
+    module_tree = cluster_modules(
+        leaf_nodes=leaf_nodes,
         components=components,
+        max_token_per_module=36_369,
+        completer=cluster_completer,
     )
 
-    # ════════════════════════════════════════════════════════════
-    #  步骤 ②  模块聚类（如果 output/module_tree.json 已存在则跳过）
-    # ════════════════════════════════════════════════════════════
+    # 保存
+    _save_json(module_tree, tree_path)
 
-    tree_output_path = os.path.join(OUTPUT_DIR, "module_tree.json")
-
-    if os.path.exists(tree_output_path):
-        logger.info(f"   ✓ 发现已有 module_tree.json，跳过聚类，直接使用")
-        with open(tree_output_path, "r", encoding="utf-8") as f:
-            module_tree = json.load(f)
-        logger.info(f"   加载了 {len(module_tree)} 个模块")
-    else:
-        logger.info("\n" + "=" * 70)
-        logger.info("  步骤 ②  模块聚类 (cluster_modules)")
-        logger.info("=" * 70)
-
-        clustering_tokens = get_clustering_input_token_count(leaf_nodes, components)
-        logger.info(f"   叶子节点: {len(leaf_nodes)}")
-        logger.info(f"   Token 量: {clustering_tokens}")
-
-        module_tree = cluster_modules(
-            leaf_nodes=leaf_nodes,
-            components=components,
-            max_token_per_module=36_369,
-            completer=cluster_completer,
-        )
-
-        with open(tree_output_path, "w", encoding="utf-8") as f:
-            json.dump(module_tree, f, indent=2, ensure_ascii=False)
-        logger.info(f"✓ Module tree saved to {tree_output_path}")
-
-    # ── 打印聚类结果 ──
     if module_tree:
-        print(f"\n{'=' * 70}")
-        print(f"  模块聚类结果")
-        print(f"{'=' * 70}")
-        print(f"\n🌳 模块树 ({len(module_tree)} top-level modules):")
+        print(f"\n🌳 模块树 ({len(module_tree)} modules):")
         print_module_tree(module_tree, components)
-        print()
     else:
-        logger.info("   聚类结果: 不需要聚类（token 在阈值内，整体作为一个模块处理）")
+        logger.info("   聚类结果: token 在阈值内，整体作为一个模块处理")
 
-    # ════════════════════════════════════════════════════════════
-    #  步骤 ③  生成模块文档（输出到 output/docs/）
-    # ════════════════════════════════════════════════════════════
+    return module_tree
 
-    logger.info("\n" + "=" * 70)
-    logger.info("  步骤 ③  生成模块文档 (generate_documentation)")
-    logger.info("=" * 70)
+
+def step3_generate_docs(repo_path: str, module_tree: dict, components: Dict[str, Node]):
+    """③ 按模块树生成文档"""
+    logger.info("\n" + "=" * 50)
+    logger.info("  步骤 ③  生成文档")
+    logger.info("=" * 50)
+
+    # 创建文档生成用 completer
+    _, doc_completer, overview_completer = create_backends(LLM_BACKEND, OUTPUT_DIR, SCRIPT_DIR, components)
 
     docs_dir = os.path.join(OUTPUT_DIR, "docs")
     repo_name = os.path.basename(repo_path)
@@ -467,16 +159,154 @@ def main():
         overview_completer=overview_completer,
     )
 
-    logger.info(f"\n✅ 文档生成完成！输出目录: {docs_dir}")
+    logger.info(f"\n✅ 完成！文档目录: {docs_dir}")
+
+
+# ═══════════════════════════════════════════════════════════════
+#  内部工具函数
+# ═══════════════════════════════════════════════════════════════
+
+LANGUAGE_EXTENSIONS = {".java": "java", ".py": "python"}
+SKIP_DIRS = {"__pycache__", "node_modules", "target", "build", ".git", ".idea",
+             ".venv", "venv", ".mypy_cache", ".pytest_cache", "dist", ".tox", "egg-info"}
+
+
+def _resolve_repo_path() -> str:
+    if len(sys.argv) >= 2:
+        return os.path.abspath(sys.argv[1])
+    print(f"(未指定路径，使用默认: {DEFAULT_REPO_PATH})")
+    return DEFAULT_REPO_PATH
+
+
+def _setup_log_file() -> str:
+    from datetime import datetime
+    logs_dir = os.path.join(OUTPUT_DIR, "logs")
+    os.makedirs(logs_dir, exist_ok=True)
+    log_path = os.path.join(logs_dir, f"{datetime.now().strftime('%Y%m%d_%H%M%S')}.log")
+
+    fh = logging.FileHandler(log_path, encoding="utf-8")
+    fh.setLevel(logging.DEBUG)
+    fh.setFormatter(logging.Formatter("%(asctime)s [%(levelname)s] %(message)s", datefmt="%H:%M:%S"))
+    logging.getLogger().addHandler(fh)
+    return log_path
+
+
+def _scan_code_files(repo_path: str) -> List[Dict[str, str]]:
+    """递归扫描目录，收集 .java / .py 文件"""
+    code_files = []
+    repo_path = os.path.abspath(repo_path)
+    for root, dirs, files in os.walk(repo_path):
+        dirs[:] = [d for d in dirs if not d.startswith(".") and d not in SKIP_DIRS]
+        for filename in sorted(files):
+            ext = os.path.splitext(filename)[1]
+            language = LANGUAGE_EXTENSIONS.get(ext)
+            if language:
+                full_path = os.path.join(root, filename)
+                code_files.append({
+                    "path": full_path,
+                    "relative_path": os.path.relpath(full_path, repo_path),
+                    "name": filename,
+                    "language": language,
+                })
+    lang_counts = defaultdict(int)
+    for f in code_files:
+        lang_counts[f["language"]] += 1
+    for lang, count in sorted(lang_counts.items()):
+        logger.info(f"   {lang}: {count} files")
+    return code_files
+
+
+def _parse_all_files(code_files: List[Dict[str, str]], repo_path: str) -> Dict[str, Node]:
+    """逐文件解析组件和调用关系"""
+    analyzers = {"java": analyze_java_file, "python": analyze_python_file}
+    components: Dict[str, Node] = {}
+    all_relationships: List[CallRelationship] = []
+    t0 = time.time()
+
+    for idx, fi in enumerate(code_files, 1):
+        analyzer = analyzers.get(fi["language"])
+        if not analyzer:
+            continue
+        try:
+            with open(fi["path"], "r", encoding="utf-8", errors="ignore") as f:
+                content = f.read()
+            nodes, rels = analyzer(fi["path"], content, repo_path)
+            for n in nodes:
+                components[n.id] = n
+            all_relationships.extend(rels)
+            logger.info(f"  [{idx}/{len(code_files)}] [{fi['language']}] {fi['relative_path']} → {len(nodes)} components, {len(rels)} rels")
+        except Exception as e:
+            logger.warning(f"  [{idx}/{len(code_files)}] Failed: {fi['relative_path']}: {e}")
+
+    # 解析调用关系
+    _resolve_call_relationships(components, all_relationships)
+
+    elapsed = time.time() - t0
+    logger.info(f"\n✓ 解析完成: {len(code_files)} files, {len(components)} components, {len(all_relationships)} rels ({elapsed:.1f}s)")
+    return components
+
+
+def _resolve_call_relationships(components: Dict[str, Node], relationships: List[CallRelationship]):
+    """将 callee 名称解析为实际组件 ID，写入 depends_on"""
+    exact_idx: Dict[str, List[str]] = defaultdict(list)
+    simple_idx: Dict[str, List[str]] = defaultdict(list)
+
+    for cid, comp in components.items():
+        exact_idx[cid].append(cid)
+        if comp.qualified_name:
+            exact_idx[comp.qualified_name].append(cid)
+        exact_idx[comp.name].append(cid)
+        simple_idx[comp.name].append(cid)
+        if comp.qualified_name:
+            simple_idx[comp.qualified_name.split(".")[-1]].append(cid)
+        if "::" in cid:
+            simple_idx[cid.split("::")[-1]].append(cid)
+
+    resolved = 0
+    for rel in relationships:
+        if rel.is_resolved and rel.callee in components:
+            if rel.caller in components:
+                components[rel.caller].depends_on.add(rel.callee)
+            resolved += 1
+            continue
+
+        rid = None
+        if rel.callee in exact_idx and len(exact_idx[rel.callee]) == 1:
+            rid = exact_idx[rel.callee][0]
+        if not rid:
+            sn = rel.callee.split(".")[-1] if "." in rel.callee else rel.callee
+            if sn in simple_idx and len(simple_idx[sn]) == 1:
+                rid = simple_idx[sn][0]
+        if rid and rid in components:
+            rel.callee = rid
+            rel.is_resolved = True
+            if rel.caller in components:
+                components[rel.caller].depends_on.add(rid)
+            resolved += 1
+
+    logger.info(f"   调用关系解析: {resolved}/{len(relationships)}")
+
+
+def _save_json(data, path: str, serialize_sets: bool = False):
+    """保存 JSON 文件"""
+    os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
+    with open(path, "w", encoding="utf-8") as f:
+        if serialize_sets:
+            def default_ser(obj):
+                if isinstance(obj, set):
+                    return sorted(list(obj))
+                raise TypeError(f"Type {type(obj)} not serializable")
+            json.dump(data, f, indent=2, ensure_ascii=False, default=default_ser)
+        else:
+            json.dump(data, f, indent=2, ensure_ascii=False)
+    logger.info(f"✓ Saved: {path}")
 
 
 # ═══════════════════════════════════════════════════════════════
 #  配置
 # ═══════════════════════════════════════════════════════════════
 
-# DEFAULT_REPO_PATH = "/Users/zqy/work/project/nrs-sales-project/utopia-nrs-sales-project-service/src/main/java/com/ke/utopia/nrs/salesproject/service/contract/v2/personal"
-DEFAULT_REPO_PATH = "/Users/zqy/work/project/nrs-sales-project/utopia-nrs-sales-project-service/src/main/java/com/ke/utopia/nrs/salesproject/service/contract/v2"
-
+DEFAULT_REPO_PATH = "/Users/zqy/work/project/nrs-sales-project/utopia-nrs-sales-project-service/src/main/java/com/ke/utopia/nrs/salesproject/service/contract/v2/personal"
 LLM_BACKEND = "claude_code"  # "openai" 或 "claude_code"
 
 if __name__ == "__main__":
