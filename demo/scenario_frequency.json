@@ -1,0 +1,147 @@
+[
+  {
+    "scenario": "合同变更管理",
+    "count": 104,
+    "percentage": "34.7%"
+  },
+  {
+    "scenario": "合同签署流程",
+    "count": 67,
+    "percentage": "22.3%"
+  },
+  {
+    "scenario": "合同创建与配置",
+    "count": 55,
+    "percentage": "18.3%"
+  },
+  {
+    "scenario": "身份认证与登录",
+    "count": 33,
+    "percentage": "11.0%"
+  },
+  {
+    "scenario": "客源与渠道管理",
+    "count": 28,
+    "percentage": "9.3%"
+  },
+  {
+    "scenario": "签约工具与小程序",
+    "count": 27,
+    "percentage": "9.0%"
+  },
+  {
+    "scenario": "合同审批与风控",
+    "count": 20,
+    "percentage": "6.7%"
+  },
+  {
+    "scenario": "签后管理",
+    "count": 18,
+    "percentage": "6.0%"
+  },
+  {
+    "scenario": "合同状态管理",
+    "count": 18,
+    "percentage": "6.0%"
+  },
+  {
+    "scenario": "合同类型管理",
+    "count": 15,
+    "percentage": "5.0%"
+  },
+  {
+    "scenario": "线下签约与补录",
+    "count": 14,
+    "percentage": "4.7%"
+  },
+  {
+    "scenario": "退单退款管理",
+    "count": 14,
+    "percentage": "4.7%"
+  },
+  {
+    "scenario": "签约模式管理",
+    "count": 13,
+    "percentage": "4.3%"
+  },
+  {
+    "scenario": "收款与资金管理",
+    "count": 11,
+    "percentage": "3.7%"
+  },
+  {
+    "scenario": "合同文件管理",
+    "count": 9,
+    "percentage": "3.0%"
+  },
+  {
+    "scenario": "选品与销售签约",
+    "count": 8,
+    "percentage": "2.7%"
+  },
+  {
+    "scenario": "报价管理",
+    "count": 8,
+    "percentage": "2.7%"
+  },
+  {
+    "scenario": "人员与岗位管理",
+    "count": 8,
+    "percentage": "2.7%"
+  },
+  {
+    "scenario": "订单与客服管理",
+    "count": 7,
+    "percentage": "2.3%"
+  },
+  {
+    "scenario": "权限与授权管理",
+    "count": 6,
+    "percentage": "2.0%"
+  },
+  {
+    "scenario": "施工与项目管理",
+    "count": 4,
+    "percentage": "1.3%"
+  },
+  {
+    "scenario": "签约-收款计划配置",
+    "count": 2,
+    "percentage": "0.7%"
+  },
+  {
+    "scenario": "优惠券管理",
+    "count": 1,
+    "percentage": "0.3%"
+  },
+  {
+    "scenario": "业绩确认与核算",
+    "count": 1,
+    "percentage": "0.3%"
+  },
+  {
+    "scenario": "数据看板",
+    "count": 1,
+    "percentage": "0.3%"
+  },
+  {
+    "scenario": "签约-业主手机号修改",
+    "count": 1,
+    "percentage": "0.3%"
+  },
+  {
+    "scenario": "系统功能支持",
+    "count": 1,
+    "percentage": "0.3%"
+  },
+  {
+    "scenario": "客户管理",
+    "count": 1,
+    "percentage": "0.3%"
+  },
+  {
+    "scenario": "印章与合同工具",
+    "count": 1,
+    "percentage": "0.3%"
+  }
+]
