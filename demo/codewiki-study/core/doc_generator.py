@@ -215,11 +215,6 @@ LEAF_USER_PROMPT = """请为 {module_name} 模块生成综合文档。
 {formatted_core_component_codes}
 </CORE_COMPONENT_CODES>
 
-<AVAILABLE_COMPONENTS>
-以下是仓库中所有可用的组件，按文件分组。如果核心组件依赖了其他组件，请直接读取对应源码文件以理解完整逻辑：
-{available_components}
-</AVAILABLE_COMPONENTS>
-
 重要要求：
 1. 使用 Write 工具将文档写入文件：{output_dir}/{module_name}.md
 2. 文档从 # 标题开始，包含完整的模块概述、架构图、核心组件详解、依赖关系、数据流、关键设计模式
@@ -338,46 +333,21 @@ def _format_component_codes(component_ids: List[str], components: Dict[str, Node
     return result
 
 
-def _format_available_components(components: Dict[str, Node]) -> str:
-    """
-    格式化所有可用组件的列表（按文件分组，含 ID、类型、AI 注解摘要）。
-    让 LLM 知道有哪些组件可以读取，以及它们的业务职责。
-    """
-    by_file = defaultdict(list)
-    for comp_id, comp in components.items():
-        by_file[comp.relative_path].append(comp)
-
-    lines = []
-    for path, comps in sorted(by_file.items()):
-        lines.append(f"# {path}")
-        for comp in comps:
-            short = comp.id.split("::")[-1] if "::" in comp.id else comp.id
-            # 如果有 @AiDoc 注解摘要，显示出来
-            if comp.docstring and comp.docstring.startswith("[AI]"):
-                lines.append(f"\t{short} ({comp.component_type})  -- {comp.docstring}")
-            else:
-                lines.append(f"\t{short} ({comp.component_type})")
-    return "\n".join(lines)
-
-
 def format_leaf_prompt(
     module_name: str,
     component_ids: List[str],
     components: Dict[str, Node],
     module_tree: dict,
-    all_components: Dict[str, Node] = None,
     output_dir: str = "",
 ) -> str:
     """格式化叶子模块的文档生成 Prompt"""
     tree_text = _format_module_tree_text(module_tree, target_module=module_name)
     codes = _format_component_codes(component_ids, components)
-    available = _format_available_components(all_components or components)
     return LEAF_USER_PROMPT.format(
         module_name=module_name,
         output_dir=output_dir,
         module_tree=tree_text,
         formatted_core_component_codes=codes,
-        available_components=available,
     )
 
 
@@ -587,7 +557,7 @@ def _generate_leaf_module_docs(
     system_prompt = LEAF_SYSTEM_PROMPT.format(module_name=module_name, custom_instructions="")
     user_prompt = format_leaf_prompt(
         module_name, component_ids, components, module_tree,
-        all_components=components, output_dir=docs_dir,
+        output_dir=docs_dir,
     )
 
     for attempt in range(max_retries + 1):
@@ -745,7 +715,7 @@ def _generate_single_module_docs(
     system_prompt = LEAF_SYSTEM_PROMPT.format(module_name=repo_name, custom_instructions="")
     user_prompt = format_leaf_prompt(
         repo_name, component_ids, components, module_tree,
-        all_components=components, output_dir=docs_dir,
+        output_dir=docs_dir,
     )
 
     logger.info(f"    Calling LLM for {repo_name}.md...")

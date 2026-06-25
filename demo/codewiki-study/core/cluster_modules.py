@@ -268,13 +268,19 @@ async def _stream_sdk_messages(prompt, options):
     """
     from claude_agent_sdk import query, AssistantMessage, ResultMessage
 
-    # 打印 prompt（日志中截断长内容，避免日志膨胀）
-    logger.info(f"      📤 Prompt ({len(prompt)} chars):")
+    # 打印 prompt（前100行 + 后100行，中间省略）
+    logger.info(f"      📤 Prompt ({len(prompt)} chars, {len(prompt.splitlines())} lines):")
     lines = prompt.split("\n")
-    for line in lines[:30]:
-        logger.info(f"         {line}")
-    if len(lines) > 30:
-        logger.info(f"         ... ({len(lines) - 30} more lines)")
+    HEAD, TAIL = 100, 100
+    if len(lines) <= HEAD + TAIL:
+        for line in lines:
+            logger.info(f"         {line}")
+    else:
+        for line in lines[:HEAD]:
+            logger.info(f"         {line}")
+        logger.info(f"         ... ({len(lines) - HEAD - TAIL} lines omitted) ...")
+        for line in lines[-TAIL:]:
+            logger.info(f"         {line}")
 
     result_text = ""
     turn = 0
