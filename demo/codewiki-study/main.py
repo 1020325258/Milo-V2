@@ -52,12 +52,9 @@ from core.cluster_modules import (
     cluster_modules,
     print_module_tree,
     get_clustering_input_token_count,
-    create_openai_completer,
-    create_claude_code_completer,
-    create_claude_code_doc_completer,
-    create_claude_code_overview_completer,
 )
 from core.doc_generator import generate_documentation
+from core.llm_backends import create_backends
 
 
 # ─────────────────────────────────────────────────────────────
@@ -336,22 +333,6 @@ def save_dependency_graph(components: Dict[str, Node], output_path: str):
     logger.info(f"✓ Dependency graph saved to {output_path}")
 
 
-def _export_components_for_mcp(components: Dict[str, Node], output_path: str):
-    """导出组件数据为 JSON，供 MCP 服务器读取"""
-    result = {}
-    for comp_id, comp in components.items():
-        result[comp_id] = {
-            "name": comp.name,
-            "component_type": comp.component_type,
-            "relative_path": comp.relative_path,
-            "source_code": comp.source_code or "",
-        }
-    os.makedirs(os.path.dirname(output_path) or ".", exist_ok=True)
-    with open(output_path, "w", encoding="utf-8") as f:
-        json.dump(result, f, ensure_ascii=False)
-    logger.info(f"✓ Exported {len(result)} components for MCP")
-
-
 # ─────────────────────────────────────────────────────────────
 # 6. 主入口
 # ─────────────────────────────────────────────────────────────
@@ -414,46 +395,15 @@ def main():
     save_dependency_graph(components, dep_graph_path)
 
     # ════════════════════════════════════════════════════════════
-    #  创建 LLM completer
+    #  创建 LLM completer（聚类 / 文档生成 / 概览）
     # ════════════════════════════════════════════════════════════
 
-    if LLM_BACKEND == "claude_code":
-        cluster_completer = create_claude_code_completer()
-
-        # 导出组件数据供 MCP 服务器使用（输出到 output/）
-        mcp_components_path = os.path.join(OUTPUT_DIR, "components_for_mcp.json")
-        _export_components_for_mcp(components, mcp_components_path)
-        mcp_server_path = os.path.join(SCRIPT_DIR, "server", "mcp_component_server.py")
-        logger.info(f"   MCP components: {mcp_components_path}")
-
-        doc_completer = create_claude_code_doc_completer(
-            mcp_server_name="code-components",
-            mcp_server_command="python",
-            mcp_server_args=[mcp_server_path, mcp_components_path],
-        )
-        overview_completer = create_claude_code_overview_completer()
-        logger.info(f"   LLM Backend: Claude Code SDK (mimo-v2.5-pro) + MCP read_code_components")
-    else:
-        cluster_completer = create_openai_completer()
-        from openai import OpenAI
-        _client = OpenAI(
-            base_url="https://token-plan-cn.xiaomimimo.com/v1",
-            api_key="tp-cxq9g672kqgmcpmgvzhktpk7vucswrn9atq4i4ehwyxc6ngl",
-        )
-        def doc_completer(system_prompt: str, user_prompt: str) -> str:
-            response = _client.chat.completions.create(
-                model="mimo-v2.5-pro",
-                messages=[
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": user_prompt},
-                ],
-                temperature=0.0, max_tokens=8192,
-            )
-            result = response.choices[0].message.content
-            logger.info(f"      ✅ LLM response: {response.usage.total_tokens} tokens")
-            return result
-        overview_completer = doc_completer
-        logger.info(f"   LLM Backend: OpenAI API (mimo-v2.5-pro)")
+    cluster_completer, doc_completer, overview_completer = create_backends(
+        backend=LLM_BACKEND,
+        output_dir=OUTPUT_DIR,
+        script_dir=SCRIPT_DIR,
+        components=components,
+    )
 
     # ════════════════════════════════════════════════════════════
     #  步骤 ②  模块聚类（如果 output/module_tree.json 已存在则跳过）
