@@ -89,9 +89,15 @@ def step1_build_dependency_graph(repo_path: str):
     leaf_nodes = get_leaf_nodes(graph, components)
     logger.info(f"   叶子节点: {len(leaf_nodes)}")
 
-    # 保存依赖图
+    # 保存依赖图（Node → dict，set → list）
     dep_graph_path = os.path.join(OUTPUT_DIR, "dependency_graph.json")
-    _save_json(components, dep_graph_path, serialize_sets=True)
+    dep_graph = {}
+    for cid, comp in components.items():
+        d = comp.model_dump()
+        if isinstance(d.get("depends_on"), set):
+            d["depends_on"] = sorted(d["depends_on"])
+        dep_graph[cid] = d
+    _save_json(dep_graph, dep_graph_path)
 
     return components, leaf_nodes
 
@@ -287,18 +293,11 @@ def _resolve_call_relationships(components: Dict[str, Node], relationships: List
     logger.info(f"   调用关系解析: {resolved}/{len(relationships)}")
 
 
-def _save_json(data, path: str, serialize_sets: bool = False):
+def _save_json(data, path: str):
     """保存 JSON 文件"""
     os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
     with open(path, "w", encoding="utf-8") as f:
-        if serialize_sets:
-            def default_ser(obj):
-                if isinstance(obj, set):
-                    return sorted(list(obj))
-                raise TypeError(f"Type {type(obj)} not serializable")
-            json.dump(data, f, indent=2, ensure_ascii=False, default=default_ser)
-        else:
-            json.dump(data, f, indent=2, ensure_ascii=False)
+        json.dump(data, f, indent=2, ensure_ascii=False)
     logger.info(f"✓ Saved: {path}")
 
 
@@ -306,7 +305,7 @@ def _save_json(data, path: str, serialize_sets: bool = False):
 #  配置
 # ═══════════════════════════════════════════════════════════════
 
-DEFAULT_REPO_PATH = "/Users/zqy/work/project/nrs-sales-project/utopia-nrs-sales-project-service/src/main/java/com/ke/utopia/nrs/salesproject/service/contract/v2/personal"
+DEFAULT_REPO_PATH = "/Users/zqy/work/project/nrs-sales-project/utopia-nrs-sales-project-service/src/main/java/com/ke/utopia/nrs/salesproject/service/contract/v2"
 LLM_BACKEND = "claude_code"  # "openai" 或 "claude_code"
 
 if __name__ == "__main__":
