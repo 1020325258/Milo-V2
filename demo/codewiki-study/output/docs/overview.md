@@ -113,15 +113,15 @@ graph TD
 
 | 模块 | 路径 | 职责 | 详细文档 |
 |------|------|------|---------|
-| **contract_context** | `contract/aspect` | AOP 切面 + ThreadLocal 上下文，在合同操作前并行加载 9 路数据 | [contract_context.md](docs/contract_context.md) |
-| **contract_detail** | `contract/aspect` | 合同详情查询与组装，首屏优化加载策略，12+ 子模块详情构建 | [contract_detail.md](docs/contract_detail.md) |
-| **change_contract_strategy** | `contract/changecontractstrategey` | 变更合同策略路由（设计变更 vs 套餐变更），7 阶段生命周期接口 | [change_contract_strategy.md](docs/change_contract_strategy.md) |
-| **contract_validation** | `contract` | 字段校验层，反射调度 + Apollo 配置驱动，覆盖品类/金额/身份/企业校验 | [contract_validation.md](docs/contract_validation.md) |
-| **contract_pdf_by_self** | `contract/createcontractpdfbyself` | 合同正文 PDF 生成（图纸/团装/翻新全案），策略模式 + 模板方法 | [contract_pdf_by_self.md](docs/contract_pdf_by_self.md) |
-| **material_pdf** | `contract/combo/material/pdf` | 材料配送清单 PDF 生成与数据一致性检查 | [material_pdf.md](docs/material_pdf.md) |
-| **terminal_contract_pdf** | `contract` | 解约协议 PDF 数据填充与生成，含退款渠道与金额格式化 | [terminal_contract_pdf.md](docs/terminal_contract_pdf.md) |
-| **contract_signing_source** | `contract/personal/bind` | 个性化签约数据源抽象（报价单/变更单/子单），策略模式 + 模板方法 | [contract_signing_source.md](docs/contract_signing_source.md) |
-| **personal_relation** | `contract/personal` | 个性化合同关联关系管理，报价单撤回时的合同解绑与状态回退 | [personal_relation.md](docs/personal_relation.md) |
+| **contract_context** | `contract/aspect` | AOP 切面 + ThreadLocal 上下文，在合同操作前并行加载 9 路数据 | [contract_context.md](contract_context.md) |
+| **contract_detail** | `contract/aspect` | 合同详情查询与组装，首屏优化加载策略，12+ 子模块详情构建 | [contract_detail.md](contract_detail.md) |
+| **change_contract_strategy** | `contract/changecontractstrategey` | 变更合同策略路由（设计变更 vs 套餐变更），7 阶段生命周期接口 | [change_contract_strategy.md](change_contract_strategy.md) |
+| **contract_validation** | `contract` | 字段校验层，反射调度 + Apollo 配置驱动，覆盖品类/金额/身份/企业校验 | [contract_validation.md](contract_validation.md) |
+| **contract_pdf_by_self** | `contract/createcontractpdfbyself` | 合同正文 PDF 生成（图纸/团装/翻新全案），策略模式 + 模板方法 | [contract_pdf_by_self.md](contract_pdf_by_self.md) |
+| **material_pdf** | `contract/combo/material/pdf` | 材料配送清单 PDF 生成与数据一致性检查 | [material_pdf.md](material_pdf.md) |
+| **terminal_contract_pdf** | `contract` | 解约协议 PDF 数据填充与生成，含退款渠道与金额格式化 | [terminal_contract_pdf.md](terminal_contract_pdf.md) |
+| **contract_signing_source** | `contract/personal/bind` | 个性化签约数据源抽象（报价单/变更单/子单），策略模式 + 模板方法 | [contract_signing_source.md](contract_signing_source.md) |
+| **personal_relation** | `contract/personal` | 个性化合同关联关系管理，报价单撤回时的合同解绑与状态回退 | [personal_relation.md](personal_relation.md) |
 
 ---
 

@@ -207,13 +207,11 @@ def topological_sort(graph: Dict[str, Set[str]]) -> List[str]:
 
 def get_leaf_nodes(graph: Dict[str, Set[str]], components: Dict[str, Node]) -> List[str]:
     """
-    找叶子节点 — 不被任何其他组件依赖的节点。
+    找叶子节点 — 用于聚类的入口组件。
 
-    在依赖图 A → B → C 中：
-    - C 是叶子（没有人依赖它）
-    - A 不是叶子（B 和 C 可能被依赖）
-
-    等价于：在反向图中，出度为 0 的节点。
+    与 CodeWiki 保持一致的两阶段筛选：
+    1. 先按组件类型过滤（只保留 class/interface/struct 等）
+    2. 如果过滤后仍 ≥ 400 个，再按依赖图过滤（只保留不被依赖的节点）
 
     Args:
         graph: 邻接表 {node: {deps}}
@@ -223,28 +221,36 @@ def get_leaf_nodes(graph: Dict[str, Set[str]], components: Dict[str, Node]) -> L
         叶子节点 ID 列表
     """
     acyclic_graph = resolve_cycles(graph)
+    all_nodes = set(acyclic_graph.keys())
 
-    # 收集所有被依赖的节点
-    depended_on = set()
-    for node, deps in acyclic_graph.items():
-        for dep in deps:
-            depended_on.add(dep)
-
-    # 叶子 = 所有节点 - 被依赖的节点
-    leaf_nodes = set(acyclic_graph.keys()) - depended_on
-
-    # 过滤：只保留 class/interface/struct 类型
+    # ── 第一步：按组件类型过滤 ──
     valid_types = {"class", "interface", "struct", "enum", "abstract class", "record"}
 
     # 如果没有上述类型，则保留 function/method
-    available_types = {components[n].component_type for n in leaf_nodes if n in components}
+    available_types = {components[n].component_type for n in all_nodes if n in components}
     if not available_types.intersection(valid_types):
         valid_types.add("function")
         valid_types.add("method")
 
-    keep = []
-    for node in leaf_nodes:
-        if node in components and components[node].component_type in valid_types:
-            keep.append(node)
+    concise_nodes = [
+        node for node in all_nodes
+        if node in components and components[node].component_type in valid_types
+    ]
 
-    return sorted(keep)
+    # ── 第二步：≥ 400 时按依赖图过滤（与 CodeWiki 一致）──
+    if len(concise_nodes) >= 400:
+        logger.info(
+            "Leaf nodes too many (%d), applying graph-theoretic filtering",
+            len(concise_nodes),
+        )
+        depended_on = set()
+        for node, deps in acyclic_graph.items():
+            for dep in deps:
+                depended_on.add(dep)
+
+        concise_nodes = [
+            node for node in concise_nodes
+            if node not in depended_on
+        ]
+
+    return sorted(concise_nodes)
