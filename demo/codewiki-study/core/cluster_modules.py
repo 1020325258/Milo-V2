@@ -41,14 +41,14 @@ def sanitize_module_name(name: str) -> str:
         "Contract-Context-Handler" → "ContractContextHandler"
     """
     name = name.strip()
-    # 空格、横杠、下划线 → 统一拆分
-    parts = re.split(r'[\s_\-]+', name)
-    # 移除空 part，每个 part 首字母大写
-    return ''.join(p.capitalize() for p in parts if p)
+    # 按非字母数字中文字符拆分（保留中文连续块）
+    parts = re.split(r'[^a-zA-Z0-9一-鿿]+', name)
+    # 移除空 part，每个 part 首字母大写、其余保留原样
+    return ''.join(p[0].upper() + p[1:] if p else '' for p in parts)
 
 
 def sanitize_module_tree_keys(tree: dict) -> dict:
-    """递归清洗模块树中所有 dict key（模块名）为 snake_case。"""
+    """递归清洗模块树中所有 dict key（模块名）为 PascalCase。"""
     sanitized = {}
     for key, value in tree.items():
         new_key = sanitize_module_name(key)
@@ -142,7 +142,7 @@ Firstly reason about the components and then group them and return the result in
             "<component_name_2>"
         ]
     }},
-    "module_name_2": {{
+    "ContractPdfGeneration": {{
         "path": "<path_to_the_module_2>",
         "components": [
             "<component_name_1>",
@@ -180,7 +180,7 @@ Firstly reason based on given context and then group them and return the result 
             "<component_name_2>"
         ]
     }},
-    "module_name_2": {{
+    "ContractPdfGeneration": {{
         "path": "<path_to_the_module_2>",
         "components": [
             "<component_name_1>",

@@ -11,48 +11,51 @@ from core.cluster_modules import sanitize_module_name, sanitize_module_tree_keys
 class TestSanitizeModuleName:
     """sanitize_module_name 的各种输入场景"""
 
-    def test_spaces_to_underscores(self):
-        assert sanitize_module_name("Contract PDF Generation") == "contract_pdf_generation"
+    def test_spaces_to_pascal(self):
+        assert sanitize_module_name("Contract PDF Generation") == "ContractPDFGeneration"
 
-    def test_hyphens_to_underscores(self):
-        assert sanitize_module_name("Contract-Context-Handler") == "contract_context_handler"
+    def test_hyphens_to_pascal(self):
+        assert sanitize_module_name("Contract-Context-Handler") == "ContractContextHandler"
+
+    def test_underscores_to_pascal(self):
+        assert sanitize_module_name("contract_context_handler") == "ContractContextHandler"
 
     def test_mixed_separators(self):
-        assert sanitize_module_name("Personal Relation & Signing") == "personal_relation_signing"
+        assert sanitize_module_name("Personal Relation & Signing") == "PersonalRelationSigning"
 
-    def test_already_snake_case(self):
-        assert sanitize_module_name("contract_context_handler") == "contract_context_handler"
+    def test_already_pascal_kept(self):
+        assert sanitize_module_name("ContractContextHandler") == "ContractContextHandler"
 
     def test_leading_trailing_spaces(self):
-        assert sanitize_module_name("  Contract PDF  ") == "contract_pdf"
+        assert sanitize_module_name("  Contract PDF  ") == "ContractPDF"
 
     def test_special_characters_removed(self):
-        assert sanitize_module_name("Contract (v2.0) & Review") == "contract_v20_review"
+        assert sanitize_module_name("Contract (v2.0) & Review") == "ContractV20Review"
 
     def test_chinese_characters_preserved(self):
         assert sanitize_module_name("合同模块管理") == "合同模块管理"
 
     def test_chinese_with_english(self):
-        assert sanitize_module_name("合同 PDF 生成") == "合同_pdf_生成"
+        assert sanitize_module_name("合同 PDF 生成") == "合同PDF生成"
 
     def test_consecutive_separators_merged(self):
-        assert sanitize_module_name("Contract   PDF") == "contract_pdf"
-        assert sanitize_module_name("Contract---PDF") == "contract_pdf"
+        assert sanitize_module_name("Contract   PDF") == "ContractPDF"
+        assert sanitize_module_name("Contract---PDF") == "ContractPDF"
 
     def test_only_special_characters(self):
         assert sanitize_module_name("& / ()") == ""
 
     def test_single_word(self):
-        assert sanitize_module_name("Contract") == "contract"
+        assert sanitize_module_name("Contract") == "Contract"
 
     def test_leading_trailing_underscores_stripped(self):
-        assert sanitize_module_name("_Contract_") == "contract"
+        assert sanitize_module_name("_Contract_") == "Contract"
 
     def test_dot_removed(self):
-        assert sanitize_module_name("v2.0.Module") == "v20module"
+        assert sanitize_module_name("v2.0.Module") == "V20Module"
 
     def test_slash_removed(self):
-        assert sanitize_module_name("combo/material/pdf") == "combomaterialpdf"
+        assert sanitize_module_name("combo/material/pdf") == "ComboMaterialPdf"
 
 
 # ─────────────────────────────────────────────────────────────
@@ -68,7 +71,7 @@ class TestSanitizeModuleTreeKeys:
             "Personal Relation & Signing": {"components": ["c::d"]},
         }
         result = sanitize_module_tree_keys(tree)
-        assert set(result.keys()) == {"contract_pdf_generation", "personal_relation_signing"}
+        assert set(result.keys()) == {"ContractPDFGeneration", "PersonalRelationSigning"}
 
     def test_nested_children(self):
         tree = {
@@ -81,9 +84,9 @@ class TestSanitizeModuleTreeKeys:
             },
         }
         result = sanitize_module_tree_keys(tree)
-        assert "contract_context_management" in result
-        children = result["contract_context_management"]["children"]
-        assert set(children.keys()) == {"contract_context_handler", "contract_detail_context_handler"}
+        assert "ContractContextManagement" in result
+        children = result["ContractContextManagement"]["children"]
+        assert set(children.keys()) == {"ContractContextHandler", "ContractDetailContextHandler"}
 
     def test_empty_tree(self):
         assert sanitize_module_tree_keys({}) == {}
@@ -91,8 +94,8 @@ class TestSanitizeModuleTreeKeys:
     def test_no_children_key(self):
         tree = {"Contract Service": {"components": ["a::b"]}}
         result = sanitize_module_tree_keys(tree)
-        assert "contract_service" in result
-        assert result["contract_service"]["components"] == ["a::b"]
+        assert "ContractService" in result
+        assert result["ContractService"]["components"] == ["a::b"]
 
     def test_empty_children(self):
         tree = {
@@ -102,7 +105,7 @@ class TestSanitizeModuleTreeKeys:
             },
         }
         result = sanitize_module_tree_keys(tree)
-        assert result["contract_service"]["children"] == {}
+        assert result["ContractService"]["children"] == {}
 
 
 # ─────────────────────────────────────────────────────────────
@@ -130,13 +133,13 @@ class TestParseClusterResponse:
 </GROUPED_COMPONENTS>"""
         result = parse_cluster_response(response)
         assert result is not None
-        assert set(result.keys()) == {"contract_pdf_generation", "personal_relation_signing"}
+        assert set(result.keys()) == {"ContractPDFGeneration", "PersonalRelationSigning"}
 
-    def test_parse_with_snake_case_keys(self):
+    def test_parse_with_pascal_keys(self):
         from core.cluster_modules import parse_cluster_response
         response = """<GROUPED_COMPONENTS>
 {
-    "contract_context_handler": {
+    "ContractContextHandler": {
         "path": "context",
         "components": ["a::b"]
     }
@@ -144,7 +147,7 @@ class TestParseClusterResponse:
 </GROUPED_COMPONENTS>"""
         result = parse_cluster_response(response)
         assert result is not None
-        assert "contract_context_handler" in result
+        assert "ContractContextHandler" in result
 
     def test_parse_missing_tags(self):
         from core.cluster_modules import parse_cluster_response

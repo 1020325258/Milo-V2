@@ -178,8 +178,7 @@ LEAF_SYSTEM_PROMPT = """<ROLE>
   组件 ID 格式：<file_path>::<ComponentName>，例如：
   - "ContractContextAspect.java::ContractContextAspect"
   - "personal/bind/ContractSigningSource.java::ContractSigningSource"
-  注意：组件 ID 是绝对路径（相对于仓库根目录），不要添加模块名作为前缀。
-  例如，模块 tree 中 contract_context 下的 ContractContextAspect.java，其 ID 是 "ContractContextAspect.java::ContractContextAspect"，不是 "contract_context/ContractContextAspect.java::ContractContextAspect"。
+  注意：组件 ID 中的 file_path 是相对于仓库根目录的路径，不要添加模块名作为前缀。
 </AVAILABLE_TOOLS>
 
 <WORKFLOW>
@@ -234,6 +233,9 @@ PARENT_USER_PROMPT = """请为 {module_name} 模块生成简要概览文档。
 - 模块的架构（用 Mermaid 图表展示）
 - 子模块文档的引用
 
+引用格式：[子模块名](子模块文件名.md)，例如 [contract_detail](contract_detail.md)。
+注意：所有文档在同一目录下，引用路径直接用文件名，不要加 docs/ 等目录前缀。
+
 以下是模块结构和子模块文档：
 <REPO_STRUCTURE>
 {repo_structure}
@@ -252,6 +254,9 @@ REPO_OVERVIEW_PROMPT = """请为 {repo_name} 仓库生成简要概览文档。
 - 仓库的目的
 - 端到端架构（用 Mermaid 图表展示）
 - 核心模块文档的引用
+
+引用格式：[模块名](模块文件名.md)，例如 [ContractContext](ContractContext.md)。
+注意：所有文档在同一目录下，引用路径直接用文件名，不要加 docs/ 等目录前缀。
 
 以下是仓库结构和核心模块文档：
 <REPO_STRUCTURE>
