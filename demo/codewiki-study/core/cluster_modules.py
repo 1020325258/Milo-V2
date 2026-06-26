@@ -32,22 +32,19 @@ logger = logging.getLogger(__name__)
 # ─────────────────────────────────────────────────────────────
 
 def sanitize_module_name(name: str) -> str:
-    """将模块名转为文件名安全的 snake_case。
+    """将模块名转为 PascalCase。
 
     例：
-        "Contract PDF Generation" → "contract_pdf_generation"
-        "Personal Relation & Signing" → "personal_relation_signing"
-        "Contract-Context-Handler" → "contract_context_handler"
+        "Contract PDF Generation" → "ContractPdfGeneration"
+        "Personal Relation & Signing" → "PersonalRelationSigning"
+        "contract_context_handler" → "ContractContextHandler"
+        "Contract-Context-Handler" → "ContractContextHandler"
     """
     name = name.strip()
-    # 空格、横杠 → 下划线
-    name = re.sub(r'[\s-]+', '_', name)
-    # 移除特殊字符（保留中英文、数字、下划线）
-    name = re.sub(r'[^a-zA-Z0-9一-鿿_]', '', name)
-    # 合并连续下划线
-    name = re.sub(r'_+', '_', name)
-    # 去首尾下划线，小写化
-    return name.strip('_').lower()
+    # 空格、横杠、下划线 → 统一拆分
+    parts = re.split(r'[\s_\-]+', name)
+    # 移除空 part，每个 part 首字母大写
+    return ''.join(p.capitalize() for p in parts if p)
 
 
 def sanitize_module_tree_keys(tree: dict) -> dict:
@@ -133,12 +130,12 @@ Please group the components into groups such that each group is a set of compone
 
 Each component ID has the form `<file_path>::<name>`. Return the IDs EXACTLY as given — do NOT strip the `<file_path>::` prefix or shorten the ID to the bare name.
 
-IMPORTANT: Module names MUST use snake_case format (lowercase English letters, words separated by underscores). No spaces, no hyphens, no special characters. Examples: contract_context_handler, contract_pdf_generation, personal_relation_signing.
+IMPORTANT: Module names MUST use PascalCase format (each word capitalized, no spaces, no underscores, no hyphens). Examples: ContractContextHandler, ContractPdfGeneration, PersonalRelationSigning.
 
 Firstly reason about the components and then group them and return the result in the following format:
 <GROUPED_COMPONENTS>
 {{
-    "module_name_1": {{
+    "ContractContextHandler": {{
         "path": "<path_to_the_module_1>",
         "components": [
             "<component_name_1>",
@@ -171,12 +168,12 @@ Please group the components into groups such that each group is a set of compone
 
 Each component ID has the form `<file_path>::<name>`. Return the IDs EXACTLY as given — do NOT strip the `<file_path>::` prefix or shorten the ID to the bare name.
 
-IMPORTANT: Module names MUST use snake_case format (lowercase English letters, words separated by underscores). No spaces, no hyphens, no special characters. Examples: contract_context_handler, contract_pdf_generation, personal_relation_signing.
+IMPORTANT: Module names MUST use PascalCase format (each word capitalized, no spaces, no underscores, no hyphens). Examples: ContractContextHandler, ContractPdfGeneration, PersonalRelationSigning.
 
 Firstly reason based on given context and then group them and return the result in the following format:
 <GROUPED_COMPONENTS>
 {{
-    "module_name_1": {{
+    "ContractContextHandler": {{
         "path": "<path_to_the_module_1>",
         "components": [
             "<component_name_1>",
