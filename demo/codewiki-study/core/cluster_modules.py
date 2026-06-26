@@ -14,6 +14,7 @@ LLM 调用：
 """
 
 import os
+import re
 import json
 import logging
 from typing import Dict, List, Any, Optional, Callable
@@ -24,6 +25,45 @@ import tiktoken
 from core.models import Node
 
 logger = logging.getLogger(__name__)
+
+
+# ─────────────────────────────────────────────────────────────
+# 模块名清洗
+# ─────────────────────────────────────────────────────────────
+
+def sanitize_module_name(name: str) -> str:
+    """将模块名转为文件名安全的 snake_case。
+
+    例：
+        "Contract PDF Generation" → "contract_pdf_generation"
+        "Personal Relation & Signing" → "personal_relation_signing"
+        "Contract-Context-Handler" → "contract_context_handler"
+    """
+    name = name.strip()
+    # 空格、横杠 → 下划线
+    name = re.sub(r'[\s-]+', '_', name)
+    # 移除特殊字符（保留中英文、数字、下划线）
+    name = re.sub(r'[^a-zA-Z0-9一-鿿_]', '', name)
+    # 合并连续下划线
+    name = re.sub(r'_+', '_', name)
+    # 去首尾下划线，小写化
+    return name.strip('_').lower()
+
+
+def sanitize_module_tree_keys(tree: dict) -> dict:
+    """递归清洗模块树中所有 dict key（模块名）为 snake_case。"""
+    sanitized = {}
+    for key, value in tree.items():
+        new_key = sanitize_module_name(key)
+        if isinstance(value, dict):
+            # 递归清洗 children
+            if "children" in value and isinstance(value["children"], dict):
+                value["children"] = sanitize_module_tree_keys(value["children"])
+            sanitized[new_key] = value
+        else:
+            sanitized[new_key] = value
+    return sanitized
+
 
 # ─────────────────────────────────────────────────────────────
 # Token 计数
@@ -93,6 +133,8 @@ Please group the components into groups such that each group is a set of compone
 
 Each component ID has the form `<file_path>::<name>`. Return the IDs EXACTLY as given — do NOT strip the `<file_path>::` prefix or shorten the ID to the bare name.
 
+IMPORTANT: Module names MUST use snake_case format (lowercase English letters, words separated by underscores). No spaces, no hyphens, no special characters. Examples: contract_context_handler, contract_pdf_generation, personal_relation_signing.
+
 Firstly reason about the components and then group them and return the result in the following format:
 <GROUPED_COMPONENTS>
 {{
@@ -103,7 +145,7 @@ Firstly reason about the components and then group them and return the result in
             "<component_name_2>"
         ]
     }},
-    "module_name_2": {{
+    "module-name-2": {{
         "path": "<path_to_the_module_2>",
         "components": [
             "<component_name_1>",
@@ -129,6 +171,8 @@ Please group the components into groups such that each group is a set of compone
 
 Each component ID has the form `<file_path>::<name>`. Return the IDs EXACTLY as given — do NOT strip the `<file_path>::` prefix or shorten the ID to the bare name.
 
+IMPORTANT: Module names MUST use snake_case format (lowercase English letters, words separated by underscores). No spaces, no hyphens, no special characters. Examples: contract_context_handler, contract_pdf_generation, personal_relation_signing.
+
 Firstly reason based on given context and then group them and return the result in the following format:
 <GROUPED_COMPONENTS>
 {{
@@ -139,7 +183,7 @@ Firstly reason based on given context and then group them and return the result 
             "<component_name_2>"
         ]
     }},
-    "module_name_2": {{
+    "module-name-2": {{
         "path": "<path_to_the_module_2>",
         "components": [
             "<component_name_1>",
@@ -471,7 +515,7 @@ def parse_cluster_response(response: str) -> Optional[Dict[str, Any]]:
         logger.warning(f"Expected dict, got {type(module_tree)}")
         return None
 
-    return module_tree
+    return sanitize_module_tree_keys(module_tree)
 
 
 # ─────────────────────────────────────────────────────────────
@@ -590,6 +634,8 @@ def cluster_modules(
         if not isinstance(module_tree, dict):
             logger.error(f"Invalid module tree format - expected dict, got {type(module_tree)}")
             return {}
+
+        module_tree = sanitize_module_tree_keys(module_tree)
 
     except Exception as e:
         logger.warning(
