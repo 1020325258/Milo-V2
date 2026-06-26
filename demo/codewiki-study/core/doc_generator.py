@@ -174,7 +174,12 @@ LEAF_SYSTEM_PROMPT = """<ROLE>
 </MERMAID_SYNTAX_RULES>
 
 <AVAILABLE_TOOLS>
-- read_code_components: 读取指定组件的源码。参数为组件 ID 列表，如 ["auth/login.py::LoginService"]
+- read_code_components: 读取指定组件的源码。参数为组件 ID 列表。
+  组件 ID 格式：<file_path>::<ComponentName>，例如：
+  - "ContractContextAspect.java::ContractContextAspect"
+  - "personal/bind/ContractSigningSource.java::ContractSigningSource"
+  注意：组件 ID 是绝对路径（相对于仓库根目录），不要添加模块名作为前缀。
+  例如，模块 tree 中 contract_context 下的 ContractContextAspect.java，其 ID 是 "ContractContextAspect.java::ContractContextAspect"，不是 "contract_context/ContractContextAspect.java::ContractContextAspect"。
 </AVAILABLE_TOOLS>
 
 <WORKFLOW>

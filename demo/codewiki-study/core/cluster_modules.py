@@ -145,7 +145,7 @@ Firstly reason about the components and then group them and return the result in
             "<component_name_2>"
         ]
     }},
-    "module-name-2": {{
+    "module_name_2": {{
         "path": "<path_to_the_module_2>",
         "components": [
             "<component_name_1>",
@@ -183,7 +183,7 @@ Firstly reason based on given context and then group them and return the result 
             "<component_name_2>"
         ]
     }},
-    "module-name-2": {{
+    "module_name_2": {{
         "path": "<path_to_the_module_2>",
         "components": [
             "<component_name_1>",
@@ -310,7 +310,7 @@ async def _stream_sdk_messages(prompt, options):
 
     所有 Claude Code SDK 调用都通过此函数，统一日志格式。
     """
-    from claude_agent_sdk import query, AssistantMessage, ResultMessage
+    from claude_agent_sdk import query, AssistantMessage, UserMessage, ResultMessage
 
     # 打印 prompt（前100行 + 后100行，中间省略）
     logger.info(f"      📤 Prompt ({len(prompt)} chars, {len(prompt.splitlines())} lines):")
@@ -348,6 +348,38 @@ async def _stream_sdk_messages(prompt, options):
                 else:
                     block_type = type(block).__name__
                     logger.info(f"         ❓ {block_type}")
+
+        elif isinstance(message, UserMessage):
+            # 工具返回结果
+            tool_result = message.tool_use_result
+            if tool_result and isinstance(tool_result, dict):
+                is_error = tool_result.get("is_error", False)
+                icon = "❌" if is_error else "📥"
+                content = tool_result.get("content", "")
+                if isinstance(content, str):
+                    preview = content[:500] + "..." if len(content) > 500 else content
+                elif isinstance(content, list):
+                    # 多个 ToolResultBlock
+                    parts = []
+                    for item in content:
+                        if isinstance(item, dict):
+                            c = item.get("content", "")
+                            if isinstance(c, str):
+                                parts.append(c[:200])
+                            else:
+                                parts.append(str(c)[:200])
+                        else:
+                            parts.append(str(item)[:200])
+                    preview = " | ".join(parts)
+                    if len(preview) > 500:
+                        preview = preview[:500] + "..."
+                else:
+                    preview = str(content)[:500]
+                logger.info(f"      {icon} tool_result: {preview}")
+            elif tool_result:
+                # tool_result 是 str 或其他非 dict 类型（SDK 异常）
+                preview = str(tool_result)[:500]
+                logger.info(f"      📥 tool_result (raw): {preview}")
 
         elif isinstance(message, ResultMessage):
             logger.info(f"      ✅ ResultMessage (stop_reason={message.stop_reason})")

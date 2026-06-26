@@ -1,59 +1,22 @@
 {
-  "Contract Context Management": {
-    "path": "contract",
+  "contract_context": {
+    "path": "contract/aspect",
     "components": [
       "ContractContextAspect.java::ContractContextAspect",
-      "ContractContextHandler.java::ContractContextHandler",
+      "ContractContextHandler.java::ContractContextHandler"
+    ],
+    "children": {}
+  },
+  "contract_detail": {
+    "path": "contract/aspect",
+    "components": [
       "ContractDetailAspect.java::ContractDetailAspect",
       "ContractDetailContextHandler.java::ContractDetailContextHandler",
       "ContractDetailService.java::ContractDetailService"
     ],
-    "children": {
-      "Contract Context Handler": {
-        "components": [
-          "ContractContextAspect.java::ContractContextAspect",
-          "ContractContextHandler.java::ContractContextHandler"
-        ],
-        "children": {}
-      },
-      "Contract Detail Context Handler": {
-        "components": [
-          "ContractDetailAspect.java::ContractDetailAspect",
-          "ContractDetailContextHandler.java::ContractDetailContextHandler",
-          "ContractDetailService.java::ContractDetailService"
-        ],
-        "children": {}
-      }
-    }
-  },
-  "Contract Core Services": {
-    "path": "contract",
-    "components": [
-      "ContractButtonConfigService.java::ContractButtonConfigService",
-      "ContractCompanySignService.java::ContractCompanySignService",
-      "ContractEscrowService.java::ContractEscrowService",
-      "ContractFieldCheckService.java::ContractFieldCheckService",
-      "ContractHomeOrderNoChangeService.java::ContractHomeOrderNoChangeService",
-      "ContractSaveDraftService.java::ContractSaveDraftService",
-      "ContractSelfSealService.java::ContractSelfSealService",
-      "WorkerTypeCheckService.java::WorkerTypeCheckService"
-    ],
     "children": {}
   },
-  "Contract PDF Generation": {
-    "path": "contract",
-    "components": [
-      "ContractScriptCreateService.java::ContractScriptCreateService",
-      "TerminalContractPdfBuildService.java::TerminalContractPdfBuildService",
-      "combo/material/pdf/MaterialPdfDiffService.java::MaterialPdfDiffService",
-      "combo/material/pdf/MaterialPdfUtil.java::MaterialPdfUtil",
-      "createcontractpdfbyself/DrawingContractPdfBySelfStrategy.java::DrawingContractPdfBySelfStrategy",
-      "createcontractpdfbyself/GroupFormalContractPdfBySelfStrategy.java::GroupFormalContractPdfBySelfStrategy",
-      "createcontractpdfbyself/ReformAllFormalContractPdfBySelfStrategy.java::ReformAllFormalContractPdfBySelfStrategy"
-    ],
-    "children": {}
-  },
-  "Contract Change Strategy": {
+  "change_contract_strategy": {
     "path": "contract/changecontractstrategey",
     "components": [
       "changecontractstrategey/ChangeContractStrategyFactory.java::ChangeContractStrategyFactory",
@@ -62,15 +25,53 @@
     ],
     "children": {}
   },
-  "Personal Relation & Signing": {
+  "contract_pdf_by_self": {
+    "path": "contract/createcontractpdfbyself",
+    "components": [
+      "createcontractpdfbyself/DrawingContractPdfBySelfStrategy.java::DrawingContractPdfBySelfStrategy",
+      "createcontractpdfbyself/GroupFormalContractPdfBySelfStrategy.java::GroupFormalContractPdfBySelfStrategy",
+      "createcontractpdfbyself/ReformAllFormalContractPdfBySelfStrategy.java::ReformAllFormalContractPdfBySelfStrategy"
+    ],
+    "children": {}
+  },
+  "material_pdf": {
+    "path": "contract/combo/material/pdf",
+    "components": [
+      "combo/material/pdf/MaterialPdfDiffService.java::MaterialPdfDiffService",
+      "combo/material/pdf/MaterialPdfUtil.java::MaterialPdfUtil"
+    ],
+    "children": {}
+  },
+  "personal_relation": {
     "path": "contract/personal",
     "components": [
       "personal/PersonalRelationHandler.java::PersonalRelationHandler",
-      "personal/PersonalRelationHandlerImpl.java::PersonalRelationHandlerImpl",
+      "personal/PersonalRelationHandlerImpl.java::PersonalRelationHandlerImpl"
+    ],
+    "children": {}
+  },
+  "contract_signing_source": {
+    "path": "contract/personal/bind",
+    "components": [
       "personal/bind/ContractSigningSource.java::ContractSigningSource",
       "personal/bind/strategy/BillSigningSourceStrategy.java::BillSigningSourceStrategy",
       "personal/bind/strategy/ChangeOrderSigningSourceStrategy.java::ChangeOrderSigningSourceStrategy",
       "personal/bind/strategy/SubOrderSigningSourceStrategy.java::SubOrderSigningSourceStrategy"
+    ],
+    "children": {}
+  },
+  "contract_validation": {
+    "path": "contract",
+    "components": [
+      "ContractFieldCheckService.java::ContractFieldCheckService",
+      "WorkerTypeCheckService.java::WorkerTypeCheckService"
+    ],
+    "children": {}
+  },
+  "terminal_contract_pdf": {
+    "path": "contract",
+    "components": [
+      "TerminalContractPdfBuildService.java::TerminalContractPdfBuildService"
     ],
     "children": {}
   }
