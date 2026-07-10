@@ -240,6 +240,9 @@ class TreeSitterJavaAnalyzer:
             javadoc = self._extract_javadoc(node, lines)
             docstring = ai_doc if ai_doc else javadoc
 
+            # 提取类级别注解（@Service, @Repository, @Data 等）
+            annotations = self._extract_class_annotations(node, lines) if node_type != "method" else None
+
             node_obj = Node(
                 id=component_id,
                 name=node_name,
@@ -259,6 +262,7 @@ class TreeSitterJavaAnalyzer:
                 component_id=component_id,
                 language="java",
                 qualified_name=qualified_name,
+                annotations=annotations,
             )
             self.nodes.append(node_obj)
 
@@ -272,6 +276,38 @@ class TreeSitterJavaAnalyzer:
         # 递归处理子节点
         for child in node.children:
             self._extract_nodes(child, top_level_nodes, lines)
+
+    def _extract_class_annotations(self, node, lines) -> List[str]:
+        """
+        提取类级别注解（@Service, @Repository, @Data 等）。
+
+        从类定义向上查找 annotation 节点，直到遇到非注解/modifier 行。
+        """
+        annotations = []
+        start_line = node.start_point[0]
+
+        # 向上扫描，收集类定义之前的注解
+        for i in range(start_line - 1, max(-1, start_line - 20), -1):
+            line = lines[i].strip()
+            if not line:
+                continue
+            if line.startswith('@'):
+                # 提取注解名（去掉参数部分）
+                ann = line.split('(')[0].strip()
+                if ann.startswith('@'):
+                    annotations.append(ann)
+            elif line.startswith(('public', 'class', 'interface', 'enum',
+                                  'abstract', 'final', 'sealed', 'non-sealed',
+                                  'private', 'protected', 'static')):
+                # 到修饰符或类定义了，停止
+                break
+            elif line.startswith('//') or line.startswith('/*') or line.startswith('*'):
+                # 注释行，跳过
+                continue
+            else:
+                break
+
+        return list(reversed(annotations))  # 恢复源码中的顺序
 
     def _extract_ai_doc(self, node, lines) -> Optional[str]:
         """

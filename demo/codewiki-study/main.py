@@ -89,6 +89,19 @@ def step1_build_dependency_graph(repo_path: str):
     leaf_nodes = get_leaf_nodes(graph, components)
     logger.info(f"   叶子节点: {len(leaf_nodes)}")
 
+    # 保存叶子节点（按类型分组，便于观测）
+    from collections import Counter
+    type_counts = Counter(components[n].component_type for n in leaf_nodes if n in components)
+    logger.info(f"   叶子节点类型分布: {dict(type_counts)}")
+    leaf_path = os.path.join(OUTPUT_DIR, "leaf_nodes.json")
+    with open(leaf_path, "w", encoding="utf-8") as f:
+        json.dump({
+            "count": len(leaf_nodes),
+            "type_distribution": dict(type_counts),
+            "nodes": sorted(leaf_nodes),
+        }, f, ensure_ascii=False, indent=2)
+    logger.info(f"   ✓ Saved: {leaf_path}")
+
     # 保存依赖图（Node → dict，set → list）
     dep_graph_path = os.path.join(OUTPUT_DIR, "dependency_graph.json")
     dep_graph = {}
@@ -154,10 +167,13 @@ def step3_generate_docs(repo_path: str, module_tree: dict, components: Dict[str,
     _, doc_completer, overview_completer = create_backends(LLM_BACKEND, OUTPUT_DIR, SCRIPT_DIR, components)
 
     docs_dir = os.path.join(OUTPUT_DIR, "docs")
-    repo_name = os.path.basename(repo_path)
+    # 使用父目录名 + 当前目录名作为仓库名，避免 LLM 从工作目录推断错误的项目名
+    # 例如 /Users/zqy/work/AI-Project/aigc-agent/agent → "aigc-agent"
+    repo_name = os.path.basename(os.path.dirname(repo_path)) or os.path.basename(repo_path)
 
     generate_documentation(
         repo_name=repo_name,
+        repo_path=repo_path,
         module_tree=module_tree,
         components=components,
         docs_dir=docs_dir,
@@ -305,7 +321,9 @@ def _save_json(data, path: str):
 #  配置
 # ═══════════════════════════════════════════════════════════════
 
-DEFAULT_REPO_PATH = "/Users/zqy/work/project/nrs-sales-project/utopia-nrs-sales-project-service/src/main/java/com/ke/utopia/nrs/salesproject/service/contract/v2"
+# DEFAULT_REPO_PATH = "/Users/zqy/work/project/nrs-sales-project/utopia-nrs-sales-project-service/src/main/java/com/ke/utopia/nrs/salesproject/service/contract/v2"
+# DEFAULT_REPO_PATH = "/Users/zqy/work/project/nrs-sales-project/"
+DEFAULT_REPO_PATH = "/Users/zqy/work/AI-Project/aigc-agent/agent"
 LLM_BACKEND = "claude_code"  # "openai" 或 "claude_code"
 
 if __name__ == "__main__":

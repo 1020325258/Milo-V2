@@ -253,4 +253,66 @@ def get_leaf_nodes(graph: Dict[str, Set[str]], components: Dict[str, Node]) -> L
             if node not in depended_on
         ]
 
+    # ── 第三步：按注解 + 类名模式过滤数据类噪音 ──
+    before_filter = len(concise_nodes)
+    concise_nodes = [
+        node for node in concise_nodes
+        if not _is_data_class_noise(node, components)
+    ]
+    filtered_count = before_filter - len(concise_nodes)
+    if filtered_count > 0:
+        logger.info(
+            "Filtered %d data-class noise nodes (DTO/Entity/Config), %d leaf nodes remain",
+            filtered_count, len(concise_nodes),
+        )
+
     return sorted(concise_nodes)
+
+
+# ── 数据类噪音过滤 ──
+
+# 注解黑名单：这些注解标记的类是数据类/配置类，不适合作为聚类入口
+_DATA_CLASS_ANNOTATIONS = {
+    '@Entity', '@Table', '@MappedSuperclass',         # JPA 实体
+    '@Data', '@Getter', '@Setter', '@Builder',         # Lombok 数据类
+    '@Value', '@AllArgsConstructor', '@NoArgsConstructor',
+    '@Configuration', '@ConfigurationProperties',       # 配置类
+}
+
+# 类名后缀黑名单（兜底，处理无注解的类）
+_DATA_CLASS_SUFFIXES = (
+    'DTO', 'Dto', 'Vo', 'VO', 'Req', 'Request', 'Response', 'Res',
+    'Param', 'Entity', 'Bo', 'BO',
+)
+
+# 包路径关键词黑名单
+_DATA_CLASS_PATH_KEYWORDS = ['/dto/', '/model/', '/entity/', '/bo/', '/vo/']
+
+
+def _is_data_class_noise(node_id: str, components: Dict[str, Node]) -> bool:
+    """判断叶子节点是否是数据类噪音（DTO/Entity/Config）"""
+    comp = components.get(node_id)
+    if not comp:
+        return False
+
+    # 1. 枚举类型（component_type 已经过滤了，但 double check）
+    if comp.component_type == 'enum':
+        return True
+
+    # 2. 注解黑名单
+    if comp.annotations:
+        if any(ann in _DATA_CLASS_ANNOTATIONS for ann in comp.annotations):
+            return True
+
+    # 3. 类名后缀兜底
+    filename = node_id.split('/')[-1].split('::')[0] if '::' in node_id else node_id
+    name_part = node_id.split('::')[-1] if '::' in node_id else node_id
+    if any(filename.endswith(s + '.java') or name_part.endswith(s) for s in _DATA_CLASS_SUFFIXES):
+        return True
+
+    # 4. 包路径兜底
+    path = node_id.split('::')[0] if '::' in node_id else node_id
+    if any(kw in path.lower() for kw in _DATA_CLASS_PATH_KEYWORDS):
+        return True
+
+    return False

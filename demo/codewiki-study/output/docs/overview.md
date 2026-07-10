@@ -1,174 +1,236 @@
-# V2 合同子系统概览
+# AIGC Agent 仓库概览
 
-## 1. 仓库目的
+## 仓库目的
 
-V2 合同子系统是家装销售项目中的**合同全生命周期管理模块**，覆盖从合同创建、签约、变更到解约的完整业务闭环。系统针对家装行业的多维度业务场景（整装、团装、翻新全案、个性化等），提供：
+AIGC Agent 是一个基于 Python 构建的 **AI Agent 对话与业务自动化平台**，采用 FastAPI + LangGraph + AgentScope 技术栈，提供以下核心能力：
 
-- **数据预加载与上下文管理**：通过 AOP 切面 + ThreadLocal 机制，在合同操作前自动并行加载多源异构数据
-- **合同详情查询与组装**：支持首屏优化的分屏加载策略，组装十余个子模块的完整合同详情
-- **变更合同策略路由**：基于策略模式，按合同类型（套餐变更 / 设计变更）分发不同的校验、提交、差异计算逻辑
-- **多业务类型 PDF 生成**：为图纸合同、团装合同、翻新全案合同、材料清单、解约协议等生成对应的 PDF 文档
-- **个性化合同签约来源管理**：抽象报价单、变更单、子单三种签约数据源，统一状态校验与商品信息构建
-- **字段校验**：通过反射调度 + 配置驱动，对品类、金额、身份证、企业信息等进行规则校验
+- **多 Agent 对话服务**：支持简单流式 Agent（AigcAgent）和 LangGraph React 模式 Agent（ReactAgent），通过 SSE 实现实时流式响应
+- **客户故事自动分析**：从企微群聊消息中自动挖掘、评级、生成客户故事并产出品牌海报物料（StoryAgent）
+- **标准化 Agent 通信**：基于 Google A2A 协议实现 Agent 间的服务发现与任务编排
+- **全链路基础设施**：提供统一的配置管理、消息持久化、缓存、Kafka 消费、日志追踪等企业级基础能力
 
----
-
-## 2. 端到端架构
+## 端到端架构
 
 ```mermaid
-graph TD
-    subgraph Entry[请求入口层]
-        CTRL[ContractController<br/>合同保存/提交/查询/变更/解约]
+graph TB
+    subgraph Client[客户端]
+        FE[前端应用]
+        ExtCaller[外部服务调用方]
+        A2AClient[A2A Client]
     end
 
-    subgraph ContextLayer[数据准备层 - contract_context]
-        ASPECT[ContractContextAspect<br/>AOP 切面]
-        DETAIL_ASPECT[ContractDetailAspect<br/>详情切面]
-        CTX_HANDLER[ContractContextHandler<br/>ThreadLocal 上下文]
-        DETAIL_HANDLER[ContractDetailContextHandler<br/>详情上下文]
-        PARALLEL[ParallelTaskService<br/>9路并行数据加载]
+    subgraph APILayer[API 层]
+        AuthMW[[ApiMiddleware<br/>认证 · 追踪 · 日志]]
+        Routes[FastAPI Routes]
+        Schemas[[ApiSchema<br/>请求/响应模型]]
     end
 
-    subgraph StrategyLayer[变更策略层 - change_contract_strategy]
-        FACTORY[ChangeContractStrategyFactory]
-        NORMAL[NormalChangeContractStrategy<br/>设计变更]
-        ZQ[ZQChangeContractStrategy<br/>套餐变更]
+    subgraph AppLayer[应用层]
+        Registry[AgentRegistry<br/>Agent 注册中心]
+        DemoAgent[[DemoAgent<br/>AigcAgent · ReactAgent]]
+        StoryAgent[[StoryAgent<br/>故事分析流水线]]
+        BaseAgent[[ApplicationBase<br/>BaseAgent 基类]]
     end
 
-    subgraph DetailLayer[详情组装层 - contract_detail]
-        DETAIL_SVC[ContractDetailService<br/>12+ 子模块组装]
+    subgraph CoreLayer[核心层]
+        LLM[[LLMManager<br/>模型管理]]
+        ChatMsg[[ChatMessage<br/>消息协议 · Card · 流式事件]]
+        A2A[[A2A<br/>Agent-to-Agent 协议]]
+        Config[[ConfigLoader<br/>全局配置中心]]
+        Log[[LogConfig<br/>日志系统]]
+        S3[[S3Storage<br/>文件上传]]
+        Tool[Tools<br/>WeatherTool · MCP]
     end
 
-    subgraph ValidationLayer[校验层 - contract_validation]
-        FIELD_CHECK[ContractFieldCheckService<br/>反射调度 + 配置驱动]
-        WORKER_CHECK[WorkerTypeCheckService<br/>工种身份校验]
+    subgraph RuntimeLayer[运行时层]
+        MsgRuntime[[MessageRuntime<br/>聚合 · 持久化 · 查询]]
     end
 
-    subgraph SignSourceLayer[签约来源层 - contract_signing_source]
-        SIGN_SRC[ContractSigningSource 接口]
-        BILL[BillSigningSourceStrategy<br/>报价单]
-        CHANGE_ORDER[ChangeOrderSigningSourceStrategy<br/>变更单]
-        SUB_ORDER[SubOrderSigningSourceStrategy<br/>子单]
+    subgraph InfraLayer[基础设施层]
+        MySQL[[MysqlPersistence<br/>ORM · CRUD]]
+        Redis[[RedisOperations<br/>缓存 · 计数器]]
+        Cache[[CacheInfrastructure<br/>Memory · Redis]]
+        Kafka[[KafkaInfrastructure<br/>消息消费]]
+        HTTP[[HttpClient<br/>异步 HTTP 客户端]]
+        RPC[[RpcClient<br/>Session · Toolbox]]
     end
 
-    subgraph PDFFormatLayer[PDF 生成层]
-        PDF_SELF[contract_pdf_by_self<br/>合同正文 PDF]
-        MAT_PDF[material_pdf<br/>材料清单 PDF]
-        TERM_PDF[terminal_contract_pdf<br/>解约协议 PDF]
-    end
+    FE -->|HTTP/SSE| AuthMW
+    ExtCaller -->|HTTP| AuthMW
+    A2AClient -->|JSON-RPC/SSE| A2A
 
-    subgraph RelationLayer[关联关系层 - personal_relation]
-        REL_HANDLER[PersonalRelationHandlerImpl<br/>报价单撤回 / 合同解绑]
-    end
+    AuthMW --> Routes
+    Routes --> Schemas
+    Routes --> Registry
+    Registry --> DemoAgent
+    Registry --> StoryAgent
 
-    subgraph External[外部依赖]
-        RPC[远程 RPC 服务<br/>报价/图纸/审核/款项/套餐/订单]
-        S3[S3 文件存储]
-        FREEFORM[FreeForm 协议平台]
-        APOLLO[Apollo 配置中心]
-        DB[(MySQL 数据库)]
-    end
+    DemoAgent --> BaseAgent
+    BaseAgent --> ChatMsg
+    BaseAgent --> LLM
+    BaseAgent --> MsgRuntime
 
-    CTRL --> ASPECT
-    CTRL --> DETAIL_ASPECT
-    ASPECT --> CTX_HANDLER
-    ASPECT --> PARALLEL
-    DETAIL_ASPECT --> DETAIL_HANDLER
-    DETAIL_ASPECT --> PARALLEL
+    StoryAgent --> LLM
+    StoryAgent --> HTTP
+    StoryAgent --> MySQL
 
-    PARALLEL --> RPC
+    A2A --> BaseAgent
+    MsgRuntime --> MySQL
+    MsgRuntime --> Redis
+    Cache --> Redis
+    RPC --> HTTP
+    RPC --> Cache
+    Kafka --> Config
+    HTTP --> Config
+    LLM --> Config
 
-    CTX_HANDLER --> FIELD_CHECK
-    CTX_HANDLER --> DETAIL_SVC
-    CTX_HANDLER --> PDF_SELF
-    CTX_HANDLER --> MAT_PDF
-    CTX_HANDLER --> TERM_PDF
-    DETAIL_HANDLER --> DETAIL_SVC
-
-    CTRL --> FACTORY
-    FACTORY --> NORMAL
-    FACTORY --> ZQ
-
-    CTRL --> SIGN_SRC
-    SIGN_SRC --> BILL
-    SIGN_SRC --> CHANGE_ORDER
-    SIGN_SRC --> SUB_ORDER
-
-    PDF_SELF --> S3
-    PDF_SELF --> FREEFORM
-    MAT_PDF --> S3
-    TERM_PDF --> RPC
-
-    CTRL --> REL_HANDLER
-    REL_HANDLER --> DB
-
-    DETAIL_SVC --> RPC
-    FIELD_CHECK --> RPC
-    FIELD_CHECK --> APOLLO
+    style AuthMW fill:#e8eaf6,stroke:#3f51b5
+    style Schemas fill:#e8eaf6,stroke:#3f51b5
+    style BaseAgent fill:#e8f5e9,stroke:#4caf50
+    style DemoAgent fill:#e8f5e9,stroke:#4caf50
+    style StoryAgent fill:#e8f5e9,stroke:#4caf50
+    style ChatMsg fill:#fff3e0,stroke:#ff9800
+    style LLM fill:#fff3e0,stroke:#ff9800
+    style A2A fill:#fff3e0,stroke:#ff9800
+    style Config fill:#fff3e0,stroke:#ff9800
+    style Log fill:#fff3e0,stroke:#ff9800
+    style S3 fill:#fff3e0,stroke:#ff9800
+    style MsgRuntime fill:#fce4ec,stroke:#e91e63
+    style MySQL fill:#efebe9,stroke:#795548
+    style Redis fill:#efebe9,stroke:#795548
+    style Cache fill:#efebe9,stroke:#795548
+    style Kafka fill:#efebe9,stroke:#795548
+    style HTTP fill:#efebe9,stroke:#795548
+    style RPC fill:#efebe9,stroke:#795548
 ```
 
----
+## 核心数据流
 
-## 3. 模块索引
-
-| 模块 | 路径 | 职责 | 详细文档 |
-|------|------|------|---------|
-| **contract_context** | `contract/aspect` | AOP 切面 + ThreadLocal 上下文，在合同操作前并行加载 9 路数据 | [contract_context.md](contract_context.md) |
-| **contract_detail** | `contract/aspect` | 合同详情查询与组装，首屏优化加载策略，12+ 子模块详情构建 | [contract_detail.md](contract_detail.md) |
-| **change_contract_strategy** | `contract/changecontractstrategey` | 变更合同策略路由（设计变更 vs 套餐变更），7 阶段生命周期接口 | [change_contract_strategy.md](change_contract_strategy.md) |
-| **contract_validation** | `contract` | 字段校验层，反射调度 + Apollo 配置驱动，覆盖品类/金额/身份/企业校验 | [contract_validation.md](contract_validation.md) |
-| **contract_pdf_by_self** | `contract/createcontractpdfbyself` | 合同正文 PDF 生成（图纸/团装/翻新全案），策略模式 + 模板方法 | [contract_pdf_by_self.md](contract_pdf_by_self.md) |
-| **material_pdf** | `contract/combo/material/pdf` | 材料配送清单 PDF 生成与数据一致性检查 | [material_pdf.md](material_pdf.md) |
-| **terminal_contract_pdf** | `contract` | 解约协议 PDF 数据填充与生成，含退款渠道与金额格式化 | [terminal_contract_pdf.md](terminal_contract_pdf.md) |
-| **contract_signing_source** | `contract/personal/bind` | 个性化签约数据源抽象（报价单/变更单/子单），策略模式 + 模板方法 | [contract_signing_source.md](contract_signing_source.md) |
-| **personal_relation** | `contract/personal` | 个性化合同关联关系管理，报价单撤回时的合同解绑与状态回退 | [personal_relation.md](personal_relation.md) |
-
----
-
-## 4. 模块间依赖关系
+### 聊天对话流
 
 ```mermaid
-graph TD
-    CTX[contract_context<br/>数据准备与上下文]
-    DET[contract_detail<br/>详情查询与组装]
-    CHG[change_contract_strategy<br/>变更策略路由]
-    VAL[contract_validation<br/>字段校验]
-    PDF[contract_pdf_by_self<br/>合同正文 PDF]
-    MAT[material_pdf<br/>材料清单 PDF]
-    TERM[terminal_contract_pdf<br/>解约协议 PDF]
-    SRC[contract_signing_source<br/>签约来源]
-    REL[personal_relation<br/>关联关系管理]
+sequenceDiagram
+    participant Client as 前端客户端
+    participant API as API 层 (Middleware + Route)
+    participant Agent as Agent 层 (BaseAgent)
+    participant LLM as LLMManager
+    participant Agg as StageValueMessageHandler
+    participant Persist as MessagePersistence
+    participant DB as MySQL / Redis
 
-    CTX --> DET
-    CTX --> PDF
-    CTX --> MAT
-    CTX --> TERM
-    CTX --> VAL
-    CTX --> REL
+    Client->>API: POST /chat/stream (ChatRequest)
+    API->>API: TraceId → Auth → Logging
+    API->>Agent: AgentRegistry.route → execute_stream()
 
-    DET --> PDF
-    DET --> CHG
+    Agent->>Persist: save_user_message
+    Agent->>Agent: build_state (BaseAgentState)
+    Agent->>LLM: LangGraph / LangChain 流式调用
 
-    CHG --> VAL
+    loop 每个 StreamEvent
+        LLM-->>Agent: token / tool_call
+        Agent-->>Client: SSE 推送 (REASON → MESSAGE)
+        Agent->>Agg: merge_event
+    end
 
-    SRC --> CTX
-    SRC --> DET
-
-    REL --> SRC
+    Agg->>Agg: flush() → 完整消息快照
+    Agg->>Persist: save_agent_message
+    Persist->>DB: INSERT message (sequence from Redis INCR)
 ```
 
-**核心依赖方向**：`contract_context` 是整个子系统的数据基座，几乎所有模块都依赖其提供的 ThreadLocal 上下文数据。`contract_signing_source` 为上下文装配和详情查询提供签约数据源抽象，`personal_relation` 则处理合同绑定关系的解除，与 `contract_signing_source`（绑定方向）形成完整的生命周期闭环。
+### 故事分析流
 
----
+```mermaid
+sequenceDiagram
+    participant Caller as 外部服务
+    participant API as Story API
+    participant Pipeline as StoryPipeline (LangGraph)
+    participant SCRM as SCRM 群消息系统
+    participant LLM as GPT-5.5
+    participant Poster as PosterPipeline
+    participant DB as MySQL
 
-## 5. 关键设计模式
+    Caller->>API: POST /story/analyze
+    API->>DB: 创建 StoryTask (PENDING)
+    API-->>Caller: 立即返回 task_id
 
-| 设计模式 | 应用模块 | 说明 |
-|---------|---------|------|
-| **AOP + ThreadLocal** | contract_context, contract_detail | 注解驱动的数据预加载，业务代码零侵入 |
-| **并行任务编排** | contract_context, contract_detail | `ParallelTaskService` 实现多路并行 RPC 调用，总耗时 ≈ 最慢单路 |
-| **策略模式** | change_contract_strategy, contract_pdf_by_self, contract_signing_source | 按合同类型/业务类型/单据类型路由到不同实现 |
-| **模板方法模式** | contract_pdf_by_self, contract_signing_source | 基类封装通用骨架，子类插入差异化逻辑 |
-| **工厂模式** | change_contract_strategy, contract_pdf_by_self | Spring IoC 自动发现 + 枚举映射路由 |
-| **反射调度** | contract_validation | 方法名字符串动态分发校验规则 |
-| **分布式锁** | personal_relation | 按报价单号加锁，保证撤回操作串行 |
+    Pipeline->>DB: 更新 PROCESSING
+    Pipeline->>SCRM: 采集群消息上下文
+    Pipeline->>Pipeline: prefilter 硬过滤
+    Pipeline->>Pipeline: preprocess 文本清洗
+    Pipeline->>SCRM: fetch_customer 补全客户信息
+    Pipeline->>LLM: write_story 结构化故事生成
+
+    alt S/A 级
+        Pipeline->>Poster: gen_poster 海报生成
+        Pipeline->>DB: COMPLETED + StoryOutput
+    else B 级
+        Pipeline->>DB: COMPLETED (仅故事)
+    else C 级
+        Pipeline->>DB: SKIPPED
+    end
+```
+
+## 核心模块索引
+
+### API 层
+
+| 模块 | 职责 | 文档 |
+|------|------|------|
+| **ApiMiddleware** | HTTP 中间件：认证鉴权（AuthMiddleware）、请求追踪（TraceIdMiddleware）、请求日志（RequestLoggingMiddleware） | [ApiMiddleware](ApiMiddleware.md) |
+| **ApiSchema** | API 数据契约层：请求/响应 Pydantic 模型（ChatRequest、BaseResponse、StoryAnalyzeRequest 等） | [ApiSchema](ApiSchema.md) |
+
+### 应用层
+
+| 模块 | 职责 | 文档 |
+|------|------|------|
+| **ApplicationBase** | Agent 框架基类：BaseAgent 生命周期管理、AgentRegistry 注册路由、ConversationManager 会话管理、Checkpointer 持久化 | [ApplicationBase](ApplicationBase.md) |
+| **DemoAgent** | 示例 Agent：AigcAgent（简单流式）和 ReactAgent（LangGraph 双阶段推理 + MCP 工具调用） | [DemoAgent](DemoAgent.md) |
+| **StoryAgent** | 故事分析流水线：群聊消息采集 → 预过滤 → LLM 故事生成 → 评级 → 海报产出，基于 LangGraph StateGraph 编排 | [StoryAgent](StoryAgent.md) |
+
+### 核心层
+
+| 模块 | 职责 | 文档 |
+|------|------|------|
+| **A2A** | Google A2A 协议实现：JSON-RPC 2.0 服务端、TaskManager 抽象、Agent Card 服务发现、SSE 流式订阅 | [A2A](A2A.md) |
+| **ConfigLoader** | 全局配置中心：YAML 加载、多环境切换（dev/test/preview/prod）、深度合并、单例点号语法访问 | [ConfigLoader](ConfigLoader.md) |
+| **EventRegistry** | 事件注册表：EventType 枚举定义、事件-监听器映射、自动注册机制，配合 EventBus 实现 Pub/Sub | [EventRegistry](EventRegistry.md) |
+| **LLMManager** | LLM 统一管理层：多厂商模型（OpenAI/豆包/通义/DeepSeek）实例创建、缓存、工厂分发 | [LLMManager](LLMManager.md) |
+| **LogConfig** | 日志基础设施：loguru 配置、InterceptHandler 拦截第三方日志、ContextVar trace_id 传播 | [LogConfig](LogConfig.md) |
+| **ChatMessage** | 消息协议层：Card 卡片生命周期管理、StreamEvent 流式事件模型、ProtocolWrapper 序列化、emitter 事件发射 | [ChatMessage](ChatMessage.md) |
+| **S3Storage** | 文件存储：S3 分片上传（创建 → 并发上传 → 合并）、预签名 URL、懒加载单例 | [S3Storage](S3Storage.md) |
+| **WeatherTool** | 工具层：LangChain @tool 天气查询（Mock）、工具注册与 Agent 集成 | [WeatherTool](WeatherTool.md) |
+
+### 运行时层
+
+| 模块 | 职责 | 文档 |
+|------|------|------|
+| **MessageRuntime** | 消息运行时：StageValueMessageHandler 增量聚合、MessagePersistence 持久化（Redis 序列号 + MySQL 写入）、MessageService 查询格式化 | [MessageRuntime](MessageRuntime.md) |
+
+### 基础设施层
+
+| 模块 | 职责 | 文档 |
+|------|------|------|
+| **MysqlPersistence** | MySQL 持久化：SQLAlchemy 2.0 异步引擎、BaseCRUD 泛型仓库、Conversation/Session/Message/StoryORM 模型 | [MysqlPersistence](MysqlPersistence.md) |
+| **RedisOperations** | Redis 操作层：String/Hash/List/Set/ZSet 五种数据结构封装、统一 redis_execute 入口、自动 JSON 序列化 | [RedisOperations](RedisOperations.md) |
+| **CacheInfrastructure** | 缓存基础设施：策略模式（MemoryCache LRU + RedisCache）、CacheManager 单例门面、可配置后端切换 | [CacheInfrastructure](CacheInfrastructure.md) |
+| **KafkaInfrastructure** | Kafka 消费层：`@kafka_listener` 装饰器声明式注册、MessageContext 消息封装、ListenerRunner 全异步消费、at-least-once 语义 | [KafkaInfrastructure](KafkaInfrastructure.md) |
+| **HttpClient** | 异步 HTTP 客户端：AsyncHttpClientManager 连接池管理、BaseAsyncHttpClient 模板方法基类、httpx 封装 | [HttpClient](HttpClient.md) |
+| **RpcClient** | 远程服务客户端：SessionRpcClient（Token 验证）、ToolboxRpcClient（Prompt 获取 + 缓存） | [RpcClient](RpcClient.md) |
+
+### 工具层
+
+| 模块 | 职责 | 文档 |
+|------|------|------|
+| **TimeUtils** | 时间工具：timestamp/datetime/string 互转、容错安全默认值、渐进式解析策略 | [TimeUtils](TimeUtils.md) |
+
+## 关键设计模式
+
+| 模式 | 应用位置 | 说明 |
+|------|---------|------|
+| **模板方法** | BaseAgent.execute_stream() | 基类定义固定执行骨架，子类通过 build_graph() / extend_state() 定制 |
+| **单例模式** | ConfigLoader、LLMManager、AgentRegistry、CacheManager | 全局唯一实例，避免资源浪费 |
+| **策略模式** | CacheStrategy（Memory/Redis）、CheckpointerBackend（Memory/MySQL） | 运行时可切换实现，对业务透明 |
+| **注册表模式** | AgentRegistry、@kafka_listener 装饰器 | 声明式注册 + 动态发现，解耦定义与使用 |
+| **工厂方法** | create_checkpointer()、LLMManager._create_llm() | 根据配置参数创建不同实例 |
+| **事件溯源** | Card → StreamEvent → StageValueMessageHandler | 同一事件流同时服务前端推送和持久化聚合 |
+| **装饰器注册** | @kafka_listener、@cache、@tool | 声明式编程，减少样板代码 |

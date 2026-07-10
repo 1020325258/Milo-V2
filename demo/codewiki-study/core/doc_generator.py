@@ -210,6 +210,8 @@ PARENT_SYSTEM_PROMPT = """<ROLE>
 # 用户 Prompt：叶子模块
 LEAF_USER_PROMPT = """请为 {module_name} 模块生成综合文档。
 
+仓库路径：{repo_path}
+
 <MODULE_TREE>
 {module_tree}
 </MODULE_TREE>
@@ -249,6 +251,8 @@ overview_content
 
 # 仓库总览 Prompt
 REPO_OVERVIEW_PROMPT = """请为 {repo_name} 仓库生成简要概览文档。
+
+仓库路径：{repo_path}
 
 概览应包含：
 - 仓库的目的
@@ -349,12 +353,14 @@ def format_leaf_prompt(
     components: Dict[str, Node],
     module_tree: dict,
     output_dir: str = "",
+    repo_path: str = "",
 ) -> str:
     """格式化叶子模块的文档生成 Prompt"""
     tree_text = _format_module_tree_text(module_tree, target_module=module_name)
     codes = _format_component_codes(component_ids, components)
     return LEAF_USER_PROMPT.format(
         module_name=module_name,
+        repo_path=repo_path,
         output_dir=output_dir,
         module_tree=tree_text,
         formatted_core_component_codes=codes,
@@ -369,10 +375,11 @@ def format_parent_prompt(module_name: str, repo_structure: dict) -> str:
     )
 
 
-def format_repo_overview_prompt(repo_name: str, repo_structure: dict) -> str:
+def format_repo_overview_prompt(repo_name: str, repo_path: str, repo_structure: dict) -> str:
     """格式化仓库总览的生成 Prompt"""
     return REPO_OVERVIEW_PROMPT.format(
         repo_name=repo_name,
+        repo_path=repo_path,
         repo_structure=json.dumps(repo_structure, indent=2, ensure_ascii=False),
     )
 
@@ -473,6 +480,7 @@ def _resolve_doc_path(docs_dir: str, module_name: str) -> str | None:
 
 def generate_documentation(
     repo_name: str,
+    repo_path: str,
     module_tree: dict,
     components: Dict[str, Node],
     docs_dir: str,
@@ -529,7 +537,7 @@ def generate_documentation(
         if is_leaf_module(module_info):
             logger.info(f"  📄 Processing leaf module: {module_key}")
             _generate_leaf_module_docs(
-                module_name, module_info, components, module_tree, docs_dir, completer
+                module_name, module_info, components, module_tree, docs_dir, completer, repo_path=repo_path
             )
         else:
             logger.info(f"  📁 Processing parent module: {module_key}")
@@ -539,7 +547,7 @@ def generate_documentation(
 
     # 生成仓库总览
     logger.info(f"  📚 Generating repository overview")
-    _generate_repo_overview(repo_name, module_tree, docs_dir, overview_completer)
+    _generate_repo_overview(repo_name, repo_path, module_tree, docs_dir, overview_completer)
 
     return docs_dir
 
@@ -551,6 +559,7 @@ def _generate_leaf_module_docs(
     module_tree: dict,
     docs_dir: str,
     completer: Callable[[str, str], str],
+    repo_path: str = "",
     max_retries: int = 2,
 ):
     """为叶子模块生成文档，包含 Mermaid 语法验证 + 自动重试"""
@@ -568,6 +577,7 @@ def _generate_leaf_module_docs(
     user_prompt = format_leaf_prompt(
         module_name, component_ids, components, module_tree,
         output_dir=docs_dir,
+        repo_path=repo_path,
     )
 
     for attempt in range(max_retries + 1):
@@ -662,6 +672,7 @@ def _generate_parent_module_docs(
 
 def _generate_repo_overview(
     repo_name: str,
+    repo_path: str,
     module_tree: dict,
     docs_dir: str,
     completer: Callable[[str, str], str],
@@ -675,7 +686,7 @@ def _generate_repo_overview(
 
     repo_structure = build_overview_structure(module_tree, [], docs_dir)
     system_prompt = "你是一名 AI 文档助手。请为仓库生成简要概览文档。"
-    user_prompt = format_repo_overview_prompt(repo_name, repo_structure)
+    user_prompt = format_repo_overview_prompt(repo_name, repo_path, repo_structure)
 
     for attempt in range(max_retries + 1):
         if attempt == 0:
@@ -702,6 +713,7 @@ def _generate_repo_overview(
         logger.warning(f"    ⚠️ Mermaid validation failed: {mermaid_result}")
         if attempt < max_retries:
             user_prompt = (
+                f"请为 {repo_name} 仓库（路径：{repo_path}）重新生成概览文档。\n\n"
                 f"你上次生成的仓库概览中 Mermaid 图表有语法错误，请修复后重新生成。\n\n"
                 f"错误信息：\n{mermaid_result}\n\n"
                 f"请重新生成完整的概览文档，确保 Mermaid 语法正确。"

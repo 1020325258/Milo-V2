@@ -1,77 +1,270 @@
 {
-  "contract_context": {
-    "path": "contract/aspect",
+  "ApiMiddleware": {
+    "path": "api/middlewares",
     "components": [
-      "ContractContextAspect.java::ContractContextAspect",
-      "ContractContextHandler.java::ContractContextHandler"
+      "api/middlewares/auth.py::AuthMiddleware",
+      "api/middlewares/logging.py::RequestLoggingMiddleware",
+      "api/middlewares/trace_id.py::TraceIdMiddleware"
     ],
     "children": {}
   },
-  "contract_detail": {
-    "path": "contract/aspect",
+  "ApiSchema": {
+    "path": "api/schemas",
     "components": [
-      "ContractDetailAspect.java::ContractDetailAspect",
-      "ContractDetailContextHandler.java::ContractDetailContextHandler",
-      "ContractDetailService.java::ContractDetailService"
+      "api/schemas/chat.py::CommandPayload",
+      "api/schemas/chat.py::MessagePayload",
+      "api/schemas/chat.py::MessageTextPayload",
+      "api/schemas/chat.py::MessageType",
+      "api/schemas/chat.py::PayloadType",
+      "api/schemas/conversation.py::MessageItem",
+      "api/schemas/conversation.py::SessionItem",
+      "api/schemas/response.py::Config",
+      "api/schemas/response.py::ResponseCode",
+      "api/schemas/story.py::WxworkMessage"
     ],
     "children": {}
   },
-  "change_contract_strategy": {
-    "path": "contract/changecontractstrategey",
+  "ApplicationBase": {
+    "path": "applications/base",
     "components": [
-      "changecontractstrategey/ChangeContractStrategyFactory.java::ChangeContractStrategyFactory",
-      "changecontractstrategey/NormalChangeContractStrategy.java::NormalChangeContractStrategy",
-      "changecontractstrategey/ZQChangeContractStrategy.java::ZQChangeContractStrategy"
+      "applications/base/application_enums.py::ApplicationEnum",
+      "applications/base/base_agent.py::BaseAgent",
+      "applications/base/base_agent.py::BaseAgentState",
+      "applications/base/base_agent.py::CheckpointerBackend",
+      "applications/base/checkpoint/memory.py::MemoryCheckpointer",
+      "applications/base/checkpoint/mysql.py::MySQLCheckpointer",
+      "applications/base/conversation/conversation_manager.py::ConversationManager",
+      "applications/base/conversation/conversation_manager.py::ConversationResult",
+      "applications/base/conversation/conversation_manager.py::SessionResult",
+      "applications/base/registry/agent_registry.py::AgentRegistry"
     ],
     "children": {}
   },
-  "contract_pdf_by_self": {
-    "path": "contract/createcontractpdfbyself",
+  "DemoAgent": {
+    "path": "applications/agent/demo_agent",
     "components": [
-      "createcontractpdfbyself/DrawingContractPdfBySelfStrategy.java::DrawingContractPdfBySelfStrategy",
-      "createcontractpdfbyself/GroupFormalContractPdfBySelfStrategy.java::GroupFormalContractPdfBySelfStrategy",
-      "createcontractpdfbyself/ReformAllFormalContractPdfBySelfStrategy.java::ReformAllFormalContractPdfBySelfStrategy"
+      "applications/agent/demo_agent/aigc_agent.py::AigcAgent",
+      "applications/agent/demo_agent/react_agent.py::ReactAgent",
+      "applications/agent/demo_agent/react_agent.py::ReactAgentState"
     ],
     "children": {}
   },
-  "material_pdf": {
-    "path": "contract/combo/material/pdf",
+  "StoryAgent": {
+    "path": "applications/agent/story_agent",
     "components": [
-      "combo/material/pdf/MaterialPdfDiffService.java::MaterialPdfDiffService",
-      "combo/material/pdf/MaterialPdfUtil.java::MaterialPdfUtil"
+      "applications/agent/story_agent/graph.py::StoryPipelineState",
+      "applications/agent/story_agent/group_locator.py::LocatedGroup",
+      "applications/agent/story_agent/nodes/story_writer.py::ProcessTimelineItem",
+      "applications/agent/story_agent/nodes/story_writer.py::StoryCause",
+      "applications/agent/story_agent/nodes/story_writer.py::StoryContent",
+      "applications/agent/story_agent/nodes/story_writer.py::StoryOwner",
+      "applications/agent/story_agent/nodes/story_writer.py::StoryProcess",
+      "applications/agent/story_agent/nodes/story_writer.py::StoryResult",
+      "applications/agent/story_agent/poster_prototype.py::PosterContentType"
     ],
     "children": {}
   },
-  "personal_relation": {
-    "path": "contract/personal",
+  "A2A": {
+    "path": "core/a2a",
     "components": [
-      "personal/PersonalRelationHandler.java::PersonalRelationHandler",
-      "personal/PersonalRelationHandlerImpl.java::PersonalRelationHandlerImpl"
+      "core/a2a/server.py::A2AServer",
+      "core/a2a/task_manager.py::TaskManager",
+      "core/a2a/types.py::A2AClientError",
+      "core/a2a/types.py::A2AClientHTTPError",
+      "core/a2a/types.py::A2AClientJSONError",
+      "core/a2a/types.py::AgentAuthentication",
+      "core/a2a/types.py::AgentCapabilities",
+      "core/a2a/types.py::AgentCard",
+      "core/a2a/types.py::AgentProvider",
+      "core/a2a/types.py::AgentSkill",
+      "core/a2a/types.py::Artifact",
+      "core/a2a/types.py::AuthenticationInfo",
+      "core/a2a/types.py::ContentTypeNotSupportedError",
+      "core/a2a/types.py::DataPart",
+      "core/a2a/types.py::FileContent",
+      "core/a2a/types.py::FilePart",
+      "core/a2a/types.py::InternalError",
+      "core/a2a/types.py::InvalidParamsError",
+      "core/a2a/types.py::InvalidRequestError",
+      "core/a2a/types.py::JSONParseError",
+      "core/a2a/types.py::JSONRPCError",
+      "core/a2a/types.py::JSONRPCMessage",
+      "core/a2a/types.py::Message",
+      "core/a2a/types.py::MethodNotFoundError",
+      "core/a2a/types.py::MissingAPIKeyError",
+      "core/a2a/types.py::PushNotificationConfig",
+      "core/a2a/types.py::PushNotificationNotSupportedError",
+      "core/a2a/types.py::Task",
+      "core/a2a/types.py::TaskArtifactUpdateEvent",
+      "core/a2a/types.py::TaskIdParams",
+      "core/a2a/types.py::TaskNotCancelableError",
+      "core/a2a/types.py::TaskNotFoundError",
+      "core/a2a/types.py::TaskPushNotificationConfig",
+      "core/a2a/types.py::TaskQueryParams",
+      "core/a2a/types.py::TaskSendParams",
+      "core/a2a/types.py::TaskState",
+      "core/a2a/types.py::TaskStatus",
+      "core/a2a/types.py::TaskStatusUpdateEvent",
+      "core/a2a/types.py::TextPart",
+      "core/a2a/types.py::UnsupportedOperationError"
     ],
     "children": {}
   },
-  "contract_signing_source": {
-    "path": "contract/personal/bind",
+  "ConfigLoader": {
+    "path": "core/config",
     "components": [
-      "personal/bind/ContractSigningSource.java::ContractSigningSource",
-      "personal/bind/strategy/BillSigningSourceStrategy.java::BillSigningSourceStrategy",
-      "personal/bind/strategy/ChangeOrderSigningSourceStrategy.java::ChangeOrderSigningSourceStrategy",
-      "personal/bind/strategy/SubOrderSigningSourceStrategy.java::SubOrderSigningSourceStrategy"
+      "core/config/loader.py::ConfigLoader",
+      "core/config/loader.py::ConfigObject",
+      "core/config/loader.py::_NullConfig"
     ],
     "children": {}
   },
-  "contract_validation": {
-    "path": "contract",
+  "EventRegistry": {
+    "path": "core/event",
     "components": [
-      "ContractFieldCheckService.java::ContractFieldCheckService",
-      "WorkerTypeCheckService.java::WorkerTypeCheckService"
+      "core/event/event_registry.py::EventType"
     ],
     "children": {}
   },
-  "terminal_contract_pdf": {
-    "path": "contract",
+  "LLMManager": {
+    "path": "core/llm",
     "components": [
-      "TerminalContractPdfBuildService.java::TerminalContractPdfBuildService"
+      "core/llm/manager.py::LLMManager",
+      "core/llm/models.py::AIModelName",
+      "core/llm/models.py::LLMModel"
+    ],
+    "children": {}
+  },
+  "LogConfig": {
+    "path": "core/log",
+    "components": [
+      "core/log/log_config.py::InterceptHandler"
+    ],
+    "children": {}
+  },
+  "ChatMessage": {
+    "path": "core/message",
+    "components": [
+      "core/message/card/base.py::Card",
+      "core/message/models.py::BaseCardModel",
+      "core/message/models.py::BaseContent",
+      "core/message/models.py::CardDataContent",
+      "core/message/models.py::CardTitleContent",
+      "core/message/models.py::StageStatusContent",
+      "core/message/protocol.py::ProtocolWrapper",
+      "core/message/stage/card_type.py::CardType",
+      "core/message/stage/card_type.py::PlainTextCard",
+      "core/message/stage/card_type.py::PlanTextCardContent",
+      "core/message/stage/card_type.py::TextCard",
+      "core/message/stage/stage.py::MessageStage",
+      "core/message/stage/stage.py::MessageStatus",
+      "core/message/stream_event.py::StreamEvent",
+      "core/message/stream_event.py::StreamEventPayload",
+      "core/message/stream_event.py::StreamEventType"
+    ],
+    "children": {}
+  },
+  "S3Storage": {
+    "path": "core/storage",
+    "components": [
+      "core/storage/s3_uploader.py::S3Uploader"
+    ],
+    "children": {}
+  },
+  "WeatherTool": {
+    "path": "core/tools",
+    "components": [
+      "core/tools/weather_tool.py::WeatherInput"
+    ],
+    "children": {}
+  },
+  "CacheInfrastructure": {
+    "path": "infrastructure/cache",
+    "components": [
+      "infrastructure/cache/impl/memory_cache.py::MemoryCache",
+      "infrastructure/cache/impl/redis_cache.py::RedisCache",
+      "infrastructure/cache/manager.py::CacheManager",
+      "infrastructure/cache/strategy.py::CacheStrategy"
+    ],
+    "children": {}
+  },
+  "HttpClient": {
+    "path": "infrastructure/http",
+    "components": [
+      "infrastructure/http/client.py::AsyncHttpClientManager",
+      "infrastructure/http/client.py::BaseAsyncHttpClient"
+    ],
+    "children": {}
+  },
+  "KafkaInfrastructure": {
+    "path": "infrastructure/kafka",
+    "components": [
+      "infrastructure/kafka/config_adapter.py::KafkaConfigAdapter",
+      "infrastructure/kafka/listener_manager.py::KafkaListenerManager",
+      "infrastructure/kafka/listener_manager.py::ListenerRunner",
+      "infrastructure/kafka/message_context.py::MessageContext",
+      "infrastructure/kafka/startup.py::KafkaStartupManager"
+    ],
+    "children": {}
+  },
+  "MysqlPersistence": {
+    "path": "infrastructure/mysql",
+    "components": [
+      "infrastructure/mysql/curd/base.py::BaseCRUD",
+      "infrastructure/mysql/curd/must_crud/conversation.py::ConversationCRUD",
+      "infrastructure/mysql/curd/must_crud/message.py::MessageCRUD",
+      "infrastructure/mysql/curd/must_crud/session.py::SessionCRUD",
+      "infrastructure/mysql/curd/story_crud/story_output_crud.py::StoryOutputCRUD",
+      "infrastructure/mysql/curd/story_crud/story_task_crud.py::StoryTaskCRUD",
+      "infrastructure/mysql/models/must_model/conversation.py::Conversation",
+      "infrastructure/mysql/models/must_model/message.py::Message",
+      "infrastructure/mysql/models/must_model/session.py::Session",
+      "infrastructure/mysql/models/story/story_output.py::StoryOutput",
+      "infrastructure/mysql/models/story/story_task.py::StoryTask"
+    ],
+    "children": {}
+  },
+  "RedisOperations": {
+    "path": "infrastructure/redis",
+    "components": [
+      "infrastructure/redis/operations.py::HashOps",
+      "infrastructure/redis/operations.py::KeyOps",
+      "infrastructure/redis/operations.py::ListOps",
+      "infrastructure/redis/operations.py::SetOps",
+      "infrastructure/redis/operations.py::StringOps",
+      "infrastructure/redis/operations.py::ZSetOps"
+    ],
+    "children": {}
+  },
+  "RpcClient": {
+    "path": "rpc",
+    "components": [
+      "rpc/session_client.py::PromptItem",
+      "rpc/session_client.py::SessionRpcClient",
+      "rpc/toolbox_client.py::PromptItem",
+      "rpc/toolbox_client.py::ToolboxRpcClient"
+    ],
+    "children": {}
+  },
+  "MessageRuntime": {
+    "path": "runtime",
+    "components": [
+      "runtime/message_aggregator.py::DownStreamValueMessage",
+      "runtime/message_aggregator.py::MessageStageValueMessage",
+      "runtime/message_aggregator.py::MessageStageValueMessages",
+      "runtime/message_aggregator.py::ReasonStageValueMessage",
+      "runtime/message_aggregator.py::ReasonStageValueMessages",
+      "runtime/message_aggregator.py::StageValueMessageHandler",
+      "runtime/message_persistence.py::MessagePersistence",
+      "runtime/message_service.py::MessageService",
+      "runtime/message_service.py::PositionEnum"
+    ],
+    "children": {}
+  },
+  "TimeUtils": {
+    "path": "utils",
+    "components": [
+      "utils/time_utils.py::TimeUtils"
     ],
     "children": {}
   }

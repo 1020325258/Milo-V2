@@ -65,6 +65,9 @@ class Node(BaseModel):
     # 全限定名，如 "com.ke.utopia.nrs.salesproject.service.PersonalRelationHandler"
     qualified_name: Optional[str] = None
 
+    # 类级别注解列表，如 ["@Service", "@Slf4j"]
+    annotations: Optional[List[str]] = None
+
     def get_display_name(self) -> str:
         return self.display_name or self.name
 
